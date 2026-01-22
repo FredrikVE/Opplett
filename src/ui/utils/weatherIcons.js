@@ -1,3 +1,22 @@
+/******************** Kildehenvisning ****************************
+
+## Bruk av ikoner.
+
+NRK tillater fri bruk av disse ikonene mot kreditering.
+Værikonene brukt i dette programmet er hentet fra NRK og yr.no.
+
+## Bruk av AI
+Denne metoden er i stor grad generert av ChatGPT ettersom den gjør svært mye repetetivt arbeid.
+
+#Kilder:
+NRK. (u å). Yr weather symbols. Hentet April 2024 fra NRK - GitHub:
+https://nrkno.github.io/yr-weather-symbols/
+
+ChatGPT. (2024, April). ChatGPT.
+Hentet fra GhatGPT: https://chatgpt.com/
+
+ **********************************************************************/
+
 export function getWeatherIconFileName(symbolCode) {
     if (!symbolCode) return "unknown.png";
 
