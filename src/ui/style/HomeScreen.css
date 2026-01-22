@@ -1,0 +1,42 @@
+/* src/ui/view/HomeScreen.css */
+
+.forecast-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.forecast-table th {
+    color: var(--table-header-color);
+    font-size: var(--table-header-font-size);
+    font-weight: var(--table-header-font-weight);
+    line-height: var(--table-header-line-height);
+    text-align: left;
+    padding: 16px;
+}
+
+.forecast-table td {
+    padding: 20px;
+    border-bottom: var(--table-row-divider);
+    font-variant-numeric: var(--font-variant-numeric);
+}
+
+.time {
+    font-weight: var(--font-weight-bold);
+}
+
+.temperature {
+    font-size: var(--temperature-font-size);
+    line-height: var(--temperature-line-height);
+}
+
+.precipitation {
+    font-size: var(--precipitation-font-size);
+    line-height: var(--precipitation-line-height);
+    color: var(--precipitation-color);
+}
+
+.wind {
+    font-size: var(--wind-font-size);
+    line-height: var(--wind-line-height);
+    color: var(--wind-color);
+}

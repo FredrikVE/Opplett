@@ -1,0 +1,136 @@
+/* src/ui/view/App.css */
+
+/* ================================
+   Global CSS variables
+   ================================ */
+:root {
+  /* Typography */
+  --font-family-base: 'NRK Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --font-size-small: 13px;
+  --font-size-medium: 16px;
+  --font-size-large: 18px;
+
+  --line-height-small: 16px;
+  --line-height-medium: 22px;
+  --line-height-large: 24px;
+
+  --font-weight-normal: 500;
+  --font-weight-bold: 700;
+
+  --font-variant-numeric: lining-nums tabular-nums;
+
+  /* Base colors */
+  --color-background-base: #ffffff;
+  --color-text-base: #061629;
+  --color-text-subtle: #4c5a66;
+
+  /* Table */
+  --table-row-divider: 1px solid #b2cff5;
+
+  --table-header-color: var(--color-text-subtle);
+  --table-header-font-size: var(--font-size-small);
+  --table-header-font-weight: var(--font-weight-normal);
+  --table-header-line-height: var(--line-height-small);
+
+  /* Temperature */
+  --temperature-font-size: var(--font-size-large);
+  --temperature-line-height: var(--line-height-large);
+  --temperature-font-variant: var(--font-variant-numeric);
+  --temperature-minus-color: #1767ce;
+  --temperature-plus-color: #b21002;
+
+  /* Precipitation */
+  --precipitation-font-size: var(--font-size-large);
+  --precipitation-line-height: var(--line-height-large);
+  --precipitation-font-variant: var(--font-variant-numeric);
+  --precipitation-color: #1767ce;
+
+  /* Wind */
+  --wind-font-size: var(--font-size-large);
+  --wind-line-height: var(--line-height-large);
+  --wind-font-variant: var(--font-variant-numeric);
+  --wind-color: #8129e5;
+}
+
+/* ================================
+   Global element styles
+   ================================ */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-medium);
+  line-height: var(--line-height-medium);
+  color: var(--color-text-base);
+  background-color: var(--color-background-base);
+
+  display: flex;
+  justify-content: center;
+}
+
+/* ================================
+   Common elements
+   ================================ */
+h1 {
+  font-size: 22px;
+  font-weight: var(--font-weight-bold);
+  margin: 0 0 16px 0;
+}
+
+p {
+  margin: 0;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+img {
+  border: 0;
+  display: block;
+}
+
+/* ================================
+   Table base styles
+   ================================ */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 16px;
+  text-align: left;
+  border-bottom: var(--table-row-divider);
+}
+
+th {
+  color: var(--table-header-color);
+  font-size: var(--table-header-font-size);
+  font-weight: var(--table-header-font-weight);
+  line-height: var(--table-header-line-height);
+}
+
+/* ================================
+   Utility classes (optional)
+   ================================ */
+.text-subtle {
+  color: var(--color-text-subtle);
+}
+
+.numeric {
+  font-variant-numeric: var(--font-variant-numeric);
+}

@@ -1,30 +1,73 @@
 // src/ui/view/HomeScreen.jsx
 export default function HomeScreen({ viewModel }) {
-
-    //statevariabel for loading og error
     const { forecast, loading, error } = viewModel;
 
     if (loading) {
-        return <p>Laster værmelding...</p>;
+        return <p>Laster værmelding…</p>;
     }
 
     if (error) {
         return <p>Feil: {error}</p>;
     }
 
+    const date = forecast.length > 0 ? forecast[0].date : "";
+
     return (
         <div>
-            <h1>Time-for-time værmelding</h1>
+            <h1>Værmelding {date && `${date}`}</h1>
 
-            <ul>
-                {forecast.map((item, index) => (
-                    <li key={index}>
-                        <strong>{item.localTime}</strong> –{" "}
-                        {item.details.air_temperature}°C
-                    </li>
-                ))}
-            </ul>
+            <table className="forecast-table">
+                <thead>
+                    <tr>
+                        <th>Tid</th>
+                        <th>Temp</th>
+                        <th>Vind</th>
+                        <th>Nedbør</th>
+                        <th>UV</th>
+                        <th>Symbol</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {forecast.map((item, index) => {
+                        const wind = item.details.wind_speed;
+                        const gust = item.details.wind_speed_of_gust;
+
+                        return (
+                            <tr key={index}>
+                                <td className="time">{item.localTime}</td>
+
+                                <td
+                                    className="temperature"
+                                    style={{
+                                        color:
+                                            item.details.air_temperature < 0
+                                                ? "var(--temperature-minus-color)"
+                                                : "var(--temperature-plus-color)",
+                                    }}
+                                >
+                                    {item.details.air_temperature} °C
+                                </td>
+
+                                <td className="wind">
+                                    {wind}
+                                    {gust != null && ` (${gust})`} m/s
+                                </td>
+
+                                <td className="precipitation">
+                                    {item.details.precipitation_amount ?? 0} mm
+                                </td>
+
+                                <td>
+                                    {item.details.ultraviolet_index_clear_sky}
+                                </td>
+
+                                <td>{item.weatherSymbol}</td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
         </div>
     );
 }
-

@@ -1,13 +1,18 @@
 //src/App.jsx
 import "./ui/style/App.css"
+import "./ui/style/HomeScreen.css"
+
 import LocationForecastDataSource from "./model/datasource/LocationForecastDataSource.js"
 import LocationForecastRepository from "./model/repositories/LocationForecastRepository.js";
 import useHourlyForecastViewModel from "./ui/viewmodel/useHourlyForecastViewModel.js";
 import HomeScreen from "./ui/view/HomeScreen.jsx";
 
 export default function App() {
-    const lat = 27.777835
-    const lon = -15.692579
+
+    const lat = 59.86;
+    const lon = 10.82;
+    //const lat = 27.777835
+    //const lon = -15.692579
     const hoursAhead = 12;
 
     const datasource = new LocationForecastDataSource();
