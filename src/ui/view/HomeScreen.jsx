@@ -1,6 +1,6 @@
 // src/ui/view/HomeScreen.jsx
 export default function HomeScreen({ viewModel }) {
-    const { forecast, loading, error } = viewModel;
+    const { forecast, sunTimes, loading, error } = viewModel;
 
     if (loading) {
         return <p>Laster værmelding…</p>;
@@ -14,7 +14,15 @@ export default function HomeScreen({ viewModel }) {
 
     return (
         <div>
-            <h1>Værmelding {date && `${date}`}</h1>
+            <h1>Værmelding {date && date}</h1>
+
+            {/* Soloppgang / solnedgang */}
+            {sunTimes && (
+                <div className="sun-times">
+                    <span>Soloppgang: {sunTimes.sunrise}</span>
+                    <span>Solnedgang: {sunTimes.sunset}</span>
+                </div>
+            )}
 
             <table className="forecast-table">
                 <thead>
