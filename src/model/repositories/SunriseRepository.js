@@ -19,9 +19,7 @@ export default class SunriseRepository {
 }
 
 
-// src/test/testSunriseMain.js
 import SunriseDataSource from "../datasource/SunriseDataSource.js"
-
 async function testSunrise() {
     const lat = 59.86;
     const lon = 10.82;
