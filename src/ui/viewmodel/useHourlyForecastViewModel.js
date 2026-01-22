@@ -10,7 +10,7 @@ export default function useHourlyForecastViewModel( repository, lat, lon, hoursA
 
     useEffect(() => {
         async function loadForecast() {
-            
+
             try {
                 const data = await repository.getHourlyForecast(lat, lon, hoursAhead);
                 setForecast(data);
@@ -26,7 +26,7 @@ export default function useHourlyForecastViewModel( repository, lat, lon, hoursA
         }
 
         loadForecast();
-    }, []);
+    }, [repository, lat, lon, hoursAhead]);
 
     return { forecast, loading, error };
 }
