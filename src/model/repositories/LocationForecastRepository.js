@@ -1,5 +1,4 @@
 // src/model/repositories/LocationForecastRepository.js
-
 export default class LocationForecastRepository {
     
     constructor(locationForecastDataSource) {
