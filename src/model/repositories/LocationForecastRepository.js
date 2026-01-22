@@ -1,5 +1,4 @@
 // src/model/repositories/LocationForecastRepository.js
-import LocationForecastDataSource from "../datasource/LocationForecastDataSource.js";
 
 export default class LocationForecastRepository {
     
@@ -55,6 +54,8 @@ export default class LocationForecastRepository {
     }
 }
 
+/*
+import LocationForecastDataSource from "../datasource/LocationForecastDataSource.js";
 
 async function main() {
     const datasource = new LocationForecastDataSource();
@@ -96,3 +97,4 @@ async function main() {
 }
 
 main();
+*/
