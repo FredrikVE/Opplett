@@ -1,4 +1,6 @@
 // src/ui/view/HomeScreen.jsx
+import { getWeatherIconFileName } from "../utils/weatherIcons";
+
 export default function HomeScreen({ viewModel }) {
     const { forecast, sunTimes, loading, error } = viewModel;
 
@@ -32,7 +34,7 @@ export default function HomeScreen({ viewModel }) {
                         <th>Vind</th>
                         <th>Nedbør</th>
                         <th>UV</th>
-                        <th>Symbol</th>
+                        <th>Vær</th>
                     </tr>
                 </thead>
 
@@ -40,6 +42,8 @@ export default function HomeScreen({ viewModel }) {
                     {forecast.map((item, index) => {
                         const wind = item.details.wind_speed;
                         const gust = item.details.wind_speed_of_gust;
+                        const iconFile =
+                            getWeatherIconFileName(item.weatherSymbol);
 
                         return (
                             <tr key={index}>
@@ -70,7 +74,15 @@ export default function HomeScreen({ viewModel }) {
                                     {item.details.ultraviolet_index_clear_sky}
                                 </td>
 
-                                <td>{item.weatherSymbol}</td>
+                                <td className="weather-icon">
+                                    <img
+                                        src={`/weather_icons/200/${iconFile}`}
+                                        alt={item.weatherSymbol}
+                                        width={32}
+                                        height={32}
+                                        loading="lazy"
+                                    />
+                                </td>
                             </tr>
                         );
                     })}
