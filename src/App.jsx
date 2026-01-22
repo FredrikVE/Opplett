@@ -2,6 +2,8 @@
 import "./ui/style/App.css"
 import "./ui/style/HomeScreen.css"
 
+import OpenCageGeocodingDataSource from "./model/datasource/OpenCageGeocodingDataSource.js";
+import OpenCageGeocodingRepository from "./model/repositories/OpenCageGeocodingRepository.js";
 import LocationForecastDataSource from "./model/datasource/LocationForecastDataSource.js"
 import LocationForecastRepository from "./model/repositories/LocationForecastRepository.js";
 import HomeScreenViewModel from "./ui/viewmodel/HomeScreenViewModel.js";
@@ -19,10 +21,11 @@ export default function App() {
 
     const locationForecastDatasource = new LocationForecastDataSource();
     const sunriseDataSource = new SunriseDataSource();
+    //const geocodingDataSource = new OpenCageGeocodingDataSource()
 
     const locationForecastRepository = new LocationForecastRepository(locationForecastDatasource);
     const sunriseRepository = new SunriseRepository(sunriseDataSource);
-
+    //const geocodingRepo = new OpenCageGeocodingRepository(geocodingDataSource);
     const homeScreenViewModel = HomeScreenViewModel(locationForecastRepository, sunriseRepository, lat, lon, hoursAhead);
 
     return <HomeScreen viewModel={homeScreenViewModel} />;

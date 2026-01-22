@@ -1,4 +1,4 @@
-// src/model/datasource/LocationForecastDataSource.js
+//src/model/datasource/LocationForecastDataSource.js
 import DataSource from "./DataSource.js";
 
 export default class LocationForecastDataSource extends DataSource {
