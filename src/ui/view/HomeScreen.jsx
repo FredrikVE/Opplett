@@ -1,4 +1,4 @@
-// src/ui/view/HomeScreen.jsx
+//src/ui/view/HomeScreen.jsx
 import { getWeatherIconFileName } from "../utils/weatherIcons";
 
 export default function HomeScreen({ viewModel }) {

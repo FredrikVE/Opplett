@@ -21,18 +21,9 @@ export default class OpenCageGeocodingDataSource {
         return response.json();
     }
 
-    async checkConnection() {
-        const query = 'Oslo';
-        const path = `json?q=${encodeURIComponent(query)}&key=${OPENCAGE_API_KEY}`;
-        return this.get(path);
-    }
-
     async fetchCoordinates(placeName) {
         try {
-            const path =
-                `json?q=${encodeURIComponent(placeName)}` +
-                `&key=${OPENCAGE_API_KEY}&language=no&pretty=1`;
-
+            const path = `json?q=${encodeURIComponent(placeName)}&key=${OPENCAGE_API_KEY}&language=no&pretty=1`;
             const data = await this.get(path);
 
             if (data?.results?.length > 0) {
@@ -41,7 +32,9 @@ export default class OpenCageGeocodingDataSource {
             }
 
             throw new Error('Fant ikke sted');
-        } catch (error) {
+        } 
+        
+        catch (error) {
             console.error('Geokoding-feil:', error);
             return null;
         }
@@ -49,10 +42,7 @@ export default class OpenCageGeocodingDataSource {
 
     // Returnerer liste over forslag
     async fetchGeocodeData(placeName) {
-        const path =
-            `json?q=${encodeURIComponent(placeName)}` +
-            `&key=${OPENCAGE_API_KEY}&language=no`;
-
+        const path = `json?q=${encodeURIComponent(placeName)}&key=${OPENCAGE_API_KEY}&language=no`;
         const data = await this.get(path);
 
         return data.results.map(r => ({

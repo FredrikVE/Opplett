@@ -1,9 +1,9 @@
-// src/ui/viewmodel/HomeScreenViewModel.js
+//src/ui/viewmodel/HomeScreenViewModel.js
 import { useEffect, useState } from "react";
 
 export default function HomeScreenViewModel(forecastRepository, sunriseRepository, lat, lon, hoursAhead) {
 
-    // Statevariabler
+    //Statevariabler
     const [forecast, setForecast] = useState([]);
     const [sunTimes, setSunTimes] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -13,12 +13,10 @@ export default function HomeScreenViewModel(forecastRepository, sunriseRepositor
         async function loadData() {
             try {
                 // Henter værmelding
-                const forecastData =
-                    await forecastRepository.getHourlyForecast(lat, lon, hoursAhead);
+                const forecastData = await forecastRepository.getHourlyForecast(lat, lon, hoursAhead);
 
                 // Bruker datoen fra første værpunkt til sunrise
-                const dateISO =
-                    forecastData.length > 0
+                const dateISO = forecastData.length > 0
                         ? forecastData[0].date.split(".").reverse().join("-")
                         : null;
 
