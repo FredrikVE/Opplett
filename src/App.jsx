@@ -7,7 +7,7 @@ import OpenCageGeocodingRepository from "./model/repositories/OpenCageGeocodingR
 import LocationForecastDataSource from "./model/datasource/LocationForecastDataSource.js"
 import LocationForecastRepository from "./model/repositories/LocationForecastRepository.js";
 import HomeScreenViewModel from "./ui/viewmodel/HomeScreenViewModel.js";
-import HomeScreen from "./ui/view/HomeScreen.jsx";
+import HomeScreen from "./ui/view/pages/HomeScreen.jsx";
 import SunriseRepository from "./model/repositories/SunriseRepository.js";
 import SunriseDataSource from "./model/datasource/SunriseDataSource.js";
 
