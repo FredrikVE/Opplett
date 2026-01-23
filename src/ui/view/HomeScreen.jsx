@@ -1,8 +1,10 @@
-//src/ui/view/HomeScreen.jsx
+// src/ui/view/HomeScreen.jsx
 import { getWeatherIconFileName } from "../utils/weatherIcons";
 
 export default function HomeScreen({ viewModel }) {
-    const { forecast, sunTimes, loading, error } = viewModel;
+
+    // Destructer props-parameter
+    const { forecast, sunTimes, loading, error, query, suggestions, onSearchChange, onSuggestionSelected, location } = viewModel;
 
     if (loading) {
         return <p>Laster værmelding…</p>;
@@ -16,9 +18,37 @@ export default function HomeScreen({ viewModel }) {
 
     return (
         <div>
-            <h1>Værmelding {date && date}</h1>
+            {/* Overskrift */}
+            <h1>
+                Værmelding {location?.name ? `– ${location.name}` : ""}
+            </h1>
 
-            {/* Soloppgang / solnedgang */}
+            {/* Søkefelt */}
+            <div className="search">
+                <input
+                    type="text"
+                    placeholder="Søk sted, by eller adresse…"
+                    value={query}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                />
+
+                {suggestions.length > 0 && (
+                    <ul className="search-suggestions">
+                        {suggestions.map((s) => (
+                            <li
+                                key={`${s.lat}-${s.lon}`}
+                                onClick={() => onSuggestionSelected(s)}
+                            >
+                                {s.name}
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+
+            <h2>{date && date}</h2>
+
+            {/* Soloppgang/solnedgang */}
             {sunTimes && (
                 <div className="sun-times">
                     <span>Soloppgang: {sunTimes.sunrise}</span>
@@ -26,6 +56,7 @@ export default function HomeScreen({ viewModel }) {
                 </div>
             )}
 
+            {/* Værvarsel  */}
             <table className="forecast-table">
                 <thead>
                     <tr>
@@ -39,14 +70,14 @@ export default function HomeScreen({ viewModel }) {
                 </thead>
 
                 <tbody>
-                    {forecast.map((item, index) => {
+                    {forecast.map((item) => {
                         const wind = item.details.wind_speed;
                         const gust = item.details.wind_speed_of_gust;
                         const iconFile =
                             getWeatherIconFileName(item.weatherSymbol);
 
                         return (
-                            <tr key={index}>
+                            <tr key={`${item.date}-${item.localTime}`}>
                                 <td className="time">{item.localTime}</td>
 
                                 <td

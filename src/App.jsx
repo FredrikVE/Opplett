@@ -21,12 +21,14 @@ export default function App() {
 
     const locationForecastDatasource = new LocationForecastDataSource();
     const sunriseDataSource = new SunriseDataSource();
-    //const geocodingDataSource = new OpenCageGeocodingDataSource()
+    const geocodingDataSource = new OpenCageGeocodingDataSource()
 
     const locationForecastRepository = new LocationForecastRepository(locationForecastDatasource);
     const sunriseRepository = new SunriseRepository(sunriseDataSource);
-    //const geocodingRepo = new OpenCageGeocodingRepository(geocodingDataSource);
-    const homeScreenViewModel = HomeScreenViewModel(locationForecastRepository, sunriseRepository, lat, lon, hoursAhead);
+    const geocodingRepository = new OpenCageGeocodingRepository(geocodingDataSource);
+    //const homeScreenViewModel = HomeScreenViewModel(locationForecastRepository, sunriseRepository, lat, lon, hoursAhead);
+
+    const homeScreenViewModel = HomeScreenViewModel(locationForecastRepository, sunriseRepository, geocodingRepository, lat, lon, hoursAhead);
 
     return <HomeScreen viewModel={homeScreenViewModel} />;
 }
