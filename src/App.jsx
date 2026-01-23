@@ -13,22 +13,26 @@ import SunriseDataSource from "./model/datasource/SunriseDataSource.js";
 
 export default function App() {
 
+    //Definerer startbetingelser som startkorrdinater og antall timer frem som væremeldingen skal være for
     //const lat = 59.86;
     //const lon = 10.82;
     const lat = 27.777835
     const lon = -15.692579
     const hoursAhead = 12;
 
+    //Initierer DataSources
     const locationForecastDatasource = new LocationForecastDataSource();
     const sunriseDataSource = new SunriseDataSource();
     const geocodingDataSource = new OpenCageGeocodingDataSource()
 
+    //Initierer Repositories med tilhørende datasources
     const locationForecastRepository = new LocationForecastRepository(locationForecastDatasource);
     const sunriseRepository = new SunriseRepository(sunriseDataSource);
     const geocodingRepository = new OpenCageGeocodingRepository(geocodingDataSource);
-    //const homeScreenViewModel = HomeScreenViewModel(locationForecastRepository, sunriseRepository, lat, lon, hoursAhead);
-
+    
+    //Oppretter ViewModeller som skal sendes inni veiws (dvs pages)
     const homeScreenViewModel = HomeScreenViewModel(locationForecastRepository, sunriseRepository, geocodingRepository, lat, lon, hoursAhead);
 
+    //Returnerer og rendrer de komponentene som utgjør views/pages
     return <HomeScreen viewModel={homeScreenViewModel} />;
 }
