@@ -1,56 +1,40 @@
+// src/ui/viewmodel/HomeScreenViewModel.js
 import { useEffect, useState } from "react";
+import useSearchViewModel from "./SearchViewModel.js";
 
 export default function HomeScreenViewModel( forecastRepository, sunriseRepository, geocodingRepository, initialLat, initialLon, hoursAhead ) {
-    //location state
-    const [location, setLocation] = useState({lat: initialLat, lon: initialLon, name: null});
+    
+    // Statevariabel for location og søkemekanikk fra useSearchViewModel-hooken
+    const [location, setLocation] = useState({ lat: initialLat, lon: initialLon, name: null });
+    const searchViewModel = useSearchViewModel( geocodingRepository, setLocation);
 
-    //search state
-    const [query, setQuery] = useState("");
-    const [suggestions, setSuggestions] = useState([]);
-
-    //weather state
+    // Statevariabler for værmeldingsresultater
     const [forecast, setForecast] = useState([]);
     const [sunTimes, setSunTimes] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    /* SEARCH LOGIC */
-    async function onSearchChange(text) {
-        setQuery(text);
-
-        if (text.length < 3) {
-            setSuggestions([]);
-            return;
-        }
-
-        const results = await geocodingRepository.getSuggestions(text);
-        setSuggestions(results);
-    }
-
-    function onSuggestionSelected(suggestion) {
-        setLocation({
-            lat: suggestion.lat,
-            lon: suggestion.lon,
-            name: suggestion.name
-        });
-
-        setQuery(suggestion.name);
-        setSuggestions([]);
-    }
-
-    /* WEATHER FETCHING */
+    // Fetching av værmelding
     useEffect(() => {
         async function loadData() {
+            
             try {
                 setLoading(true);
 
-                const forecastData = await forecastRepository.getHourlyForecast(location.lat, location.lon, hoursAhead);
+                const forecastData =
+                    await forecastRepository.getHourlyForecast(
+                        location.lat,
+                        location.lon,
+                        hoursAhead
+                    );
 
-                const dateISO = forecastData.length > 0
+                const dateISO =
+                    forecastData.length > 0
                         ? forecastData[0].date.split(".").reverse().join("-")
                         : null;
 
-                const sunData = dateISO
+                const sunData =
+                    dateISO
                         ? await sunriseRepository.getSunTimes(
                             location.lat,
                             location.lon,
@@ -65,7 +49,7 @@ export default function HomeScreenViewModel( forecastRepository, sunriseReposito
             } 
             
             catch (e) {
-                setError(e.message ?? "Ukjent feil");
+                setError(e?.message ?? "Ukjent feil");
             } 
             
             finally {
@@ -74,22 +58,24 @@ export default function HomeScreenViewModel( forecastRepository, sunriseReposito
         }
 
         loadData();
-    }, [location.lat, location.lon, hoursAhead]);
 
+    }, 
+    //Dependancy array for useEffect()
+    [location.lat, location.lon, hoursAhead]);
+
+    //Rerunerer objekt med resulteter til view fra ViewModel
     return {
-        // data
+        //Vær
         forecast,
         sunTimes,
         loading,
         error,
         location,
 
-        // search state
-        query,
-        suggestions,
-
-        // actions
-        onSearchChange,
-        onSuggestionSelected
+        // Søkeresultater
+        query: searchViewModel.query,
+        suggestions: searchViewModel.suggestions,
+        onSearchChange: searchViewModel.onSearchChange,
+        onSuggestionSelected: searchViewModel.onSuggestionSelected
     };
 }
