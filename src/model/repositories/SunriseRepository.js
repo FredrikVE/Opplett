@@ -18,7 +18,7 @@ export default class SunriseRepository {
     }
 }
 
-
+/*
 import SunriseDataSource from "../datasource/SunriseDataSource.js"
 async function testSunrise() {
     const lat = 59.86;
@@ -43,3 +43,4 @@ async function testSunrise() {
 }
 
 testSunrise();
+*/
