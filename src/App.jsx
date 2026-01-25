@@ -3,6 +3,7 @@ import "./ui/style/App.css"
 import "./ui/style/SolarInfo.css"
 import "./ui/style/SearchFeild.css"
 import "./ui/style/Alerts.css"
+import "./ui/style/Header.css"
 import "./ui/style/HomeScreen.css"
 
 import OpenCageGeocodingDataSource from "./model/datasource/OpenCageGeocodingDataSource.js";
