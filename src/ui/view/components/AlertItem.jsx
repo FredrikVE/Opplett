@@ -1,34 +1,23 @@
 //src/ui/view/components/AlertItem.jsx
 import { getAlertIconFileName } from "../../utils/getAlertIconFileName.js";
+import { getRiskLevelText } from "../../utils/getRiskLevelText.js";
 
 export default function AlertItem({ alert }) {
+
+    // variabler for å holde på informasjon om fareikoner
     const iconFileName = getAlertIconFileName(alert);
-
-    const getRiskLevelText = (riskMatrixColor) => {
-        switch (riskMatrixColor) {
-            case "Yellow":
-                return "Gult nivå";
-            case "Orange":
-                return "Oransje nivå";
-            case "Red":
-                return "Rødt nivå";
-            default:
-                return "";
-        }
-    };
-
     const levelText = getRiskLevelText(alert.riskMatrixColor);
-    
+    const iconPath = `/alert_symbols/128/${iconFileName}`;
+
     return (
-        <div className={`alert-card alert-${alert.riskMatrixColor?.toLowerCase() ?? "yellow"}`}>
+        <div className={`alert-card alert-${alert.riskMatrixColor?.toLowerCase() ?? "lightslategray"}`}>
 
             <div className="alert-header">
                 <img
-                    src={`/alert_symbols/128/${iconFileName}`}
-                    alt=""
+                    src={iconPath}
+                    alt=""                        // tom alt tag for å ikke overvelde skjermlesere jf WCAG.
                     className="alert-icon"
                 />
-
                 <div>
                     <strong>{alert.eventAwarenessName}</strong>
                     <div className="alert-level">{levelText}</div>

@@ -1,18 +1,34 @@
-/* ================================
-   Solar information (Yr-style row)
-   ================================ */
-
+/*src/style/SolarInfo.css*/
 .solar-info {
     display: flex;
-    gap: 16px;
+    justify-content: space-between;
+    align-items: center;
     padding: 12px 0;
+    margin: 8px 0 16px 0;
     border-bottom: var(--table-row-divider);
-    margin-bottom: 16px;
 }
 
-.solar-info span {
+
+.solar-item {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+    font-size: var(--font-size-small);
+    color: var(--color-text-subtle);
+}
+
+.solar-icon {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.solar-label {
+    font-weight: var(--font-weight-normal);
+}
+
+.solar-time {
     font-weight: var(--font-weight-bold);
+    font-variant-numeric: var(--font-variant-numeric);
 }

@@ -16,11 +16,12 @@ https://chatgpt.com/
  **********************************************************************/
 
 export function getAlertIconFileName(alert) {
-    if (!alert) return "icon-warning-generic-yellow.png";
+    if (!alert) {
+        return "icon-warning-generic-yellow.png";
+    }
 
     const event = alert.event;
-    const color =
-        alert.riskMatrixColor?.toLowerCase() ?? "yellow";
+    const color = alert.riskMatrixColor?.toLowerCase() ?? "yellow";
 
     const EVENT_ICON_MAP = {
         avalanches: "icon-warning-avalanches",
@@ -46,8 +47,7 @@ export function getAlertIconFileName(alert) {
         polarLow: "icon-warning-polarlow"
     };
 
-    const base =
-        EVENT_ICON_MAP[event] ?? "icon-warning-generic";
+    const base = EVENT_ICON_MAP[event] ?? "icon-warning-generic";
 
     return `${base}-${color}.png`;
 }
