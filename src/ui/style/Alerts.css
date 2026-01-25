@@ -1,0 +1,78 @@
+/* ================================
+   Page layout
+   ================================ */
+
+.home-screen {
+    max-width: 720px;
+    padding: 16px;
+}
+
+.page-header {
+    margin-bottom: 12px;
+}
+
+.page-date {
+    font-weight: var(--font-weight-bold);
+    margin-bottom: 16px;
+}
+
+/* ================================
+   Alerts (Yr-style)
+   ================================ */
+
+.alerts-section {
+    margin: 16px 0 24px 0;
+}
+
+.alerts-section h2 {
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+
+.alert-card {
+    background: #fff8cc;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.alert-yellow {
+    background-color: #fff6cc;
+    border-left: 6px solid #f2c200;
+}
+
+.alert-orange {
+    background-color: #ffe5cc;
+    border-left: 6px solid #f28c00;
+}
+
+.alert-red {
+    background-color: #fbe3e3;
+    border-left: 6px solid #d93025;
+}
+
+.alert-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.alert-icon {
+    font-size: 20px;
+}
+
+.alert-level {
+    font-size: 13px;
+    color: var(--color-text-subtle);
+}
+
+.alert-description {
+    margin-bottom: 8px;
+}
+
+.alert-area {
+    font-style: italic;
+    margin-top: 8px;
+    color: var(--color-text-subtle);
+}

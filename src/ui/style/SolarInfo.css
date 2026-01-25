@@ -1,0 +1,18 @@
+/* ================================
+   Solar information (Yr-style row)
+   ================================ */
+
+.solar-info {
+    display: flex;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: var(--table-row-divider);
+    margin-bottom: 16px;
+}
+
+.solar-info span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: var(--font-weight-bold);
+}

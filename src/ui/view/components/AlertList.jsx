@@ -9,7 +9,7 @@ export default function AlertList({ alerts }) {
     }
 
     return (
-        <section>
+        <section className="alerts-section">
             <h2>Farevarsler</h2>
 
             {alerts.map(alert => (

@@ -1,5 +1,7 @@
 //src/App.jsx
 import "./ui/style/App.css"
+import "./ui/style/SolarInfo.css"
+import "./ui/style/Alerts.css"
 import "./ui/style/HomeScreen.css"
 
 import OpenCageGeocodingDataSource from "./model/datasource/OpenCageGeocodingDataSource.js";
