@@ -37,7 +37,6 @@ export default class MetAlertsRepository {
                 }
             }
 
-            // MetAlerts returnerer normalt 0–1 aktive varsler per punkt.
             return { alerts };
 
         } 
