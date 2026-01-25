@@ -2,6 +2,7 @@
 import SearchField from "../components/SearchField.jsx";
 import SolarInformation from "../components/SolarInformation.jsx";
 import ForecastTable from "../components/ForecastTable.jsx";
+import AlertList from "../components/AlertList.jsx";
 
 export default function HomeScreen({ viewModel }) {
 
@@ -22,6 +23,9 @@ export default function HomeScreen({ viewModel }) {
                 <h1>Værmelding {location?.name ? `– ${location.name}` : ""}</h1>
                 <h2>{date}</h2>
             </div>
+
+            {/* Farevarsler */}
+            <AlertList alerts={viewModel.alerts} />
            
              {/* Søkefelt */}
             <SearchField
