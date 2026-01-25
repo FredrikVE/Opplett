@@ -1,0 +1,91 @@
+/* src/ui/style/SearchField.css */
+
+/* ================================
+   Search container
+   ================================ */
+
+.search {
+    position: relative;
+    width: 100%;
+    margin: 16px 0 20px 0;
+}
+
+/* ================================
+   Search input (Yr-style, UU)
+   ================================ */
+
+.search-input {
+    width: 100%;
+
+    padding: 16px 18px;
+    font-size: 18px;
+    line-height: 24px;
+
+    font-family: var(--font-family-base);
+    font-weight: 500;
+
+    border-radius: 10px;
+    border: 2px solid #cfd8e3;
+    background-color: #f8fafc;
+
+    outline: none;
+}
+
+.search-input::placeholder {
+    color: var(--color-text-subtle);
+}
+
+/* Focus state – tydelig og WCAG-vennlig */
+.search-input:focus {
+    background-color: #ffffff;
+    border-color: #1767ce;
+    box-shadow: 0 0 0 3px rgba(23, 103, 206, 0.25);
+}
+
+/* ================================
+   Suggestions dropdown
+   ================================ */
+
+.search-suggestions {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+
+    background: #ffffff;
+    border-radius: 10px;
+
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    z-index: 50;
+
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+/* ================================
+   Suggestion items
+   ================================ */
+
+.search-suggestion {
+    padding: 16px 18px;
+    font-size: 16px;
+    line-height: 22px;
+
+    cursor: pointer;
+}
+
+/* Hover / active */
+.search-suggestion:hover {
+    background-color: #f0f6ff;
+}
+
+/* Optional: første/ siste avrunding */
+.search-suggestion:first-child {
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.search-suggestion:last-child {
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
