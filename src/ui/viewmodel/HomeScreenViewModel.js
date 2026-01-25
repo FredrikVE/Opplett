@@ -16,12 +16,33 @@ export default function HomeScreenViewModel( forecastRepository, sunriseReposito
     // Error og loading states
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
- 
+
+    //Henter stedsnavn for startkoordinater én gang ved oppstart
+    useEffect(() => {
+        async function resolveInitialLocationName() {
+            try {
+                const result = await geocodingRepository.getCoordinates(
+                    `${initialLat}, ${initialLon}`
+                );
+
+                if (result?.name) {
+                    setLocation(loc => ({
+                        ...loc,
+                        name: result.name
+                    }));
+                }
+            } catch (e) {
+                // stille fail – appen funker fortsatt uten navn
+                console.warn("Kunne ikke hente stedsnavn", e);
+            }
+        }
+
+        resolveInitialLocationName();
+    }, [initialLat, initialLon, geocodingRepository]);
 
     // Fetching av værmelding
     useEffect(() => {
         async function loadData() {
-            
             try {
                 setLoading(true);
                 
@@ -36,28 +57,26 @@ export default function HomeScreenViewModel( forecastRepository, sunriseReposito
                     forecastData.length > 0
                         ? forecastData[0].date.split(".").reverse().join("-")
                         : null;
-                
-                //Soltider
-                const sunData =
-                    dateISO
-                        ? await sunriseRepository.getSunTimes(
-                            location.lat,
-                            location.lon,
-                            dateISO,
-                            "+01:00"
-                        )
-                        : null;
+
+                // Soltider
+                const sunData = dateISO
+                    ? await sunriseRepository.getSunTimes(
+                        location.lat,
+                        location.lon,
+                        dateISO,
+                        "+01:00"
+                    )
+                    : null;
 
                 //Farevarsler
                 const alertResults = await metAlertsRepository.findAlerts(
-                    location.lat, 
+                    location.lat,
                     location.lon
                 );
 
-                //Oppdaterer states med setteMetoderne til useState-hookene
-                setAlerts(alertResults.alerts);
                 setForecast(forecastData);
                 setSunTimes(sunData);
+                setAlerts(alertResults.alerts);
                 setError(null);
             } 
             

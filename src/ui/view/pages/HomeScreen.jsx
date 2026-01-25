@@ -21,7 +21,8 @@ export default function HomeScreen({ viewModel }) {
         <div className="home-screen">
             {/* Sideoverskrift med dato og stedsnavn */}
             <header className="page-header">
-                <h1>Værmelding {location?.name ? `– ${location.name}` : ""}</h1>
+                <h1>Værmelding: {viewModel.location.name}</h1>
+
                 <h2 className="page-date">{date}</h2>
             </header>
            
