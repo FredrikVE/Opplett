@@ -8,6 +8,7 @@ import LocationForecastDataSource from "./model/datasource/LocationForecastDataS
 import LocationForecastRepository from "./model/repositories/LocationForecastRepository.js";
 
 import MetAlertsDataSource from "./model/datasource/MetAlertsDataSource.js";
+import MetAlertsRepository from "./model/repositories/MetAlertsRepository.js";
 
 
 import HomeScreenViewModel from "./ui/viewmodel/HomeScreenViewModel.js";
@@ -27,15 +28,17 @@ export default function App() {
     //Initierer DataSources
     const locationForecastDatasource = new LocationForecastDataSource();
     const sunriseDataSource = new SunriseDataSource();
-    const geocodingDataSource = new OpenCageGeocodingDataSource()
+    const geocodingDataSource = new OpenCageGeocodingDataSource();
+    const metAlertsDataSource = new MetAlertsDataSource();
 
     //Initierer Repositories med tilhørende datasources
     const locationForecastRepository = new LocationForecastRepository(locationForecastDatasource);
     const sunriseRepository = new SunriseRepository(sunriseDataSource);
+    const metAlertsRepository = new MetAlertsRepository(metAlertsDataSource);
     const geocodingRepository = new OpenCageGeocodingRepository(geocodingDataSource);
     
     //Oppretter ViewModeller som skal sendes inni veiws (dvs pages)
-    const homeScreenViewModel = HomeScreenViewModel(locationForecastRepository, sunriseRepository, geocodingRepository, lat, lon, hoursAhead);
+    const homeScreenViewModel = HomeScreenViewModel(locationForecastRepository, sunriseRepository, metAlertsRepository ,geocodingRepository, lat, lon, hoursAhead);
 
     //Returnerer og rendrer de komponentene som utgjør views/pages
     return <HomeScreen viewModel={homeScreenViewModel} />;

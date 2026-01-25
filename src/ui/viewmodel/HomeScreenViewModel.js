@@ -2,17 +2,21 @@
 import { useEffect, useState } from "react";
 import useSearchViewModel from "./SearchViewModel.js";
 
-export default function HomeScreenViewModel( forecastRepository, sunriseRepository, geocodingRepository, initialLat, initialLon, hoursAhead ) {
+export default function HomeScreenViewModel( forecastRepository, sunriseRepository, metAlertsRepository, geocodingRepository, initialLat, initialLon, hoursAhead ) {
     
     // Statevariabel for location og søkemekanikk fra useSearchViewModel-hooken
     const [location, setLocation] = useState({ lat: initialLat, lon: initialLon, name: null });
     const searchViewModel = useSearchViewModel( geocodingRepository, setLocation);
 
-    // Statevariabler for værmeldingsresultater
+    // Statevariabler for værmeldingsresultater, soloppgang, og metalerts
     const [forecast, setForecast] = useState([]);
     const [sunTimes, setSunTimes] = useState(null);
+    const [alerts, setAlerts] = useState([]);
+ 
+    // Error og loading states
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+ 
 
     // Fetching av værmelding
     useEffect(() => {
@@ -20,19 +24,20 @@ export default function HomeScreenViewModel( forecastRepository, sunriseReposito
             
             try {
                 setLoading(true);
-
-                const forecastData =
-                    await forecastRepository.getHourlyForecast(
-                        location.lat,
-                        location.lon,
-                        hoursAhead
-                    );
+                
+                //Værmelding
+                const forecastData = await forecastRepository.getHourlyForecast(
+                    location.lat,
+                    location.lon,
+                    hoursAhead
+                );
 
                 const dateISO =
                     forecastData.length > 0
                         ? forecastData[0].date.split(".").reverse().join("-")
                         : null;
-
+                
+                //Soltider
                 const sunData =
                     dateISO
                         ? await sunriseRepository.getSunTimes(
@@ -43,6 +48,14 @@ export default function HomeScreenViewModel( forecastRepository, sunriseReposito
                         )
                         : null;
 
+                //Farevarsler
+                const alertResults = await metAlertsRepository.findAlerts(
+                    location.lat, 
+                    location.lon
+                );
+
+                //Oppdaterer states med setteMetoderne til useState-hookene
+                setAlerts(alertResults.alerts);
                 setForecast(forecastData);
                 setSunTimes(sunData);
                 setError(null);
@@ -61,18 +74,25 @@ export default function HomeScreenViewModel( forecastRepository, sunriseReposito
 
     }, 
     //Dependancy array for useEffect()
-    [location.lat, location.lon, hoursAhead]);
+    [location.lat, location.lon, hoursAhead]);  //refresher hvis antall timer frem endres eller lat/lon endres
 
     //Rerunerer objekt med resulteter til view fra ViewModel
     return {
         //Vær
         forecast,
         sunTimes,
+
+        //Alerts
+        alerts,
+
+        //UI-states
         loading,
         error,
+
+        //Lokasjon
         location,
 
-        // Søkeresultater
+        //Søkeresultater
         query: searchViewModel.query,
         suggestions: searchViewModel.suggestions,
         onSearchChange: searchViewModel.onSearchChange,
