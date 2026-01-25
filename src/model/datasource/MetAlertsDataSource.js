@@ -14,6 +14,12 @@ async function main() {
 
     const datasource = new MetAlertsDataSource();
     
+    //hammerfest (to farevarsler samtidig)
+    const lat = 70.674705
+    const lon = 23.667911
+
+
+
     //bruker stavanger fordi det er en farevarsel i rogaland om skogbrannfare
     const lat = 58.952071
     const lon = 5.671383
