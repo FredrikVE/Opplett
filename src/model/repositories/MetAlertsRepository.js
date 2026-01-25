@@ -12,7 +12,7 @@ export default class MetAlertsRepository {
             const alerts = [];
 
             if (data.features) {
-                
+
                 for (const feature of data.features) {
                     const property = feature.properties;
 
@@ -49,7 +49,7 @@ export default class MetAlertsRepository {
     }
 }
 
-
+/*
 //Testmain
 import MetAlertsDataSource from "../datasource/MetAlertsDataSource.js";
 
@@ -69,3 +69,4 @@ async function main() {
 
 
 main();
+*/
