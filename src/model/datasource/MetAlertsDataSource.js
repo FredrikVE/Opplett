@@ -9,7 +9,7 @@ export default class MetAlertsDataSource extends DataSource {
     }
 }
 
-
+/*
 async function main() {
 
     const datasource = new MetAlertsDataSource();
@@ -32,3 +32,4 @@ async function main() {
     
 }
 main()
+*/
