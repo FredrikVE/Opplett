@@ -23,8 +23,12 @@ import HomeScreen from "./ui/view/pages/HomeScreen.jsx";
 export default function App() {
 
     // Init koordinater og antall timer frem
-    const lat = 27.777835;
-    const lon = -15.692579;
+    //const lat = 27.777835;
+    //const lon = -15.692579;
+    
+    //hammerfest (to farevarsler samtidig)
+    const lat = 70.674705
+    const lon = 23.667911
     const hoursAhead = 12;
 
     // Lag datasources+repositories én gang i useMemo for stabile referanser.
