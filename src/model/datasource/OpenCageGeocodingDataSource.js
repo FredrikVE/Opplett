@@ -2,54 +2,66 @@
 const API_KEY = import.meta.env.VITE_OPENCAGE_API_KEY;
 
 export default class OpenCageGeocodingDataSource {
+  constructor() {
+    this.baseUrl = "https://api.opencagedata.com/geocode/v1/";
 
-    constructor() {
-        this.baseUrl = 'https://api.opencagedata.com/geocode/v1/';
+    // teller for å logge antall API-kall (Per side-refresh)
+    this.apiCallCount = 0;
+  }
+
+  async get(path) {
+    this.apiCallCount += 1;
+
+    const url = this.baseUrl + path;
+    const startedAt = performance.now();
+
+    console.log(`[OpenCage] API-kall #${this.apiCallCount} -> ${url}`);
+
+    const response = await fetch(url, {
+      headers: { Accept: "application/json" },
+    });
+
+    const ms = Math.round(performance.now() - startedAt);
+
+    if (!response.ok) {
+      console.warn(`[OpenCage] API-kall #${this.apiCallCount} FEIL (${response.status}) etter ${ms}ms -> ${url}`);
+      throw new Error(`HTTP ${response.status}`);
     }
 
-    async get(path) {
-        const response = await fetch(this.baseUrl + path, {
-            headers: {
-                "Accept": "application/json",
-            },
-        });
+    console.log(`[OpenCage] API-kall #${this.apiCallCount} OK (${response.status}) etter ${ms}ms`);
 
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
+    return response.json();
+  }
 
-        return response.json();
+  /*
+  async fetchCoordinates(placeName) {
+    try {
+      const path = `json?q=${encodeURIComponent(placeName)}&key=${API_KEY}&language=no&pretty=1`;
+      const data = await this.get(path);
+
+      if (data?.results?.length > 0) {
+        const { lat, lng } = data.results[0].geometry;
+        return { lat, lon: lng };
+      }
+
+      throw new Error("Fant ikke sted");
+    } catch (error) {
+      console.error("Geokoding-feil:", error);
+      return null;
     }
+  }
+  */
 
-    async fetchCoordinates(placeName) {
-        try {
-            const path = `json?q=${encodeURIComponent(placeName)}&key=${API_KEY}&language=no&pretty=1`;
-            const data = await this.get(path);
+  // Returnerer liste over forslag
+  async fetchGeocodeData(placeName) {
+    const path = `json?q=${encodeURIComponent(placeName)}&key=${API_KEY}&language=no`;
+    const data = await this.get(path);
 
-            if (data?.results?.length > 0) {
-                const { lat, lng } = data.results[0].geometry;
-                return { lat, lon: lng };
-            }
-
-            throw new Error('Fant ikke sted');
-        } 
-        
-        catch (error) {
-            console.error('Geokoding-feil:', error);
-            return null;
-        }
-    }
-
-    // Returnerer liste over forslag
-    async fetchGeocodeData(placeName) {
-        const path = `json?q=${encodeURIComponent(placeName)}&key=${API_KEY}&language=no`;
-        const data = await this.get(path);
-
-        return data.results.map(r => ({
-            name: r.formatted,
-            lat: r.geometry.lat,
-            lon: r.geometry.lng,
-            timezone: r.annotations?.timezone?.name ?? null
-        }));
-    }
+    return data.results.map((r) => ({
+      name: r.formatted,
+      lat: r.geometry.lat,
+      lon: r.geometry.lng,
+      timezone: r.annotations?.timezone?.name ?? null,
+    }));
+  }
 }
