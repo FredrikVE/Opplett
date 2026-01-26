@@ -14,7 +14,6 @@ import LocationForecastRepository from "./model/repositories/LocationForecastRep
 import MetAlertsDataSource from "./model/datasource/MetAlertsDataSource.js";
 import MetAlertsRepository from "./model/repositories/MetAlertsRepository.js";
 
-
 import HomeScreenViewModel from "./ui/viewmodel/HomeScreenViewModel.js";
 import HomeScreen from "./ui/view/pages/HomeScreen.jsx";
 import SunriseRepository from "./model/repositories/SunriseRepository.js";
