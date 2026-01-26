@@ -38,7 +38,9 @@ export default function HomeScreenViewModel( forecastRepository, sunriseReposito
         }
 
         resolveInitialLocationName();
-    }, [initialLat, initialLon, geocodingRepository]);
+    }, 
+    //[initialLat, initialLon, geocodingRepository]);
+    [initialLat, initialLon]);
 
     // Fetching av værmelding
     useEffect(() => {
