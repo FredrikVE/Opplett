@@ -9,7 +9,7 @@ export default class OpenCageGeocodingDataSource {
     this.apiCallCount = 0;
   }
 
-  async get(path) {
+  async get(path, signal) {
     this.apiCallCount += 1;
 
     const url = this.baseUrl + path;
@@ -19,6 +19,7 @@ export default class OpenCageGeocodingDataSource {
 
     const response = await fetch(url, {
       headers: { Accept: "application/json" },
+      signal
     });
 
     const ms = Math.round(performance.now() - startedAt);
@@ -33,29 +34,10 @@ export default class OpenCageGeocodingDataSource {
     return response.json();
   }
 
-  /*
-  async fetchCoordinates(placeName) {
-    try {
-      const path = `json?q=${encodeURIComponent(placeName)}&key=${API_KEY}&language=no&pretty=1`;
-      const data = await this.get(path);
-
-      if (data?.results?.length > 0) {
-        const { lat, lng } = data.results[0].geometry;
-        return { lat, lon: lng };
-      }
-
-      throw new Error("Fant ikke sted");
-    } catch (error) {
-      console.error("Geokoding-feil:", error);
-      return null;
-    }
-  }
-  */
-
   // Returnerer liste over forslag
-  async fetchGeocodeData(placeName) {
+  async fetchGeocodeData(placeName, signal) {
     const path = `json?q=${encodeURIComponent(placeName)}&key=${API_KEY}&language=no`;
-    const data = await this.get(path);
+    const data = await this.get(path, signal);
 
     return data.results.map((r) => ({
       name: r.formatted,

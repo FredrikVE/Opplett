@@ -5,8 +5,8 @@ export default class OpenCageGeocodingRepository {
         this.dataSource = dataSource;
     }
 
-    async getSuggestions(query) {
-        return this.dataSource.fetchGeocodeData(query);
+    async getSuggestions(query, signal) {
+        return this.dataSource.fetchGeocodeData(query, signal);
     }
 
     async getCoordinates(query) {
