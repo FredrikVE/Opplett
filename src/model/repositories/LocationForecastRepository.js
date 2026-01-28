@@ -51,6 +51,26 @@ export default class LocationForecastRepository {
             };
         });
     }
+    
+    
+    #groupByDate(forecast) {
+        const grouped = {};
+
+        for (const item of forecast) {
+            const date = item.date;
+            if (!grouped[date]) {
+                grouped[date] = [];
+            }
+            grouped[date].push(item);
+        }
+
+        return grouped;
+    }
+
+    async getHourlyForecastGroupedByDate(lat, lon, hoursAhead) {
+        const forecast = await this.getHourlyForecast(lat, lon, hoursAhead);
+        return this.#groupByDate(forecast);
+    }
 }
 
 /*
