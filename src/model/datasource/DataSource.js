@@ -1,8 +1,8 @@
 //src/model/datasource/DataSource.js
 export default class DataSource {
   constructor() {
+    this.apiCallCount = 0;      //teller for å logge antall API-kall (Per side-refresh)
     this.hostURL = "https://api.met.no/";
-    this.apiCallCount = 0;
   }
 
   async get(path) {

@@ -3,10 +3,8 @@ const API_KEY = import.meta.env.VITE_OPENCAGE_API_KEY;
 
 export default class OpenCageGeocodingDataSource {
   constructor() {
+    this.apiCallCount = 0; // teller for å logge antall API-kall (Per side-refresh)
     this.baseUrl = "https://api.opencagedata.com/geocode/v1/";
-
-    // teller for å logge antall API-kall (Per side-refresh)
-    this.apiCallCount = 0;
   }
 
   async get(path, signal) {
