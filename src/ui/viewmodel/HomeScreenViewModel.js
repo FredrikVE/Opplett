@@ -1,5 +1,6 @@
 // src/ui/viewmodel/HomeScreenViewModel.js
 import { useEffect, useState } from "react";
+import { fetchInitialLocationName } from "../utils/fetchInitialLocationName.js";
 import useSearchViewModel from "./SearchViewModel.js";
 
 export default function HomeScreenViewModel( forecastRepository, sunriseRepository, metAlertsRepository, geocodingRepository, initialLat, initialLon, hoursAhead ) {
@@ -19,25 +20,8 @@ export default function HomeScreenViewModel( forecastRepository, sunriseReposito
 
     //Henter stedsnavn for startkoordinater én gang ved oppstart
     useEffect(() => {
-        async function resolveInitialLocationName() {
-            try {
-                const result = await geocodingRepository.getCoordinates(
-                    `${initialLat}, ${initialLon}`
-                );
-
-                if (result?.name) {
-                    setLocation(loc => ({
-                        ...loc,
-                        name: result.name
-                    }));
-                }
-            } catch (e) {
-                // stille fail – appen funker fortsatt uten navn
-                console.warn("Kunne ikke hente stedsnavn", e);
-            }
-        }
-
-        resolveInitialLocationName();
+        //Påkaller utmodularisert funksjon i ui/utils som setter startlokasjonsnavn fra start koordinater.
+        fetchInitialLocationName(setLocation, geocodingRepository, initialLat, initialLon);
     }, 
     //[initialLat, initialLon, geocodingRepository]);
     [initialLat, initialLon]);
@@ -55,14 +39,12 @@ export default function HomeScreenViewModel( forecastRepository, sunriseReposito
                     hoursAhead
                 );
 
-                const dateISO =
-                    forecastData.length > 0
+                const dateISO = forecastData.length > 0
                         ? forecastData[0].date.split(".").reverse().join("-")
                         : null;
 
                 // Soltider
-                const sunData = dateISO
-                    ? await sunriseRepository.getSunTimes(
+                const sunData = dateISO? await sunriseRepository.getSunTimes(
                         location.lat,
                         location.lon,
                         dateISO,
@@ -71,19 +53,17 @@ export default function HomeScreenViewModel( forecastRepository, sunriseReposito
                     : null;
 
                 //Farevarsler
-                const alertResults = await metAlertsRepository.findAlerts(
-                    location.lat,
-                    location.lon
-                );
-
+                const alertResults = await metAlertsRepository.findAlerts(location.lat, location.lon);
+                
+                //Oppdaterer states med settefunksjoner
                 setForecast(forecastData);
                 setSunTimes(sunData);
                 setAlerts(alertResults.alerts);
                 setError(null);
             } 
             
-            catch (e) {
-                setError(e?.message ?? "Ukjent feil");
+            catch (error) {
+                setError(error?.message ?? "Ukjent feil");
             } 
             
             finally {
