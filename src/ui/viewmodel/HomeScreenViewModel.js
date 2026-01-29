@@ -5,8 +5,10 @@ import useSearchViewModel from "./SearchViewModel.js";
 
 export default function HomeScreenViewModel( forecastRepository, sunriseRepository, metAlertsRepository, geocodingRepository, initialLat, initialLon, hoursAhead ) {
     
+    //Legger inn init-koordinater i et eget objekt med assosiert navn
+    const initialLocation = {lat: initialLat, lon: initialLon, name: null};
+    
     //Statevariabel for location og søkemekanikk fra useSearchViewModel-hooken
-    const initialLocation = {lat: initialLat, lon: initialLon, name: null};     //oppretter er locationObjekt med init-lat/lon og tomt navn
     const [location, setLocation] = useState(initialLocation);                      //setter initialLocation objektet inni statevariablen fra start
     const searchViewModel = useSearchViewModel( geocodingRepository, setLocation);
 
@@ -24,7 +26,6 @@ export default function HomeScreenViewModel( forecastRepository, sunriseReposito
         //Påkaller utmodularisert funksjon i ui/utils som setter startlokasjonsnavn fra start koordinater.
         fetchInitialLocationName(setLocation, geocodingRepository, initialLat, initialLon);
     }, 
-    //[initialLat, initialLon, geocodingRepository]);
     [initialLat, initialLon]);
 
     // Fetching av værmelding
