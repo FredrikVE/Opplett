@@ -1,0 +1,42 @@
+.day-card {
+    border: var(--card-border, 1px solid #e0e0e0);
+    border-radius: var(--card-border-radius, 8px);
+    margin-bottom: 16px;
+    overflow: hidden;
+    background-color: var(--card-background, #fff);
+}
+
+.day-card-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 16px;
+    background: var(--card-header-background, #f6f6f6);
+
+    border: none;
+    cursor: pointer;
+    text-align: left;
+
+    font: inherit;
+    color: inherit;
+}
+
+.day-card-header:hover {
+    background: var(--card-header-hover-background, #eeeeee);
+}
+
+.day-card-date {
+    margin: 0;
+    font-size: var(--day-card-date-font-size, 1.1rem);
+    font-weight: var(--font-weight-bold);
+}
+
+.day-card-toggle {
+    font-size: 0.9rem;
+}
+
+.day-card-content {
+    padding: 0 8px 8px 8px;
+}

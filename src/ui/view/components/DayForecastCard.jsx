@@ -7,16 +7,22 @@ export default function DayForecastCard({ date, forecast }) {
 
     return (
         <section className="day-card">
-            <header
+            <button
                 className="day-card-header"
                 onClick={() => setOpen(o => !o)}
-                style={{ cursor: "pointer" }}
+                aria-expanded={open}
             >
-                <h2>{date}</h2>
-                <span>{open ? "▲" : "▼"}</span>
-            </header>
+                <h2 className="day-card-date">{date}</h2>
+                <span className="day-card-toggle">
+                    {open ? "▲" : "▼"}
+                </span>
+            </button>
 
-            {open && <ForecastTable forecast={forecast} />}
+            {open && (
+                <div className="day-card-content">
+                    <ForecastTable forecast={forecast} />
+                </div>
+            )}
         </section>
     );
 }
