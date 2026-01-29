@@ -41,3 +41,35 @@
 .day-card-content {
     padding: 0 8px 8px 8px;
 }
+
+
+.day-card-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 16px;
+}
+
+.day-card-periods {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.day-card-period {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.day-card-period img {
+    opacity: 0.9;
+}
+
+.day-card-period-label {
+    font-size: 0.7rem;
+    color: #6b7280; /* diskret grå */
+    line-height: 1;
+}
+

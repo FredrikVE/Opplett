@@ -1,4 +1,4 @@
-//src/ui/view/pages/HomeScreen.jsx
+// src/ui/view/pages/HomeScreen.jsx
 import SearchField from "../components/SearchField.jsx";
 import SolarInformation from "../components/SolarInformation.jsx";
 import DayForecastCard from "../components/DayForecastCard.jsx";
@@ -14,19 +14,15 @@ export default function HomeScreen({ viewModel }) {
         return <p>Feil: {viewModel.error}</p>;
     }
 
-    const date = viewModel.forecast.length > 0 ? viewModel.forecast[0].date : "";
-
     return (
-        
         <div className="home-screen">
-            {/* Sideoverskrift med dato og stedsnavn */}
+
+            {/* Sideoverskrift */}
             <header className="page-header">
                 <h1>Værmelding: {viewModel.location.name}</h1>
-
-                <h2 className="page-date">{date}</h2>
             </header>
-           
-             {/* Søkefelt */}
+
+            {/* Søkefelt */}
             <SearchField
                 query={viewModel.query}
                 suggestions={viewModel.suggestions}
@@ -39,19 +35,17 @@ export default function HomeScreen({ viewModel }) {
 
             {/* Soloppgang/solnedgang */}
             <SolarInformation sunTimes={viewModel.sunTimes} />
-            
-            {/* Værmelding */}
-            {/*
-            <ForecastTable forecast={viewModel.forecast} />
-            */}
 
-            {Object.entries(viewModel.forecast).map(([date, items]) => (
-                <DayForecastCard key={date} date={date} forecast={items}/>
-                ))
-            }
+            {/* Dagkort */}
+            {Object.entries(viewModel.forecast).map(([date, hourly]) => (
+                <DayForecastCard
+                    key={date}
+                    date={date}
+                    hourly={hourly}
+                    periods={viewModel.dailyPeriods[date]?.periods}
+                />
+            ))}
 
-
-            
         </div>
     );
 }

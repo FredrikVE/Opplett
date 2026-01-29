@@ -13,7 +13,9 @@ export default function HomeScreenViewModel( forecastRepository, sunriseReposito
     const searchViewModel = useSearchViewModel( geocodingRepository, setLocation);
 
     // Statevariabler for værmeldingsresultater, soloppgang, og metalerts
-    const [forecast, setForecast] = useState([]);
+    //const [forecast, setForecast] = useState([]);
+    const [forecast, setForecast] = useState({});
+    const [dailyPeriods, setDailyPeriods] = useState({});
     const [sunTimes, setSunTimes] = useState(null);
     const [alerts, setAlerts] = useState([]);
  
@@ -42,10 +44,19 @@ export default function HomeScreenViewModel( forecastRepository, sunriseReposito
                     hoursAhead
                 );
 
+                const dailyPeriodForecast = await forecastRepository.getDailyPeriodForecast(
+                    location.lat,
+                    location.lon,
+                    hoursAhead
+                );
+                
+                
                 const dateISO = forecastData.length > 0
                         ? forecastData[0].date.split(".").reverse().join("-")
                         : null;
-
+                
+                //dette med ISO til sun data er egentlig unødvendig tror jeg siden API-et selv fikser dette
+        
                 // Soltider
                 const sunData = dateISO? await sunriseRepository.getSunTimes(
                         location.lat,
@@ -54,12 +65,18 @@ export default function HomeScreenViewModel( forecastRepository, sunriseReposito
                         "+01:00"
                     )
                     : null;
+                
+                // Soltider (repository/API håndterer dato selv)
+                
+                //prøver uten ISO
+                //const sunData = await sunriseRepository.getSunTimes(location.lat, location.lon);
 
                 //Farevarsler
                 const alertResults = await metAlertsRepository.findAlerts(location.lat, location.lon);
                 
                 //Oppdaterer states med settefunksjoner
                 setForecast(forecastData);
+                setDailyPeriods(dailyPeriodForecast);
                 setSunTimes(sunData);
                 setAlerts(alertResults.alerts);
                 setError(null);
@@ -85,6 +102,7 @@ export default function HomeScreenViewModel( forecastRepository, sunriseReposito
         //Vær
         forecast,
         sunTimes,
+        dailyPeriods,
 
         //Alerts
         alerts,
