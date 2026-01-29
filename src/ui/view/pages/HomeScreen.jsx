@@ -1,7 +1,6 @@
 //src/ui/view/pages/HomeScreen.jsx
 import SearchField from "../components/SearchField.jsx";
 import SolarInformation from "../components/SolarInformation.jsx";
-import ForecastTable from "../components/ForecastTable.jsx";
 import DayForecastCard from "../components/DayForecastCard.jsx";
 import AlertList from "../components/AlertList.jsx";
 

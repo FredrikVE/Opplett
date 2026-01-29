@@ -1,10 +1,12 @@
 // src/model/repositories/LocationForecastRepository.js
 export default class LocationForecastRepository {
     
+    // Konstruktør som tar inn tilhørende datasource
     constructor(locationForecastDataSource) {
         this.datasource = locationForecastDataSource;
     }
 
+    // Private hjelpemetoder
     async #getRawTimeSeries(lat, lon, hoursAhead) {
 
         // Krever at antall timer frem er definert. Derfor legger vi inn sjekker for dette.
@@ -22,6 +24,29 @@ export default class LocationForecastRepository {
         return timeseries.slice(0, hoursAhead);
     }
 
+    #getHour(item) {
+        const localTime = item.localTime;      // f.eks. "08:00"
+        const hourPart = localTime.split(":")[0]; // "08"
+        const hour = Number(hourPart);          // 8
+
+        return hour;
+    }
+
+    #groupByDate(forecast) {
+        const grouped = {};
+
+        for (const item of forecast) {
+            const date = item.date;
+            if (!grouped[date]) {
+                grouped[date] = [];
+            }
+            grouped[date].push(item);
+        }
+
+        return grouped;
+    }
+
+    // Public-metoder som skal brukes i viewmodel
     async getHourlyForecast(lat, lon, hoursAhead) {
         const timeseries = await this.#getRawTimeSeries(lat, lon, hoursAhead);
 
@@ -52,24 +77,68 @@ export default class LocationForecastRepository {
         });
     }
     
-    
-    #groupByDate(forecast) {
-        const grouped = {};
-
-        for (const item of forecast) {
-            const date = item.date;
-            if (!grouped[date]) {
-                grouped[date] = [];
-            }
-            grouped[date].push(item);
-        }
-
-        return grouped;
-    }
 
     async getHourlyForecastGroupedByDate(lat, lon, hoursAhead) {
         const forecast = await this.getHourlyForecast(lat, lon, hoursAhead);
         return this.#groupByDate(forecast);
+    }
+
+
+    async getDailyPeriodForecast(lat, lon, hoursAhead) {
+        const hourlyForecast = await this.getHourlyForecast(lat, lon, hoursAhead);
+        const groupedByDate = this.#groupByDate(hourlyForecast);
+
+        const result = {};
+
+        for (const date in groupedByDate) {
+            const entries = groupedByDate[date];
+
+            const periods = {};
+
+            const night = entries.find(i => this.#getHour(i) === 2);
+            if (night) {
+                periods.night = {
+                    localTime: night.localTime,
+                    weatherSymbol: night.weatherSymbol,
+                    details: night.details
+                };
+            }
+
+            const morning = entries.find(i => this.#getHour(i) === 8);
+            if (morning) {
+                periods.morning = {
+                    localTime: morning.localTime,
+                    weatherSymbol: morning.weatherSymbol,
+                    details: morning.details
+                };
+            }
+
+            const afternoon = entries.find(i => this.#getHour(i) === 14);
+            if (afternoon) {
+                periods.afternoon = {
+                    localTime: afternoon.localTime,
+                    weatherSymbol: afternoon.weatherSymbol,
+                    details: afternoon.details
+                };
+            }
+
+            const evening = entries.find(i => this.#getHour(i) === 19);
+            if (evening) {
+                periods.evening = {
+                    localTime: evening.localTime,
+                    weatherSymbol: evening.weatherSymbol,
+                    details: evening.details
+                };
+            }
+
+            result[date] = {
+                date,
+                periods,
+                hourly: entries
+            };
+        }
+
+        return result;
     }
 }
 
