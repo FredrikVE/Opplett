@@ -29,7 +29,8 @@ export default function App() {
     //hammerfest (to farevarsler samtidig)
     const lat = 70.674705
     const lon = 23.667911
-    const hoursAhead = 12;
+    //const hoursAhead = 12;
+    const hoursAhead = 120;
 
     // Lag datasources+repositories én gang i useMemo for stabile referanser.
     const { locationForecastRepository, sunriseRepository, metAlertsRepository, geocodingRepository} = useMemo(() => {

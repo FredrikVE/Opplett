@@ -2,6 +2,7 @@
 import SearchField from "../components/SearchField.jsx";
 import SolarInformation from "../components/SolarInformation.jsx";
 import ForecastTable from "../components/ForecastTable.jsx";
+import DayForecastCard from "../components/DayForecastCard.jsx";
 import AlertList from "../components/AlertList.jsx";
 
 export default function HomeScreen({ viewModel }) {
@@ -41,7 +42,17 @@ export default function HomeScreen({ viewModel }) {
             <SolarInformation sunTimes={viewModel.sunTimes} />
             
             {/* Værmelding */}
+            {/*
             <ForecastTable forecast={viewModel.forecast} />
+            */}
+
+            {Object.entries(viewModel.forecast).map(([date, items]) => (
+                <DayForecastCard key={date} date={date} forecast={items}/>
+                ))
+            }
+
+
+            
         </div>
     );
 }

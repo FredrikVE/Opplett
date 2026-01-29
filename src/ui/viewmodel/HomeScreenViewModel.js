@@ -34,7 +34,8 @@ export default function HomeScreenViewModel( forecastRepository, sunriseReposito
                 setLoading(true);
                 
                 //Værmelding
-                const forecastData = await forecastRepository.getHourlyForecast(
+                //const forecastData = await forecastRepository.getHourlyForecast(
+                const forecastData = await forecastRepository.getHourlyForecastGroupedByDate(
                     location.lat,
                     location.lon,
                     hoursAhead
