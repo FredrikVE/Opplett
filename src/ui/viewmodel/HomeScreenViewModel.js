@@ -5,8 +5,9 @@ import useSearchViewModel from "./SearchViewModel.js";
 
 export default function HomeScreenViewModel( forecastRepository, sunriseRepository, metAlertsRepository, geocodingRepository, initialLat, initialLon, hoursAhead ) {
     
-    // Statevariabel for location og søkemekanikk fra useSearchViewModel-hooken
-    const [location, setLocation] = useState({ lat: initialLat, lon: initialLon, name: null });
+    //Statevariabel for location og søkemekanikk fra useSearchViewModel-hooken
+    const initialLocation = {lat: initialLat, lon: initialLon, name: null};     //oppretter er locationObjekt med init-lat/lon og tomt navn
+    const [location, setLocation] = useState(initialLocation);                      //setter initialLocation objektet inni statevariablen fra start
     const searchViewModel = useSearchViewModel( geocodingRepository, setLocation);
 
     // Statevariabler for værmeldingsresultater, soloppgang, og metalerts
