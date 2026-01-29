@@ -19,8 +19,7 @@ export default function ForecastTable({ forecast }) {
                 {forecast.map((item) => {
                     const wind = item.details.wind_speed;
                     const gust = item.details.wind_speed_of_gust;
-                    const iconFile =
-                        getWeatherIconFileName(item.weatherSymbol);
+                    const iconFile = getWeatherIconFileName(item.weatherSymbol);
 
                     return (
                         <tr key={`${item.date}-${item.localTime}`}>
@@ -52,13 +51,16 @@ export default function ForecastTable({ forecast }) {
                             </td>
 
                             <td className="weather-icon">
-                                <img
-                                    src={`/weather_icons/200/${iconFile}`}
-                                    alt={item.weatherSymbol}
-                                    width={32}
-                                    height={32}
-                                    loading="lazy"
-                                />
+                                {iconFile && (
+                                    <img
+                                        src={`/weather_icons/200/${iconFile}`}
+                                        alt={item.weatherSymbol}
+                                        width={32}
+                                        height={32}
+                                        loading="lazy"
+                                    />
+                                )}
+                           
                             </td>
                         </tr>
                     );

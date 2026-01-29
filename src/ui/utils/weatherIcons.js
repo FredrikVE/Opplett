@@ -18,7 +18,11 @@ Hentet fra GhatGPT: https://chatgpt.com/
  **********************************************************************/
 
 export function getWeatherIconFileName(symbolCode) {
-    if (!symbolCode) return "unknown.png";
+    //if (!symbolCode) return "unknown.png";
+    if (!symbolCode) {
+        return null;
+    }
+
 
     const normalized = symbolCode
         .toLowerCase()
@@ -66,6 +70,10 @@ export function getWeatherIconFileName(symbolCode) {
         fog: "15"
     };
 
-    const code = map[base] ?? "unknown";
+    const code = map[base];
+    if (!code) {
+        return null;
+    }
+    
     return suffix ? `${code}${suffix}.png` : `${code}.png`;
 }
