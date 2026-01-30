@@ -24,13 +24,7 @@ export default class LocationForecastRepository {
         return timeseries.slice(0, hoursAhead);
     }
 
-    #getHour(item) {
-        const localTime = item.localTime;      // f.eks. "08:00"
-        const hourPart = localTime.split(":")[0]; // "08"
-        const hour = Number(hourPart);          // 8
 
-        return hour;
-    }
 
     #groupByDate(forecast) {
         const grouped = {};
@@ -83,6 +77,163 @@ export default class LocationForecastRepository {
         return this.#groupByDate(forecast);
     }
 
+    /*
+    async getDailyPeriodForecast(lat, lon, hoursAhead) {
+        const timeseries = await this.#getRawTimeSeries(lat, lon, hoursAhead);
+
+        const result = {};
+
+        for (const entry of timeseries) {
+
+            // Lokal dato
+            const dateObj = new Date(entry.time);
+
+            const localDate = dateObj.toLocaleDateString("no-NO", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit"
+            });
+
+            const localHour = Number(dateObj.toLocaleTimeString("no-NO", { hour: "2-digit" }));
+
+            // Init dag hvis den ikke finnes
+            if (!result[localDate]) {
+                result[localDate] = {
+                    date: localDate,
+                    periods: {}
+                };
+            }
+
+            const periods = result[localDate].periods;
+
+            const summary = entry.data.next_6_hours?.summary;
+            const details = entry.data.next_6_hours?.details;
+
+            if (!summary) continue;
+
+            if (localHour === 2 && !periods.night) {
+                periods.night = {
+                    weatherSymbol: summary.symbol_code,
+                    symbolConfidence: summary.symbol_confidence,
+                    details
+                };
+            }
+
+            if (localHour === 8 && !periods.morning) {
+                periods.morning = {
+                    weatherSymbol: summary.symbol_code,
+                    symbolConfidence: summary.symbol_confidence,
+                    details
+                };
+            }
+
+            if (localHour === 14 && !periods.afternoon) {
+                periods.afternoon = {
+                    weatherSymbol: summary.symbol_code,
+                    symbolConfidence: summary.symbol_confidence,
+                    details
+                };
+            }
+
+            if (localHour === 19 && !periods.evening) {
+                periods.evening = {
+                    weatherSymbol: summary.symbol_code,
+                    symbolConfidence: summary.symbol_confidence,
+                    details
+                };
+            }
+        }
+
+        return result;
+    }
+    */
+
+    async getDailyPeriodForecast(lat, lon, hoursAhead) {
+        const timeseries = await this.#getRawTimeSeries(lat, lon, hoursAhead);
+
+        const TARGET_HOURS = {
+            night: 1,
+            morning: 7,
+            afternoon: 13,
+            evening: 18
+        };
+
+        const result = {};
+
+        // Gruppér først per dag
+        for (const entry of timeseries) {
+            const dateObj = new Date(entry.time);
+
+            const localDate = dateObj.toLocaleDateString("no-NO", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit"
+            });
+
+            if (!result[localDate]) {
+                result[localDate] = {
+                    date: localDate,
+                    entries: []
+                };
+            }
+
+            result[localDate].entries.push(entry);
+        }
+
+        // Finn perioder per dag
+        for (const date in result) {
+            const entries = result[date].entries;
+
+            const periods = {};
+
+            for (const [key, targetHour] of Object.entries(TARGET_HOURS)) {
+
+                let bestEntry = null;
+                let bestDiff = Infinity;
+
+                for (const entry of entries) {
+                    const dateObj = new Date(entry.time);
+                    const hour = Number(dateObj.toLocaleTimeString("no-NO", { hour: "2-digit" }));
+
+                    const diff = Math.abs(hour - targetHour);
+
+                    if (diff < bestDiff) {
+                        bestDiff = diff;
+                        bestEntry = entry;
+                    }
+                }
+
+                const summary = bestEntry?.data?.next_6_hours?.summary;
+                const details = bestEntry?.data?.next_6_hours?.details;
+
+                if (summary) {
+                    periods[key] = {
+                        weatherSymbol: summary.symbol_code,
+                        symbolConfidence: summary.symbol_confidence,
+                        details
+                    };
+                }
+            }
+
+            delete result[date].entries;
+            result[date].periods = periods;
+        }
+
+        return result;
+    }
+
+
+
+
+
+    /*
+    #getHour(item) {
+        const localTime = item.localTime;      // f.eks. "08:00"
+        const hourPart = localTime.split(":")[0]; // "08"
+        const hour = Number(hourPart);          // 8
+
+        return hour;
+    }
 
     async getDailyPeriodForecast(lat, lon, hoursAhead) {
         const hourlyForecast = await this.getHourlyForecast(lat, lon, hoursAhead);
@@ -140,6 +291,9 @@ export default class LocationForecastRepository {
 
         return result;
     }
+    */
+
+
 }
 
 /*

@@ -31,7 +31,7 @@ export default function App() {
     const lat = 70.674705
     const lon = 23.667911
     //const hoursAhead = 12;
-    const hoursAhead = 120;
+    const hoursAhead = 120; //24 t/døgn * 5 døgn = 120 t
 
     // Lag datasources+repositories én gang i useMemo for stabile referanser.
     const { locationForecastRepository, sunriseRepository, metAlertsRepository, geocodingRepository} = useMemo(() => {
