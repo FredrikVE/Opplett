@@ -1,10 +1,10 @@
 // src/ui/view/pages/HomeScreen.jsx
 import SearchField from "../components/SearchField.jsx";
-import SolarInformation from "../components/SolarInformation.jsx";
+//import SolarInformation from "../components/SolarInformation.jsx";
 import DayForecastCard from "../components/DayForecastCard.jsx";
 import AlertList from "../components/AlertList.jsx";
 
-export default function HomeScreen({ viewModel }) {
+export default function HomePage({ viewModel }) {
 
     if (viewModel.loading) {
         return <p>Laster værmelding…</p>;

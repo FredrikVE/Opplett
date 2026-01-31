@@ -21,7 +21,7 @@
   --font-variant-numeric: lining-nums tabular-nums;
 
   /* Base colors */
-  --color-background-base: #ffffff;
+  --color-background-base:#f3f6fb; /* litt “Yr/NRK-ish” */;
   --color-text-base: #061629;
   --color-text-subtle: #4c5a66;
 
@@ -72,9 +72,6 @@ body {
   line-height: var(--line-height-medium);
   color: var(--color-text-base);
   background-color: var(--color-background-base);
-
-  display: flex;
-  justify-content: center;
 }
 
 /* ================================

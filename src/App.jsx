@@ -9,6 +9,7 @@ import "./ui/style/Alerts.css";
 import "./ui/style/Header.css";
 import "./ui/style/ForecastTable.css";
 import "./ui/style/DayForecastCard.css";
+import "./ui/style/HomePage.css";
 
 import OpenCageGeocodingDataSource from "./model/datasource/OpenCageGeocodingDataSource.js";
 import OpenCageGeocodingRepository from "./model/repositories/OpenCageGeocodingRepository.js";
@@ -20,7 +21,7 @@ import SunriseRepository from "./model/repositories/SunriseRepository.js";
 import SunriseDataSource from "./model/datasource/SunriseDataSource.js";
 
 import HomeScreenViewModel from "./ui/viewmodel/HomeScreenViewModel.js";
-import HomeScreen from "./ui/view/pages/HomeScreen.jsx";
+import HomePage from "./ui/view/pages/HomePage.jsx";
 
 export default function App() {
     const hoursAhead = 120;
@@ -65,5 +66,5 @@ export default function App() {
     }
 
     //Når alt er klart vises appen
-    return <HomeScreen viewModel={homeScreenViewModel} />;
+    return <HomePage viewModel={homeScreenViewModel} />;
 }

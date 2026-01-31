@@ -1,25 +1,7 @@
 /*src/style/Alert.css*/
 /* ================================
-   Page layout
-   ================================ */
-.home-screen {
-    max-width: 720px;
-    padding: 16px;
-}
-
-.page-header {
-    margin-bottom: 12px;
-}
-
-.page-date {
-    font-weight: var(--font-weight-bold);
-    margin-bottom: 16px;
-}
-
-/* ================================
    Alerts (Yr-style)
    ================================ */
-
 .alerts-section {
     margin: 16px 0 24px 0;
 }
