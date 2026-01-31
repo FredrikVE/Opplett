@@ -34,7 +34,9 @@ export default function HomeScreen({ viewModel }) {
             <AlertList alerts={viewModel.alerts} />
 
             {/* Soloppgang/solnedgang */}
+            {/*
             <SolarInformation sunTimes={viewModel.sunTimes} />
+            */}
 
             {/* Dagkort */}
             {Object.entries(viewModel.forecast).map(([date, hourly]) => (
@@ -43,6 +45,7 @@ export default function HomeScreen({ viewModel }) {
                     date={date}
                     hourly={hourly}
                     periods={viewModel.dailyPeriods[date]?.periods}
+                    sunTimes={viewModel.sunTimesByDate?.[date]}
                 />
             ))}
 

@@ -1,9 +1,10 @@
 // src/ui/view/components/DayForecastCard.jsx
 import { useState } from "react";
 import ForecastTable from "./ForecastTable.jsx";
+import SolarInformation from "./SolarInformation.jsx"
 import { getWeatherIconFileName } from "../../utils/weatherIcons.js";
 
-export default function DayForecastCard({ date, hourly, periods }) {
+export default function DayForecastCard({ date, hourly, periods, sunTimes }) {
     const [open, setOpen] = useState(false);
 
     return (
@@ -41,6 +42,7 @@ export default function DayForecastCard({ date, hourly, periods }) {
             {open && (
                 <div className="day-card-content">
                     <ForecastTable forecast={hourly} />
+                    <SolarInformation sunTimes={sunTimes} />
                 </div>
             )}
         </section>
