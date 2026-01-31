@@ -43,10 +43,7 @@ export default function SearchField({ query, suggestions, onSearchChange, onSugg
 
     return (
         <div className="search">
-            <label className="visually-hidden" htmlFor="location-search">
-                Søk etter sted, by eller adresse
-            </label>
-
+           
             <input
                 id="location-search"
                 className="search-input"
