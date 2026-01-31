@@ -26,10 +26,12 @@ export default function App() {
     const hoursAhead = 120;
 
     // Start alltid med fallback (unngår hook-feil)
-    const [coords, setCoords] = useState({ 
+    const [coords, setCoords] = useState({          //denne løsningen er ikke helt god.. må fikses.
         lat: 70.674705, // Hammerfest fallback
         lon: 23.667911
     });
+
+
 
     // Hent enhetens lokasjon (oppdaterer kun state)
     useEffect(() => {
