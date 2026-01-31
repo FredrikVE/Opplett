@@ -1,5 +1,5 @@
-//src/App.jsx
-import { useMemo } from "react";
+// src/App.jsx
+import { useMemo, useState, useEffect } from "react";
 
 import "./ui/style/App.css";
 import "./ui/style/SolarInfo.css";
@@ -23,18 +23,33 @@ import HomeScreen from "./ui/view/pages/HomeScreen.jsx";
 
 export default function App() {
 
-    // Init koordinater og antall timer frem
-    //const lat = 27.777835;
-    //const lon = -15.692579;
-    
-    //hammerfest (to farevarsler samtidig)
-    const lat = 70.674705
-    const lon = 23.667911
-    //const hoursAhead = 12;
-    const hoursAhead = 120; //24 t/døgn * 5 døgn = 120 t
+    const hoursAhead = 120;
 
-    // Lag datasources+repositories én gang i useMemo for stabile referanser.
-    const { locationForecastRepository, sunriseRepository, metAlertsRepository, geocodingRepository} = useMemo(() => {
+    // Start alltid med fallback (unngår hook-feil)
+    const [coords, setCoords] = useState({ 
+        lat: 70.674705, // Hammerfest fallback
+        lon: 23.667911
+    });
+
+    // Hent enhetens lokasjon (oppdaterer kun state)
+    useEffect(() => {
+        if (!navigator.geolocation) return;
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                setCoords({
+                    lat: position.coords.latitude,
+                    lon: position.coords.longitude
+                });
+            },
+            () => {
+                // behold fallback
+            }
+        );
+    }, []);
+
+    // Datasources + repositories (stabile referanser)
+    const { locationForecastRepository, sunriseRepository, metAlertsRepository, geocodingRepository } = useMemo(() => {
         const locationForecastDatasource = new LocationForecastDataSource();
         const sunriseDataSource = new SunriseDataSource();
         const geocodingDataSource = new OpenCageGeocodingDataSource();
@@ -46,16 +61,10 @@ export default function App() {
             metAlertsRepository: new MetAlertsRepository(metAlertsDataSource),
             geocodingRepository: new OpenCageGeocodingRepository(geocodingDataSource)
         };
-    }, 
-    []      // Tom dependancy array fordi den ikke skal lytte til noe. Kun oppdateres én gang.
-    );
+    }, []);
 
-    // Opprett ny viewModell
-    const homeScreenViewModel = HomeScreenViewModel( locationForecastRepository, sunriseRepository, metAlertsRepository, geocodingRepository, lat, lon, hoursAhead );
+    
+    const homeScreenViewModel = HomeScreenViewModel(locationForecastRepository, sunriseRepository, metAlertsRepository, geocodingRepository, coords.lat, coords.lon, hoursAhead);
 
-
-    // Rendre skjermene
-    return (
-        <HomeScreen viewModel={homeScreenViewModel} />
-    );
+    return <HomeScreen viewModel={homeScreenViewModel} />;
 }

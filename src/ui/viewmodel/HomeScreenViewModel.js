@@ -4,120 +4,95 @@ import { fetchInitialLocationName } from "../utils/fetchInitialLocationName.js";
 import useSearchViewModel from "./SearchViewModel.js";
 
 export default function HomeScreenViewModel( forecastRepository, sunriseRepository, metAlertsRepository, geocodingRepository, initialLat, initialLon, hoursAhead ) {
-    
-    //Legger inn init-koordinater i et eget objekt med assosiert navn
-    const initialLocation = {lat: initialLat, lon: initialLon, name: null};
-    
-    //Statevariabel for location og søkemekanikk fra useSearchViewModel-hooken
-    const [location, setLocation] = useState(initialLocation);                      //setter initialLocation objektet inni statevariablen fra start
-    const searchViewModel = useSearchViewModel( geocodingRepository, setLocation);
+  const initialLocation = { lat: initialLat, lon: initialLon, name: null, timezone: null };
 
-    // Statevariabler for værmeldingsresultater, soloppgang, og metalerts
-    //const [forecast, setForecast] = useState([]);
-    const [forecast, setForecast] = useState({});
-    const [dailyPeriods, setDailyPeriods] = useState({});
-    const [sunTimes, setSunTimes] = useState(null);
-    const [alerts, setAlerts] = useState([]);
- 
-    // Error og loading states
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+  const [location, setLocation] = useState(initialLocation);
+  const searchViewModel = useSearchViewModel(geocodingRepository, setLocation);
 
-    //Henter stedsnavn for startkoordinater én gang ved oppstart
-    useEffect(() => {
-        //Påkaller utmodularisert funksjon i ui/utils som setter startlokasjonsnavn fra start koordinater.
-        fetchInitialLocationName(setLocation, geocodingRepository, initialLat, initialLon);
-    }, 
-    [initialLat, initialLon]);
+  const [forecast, setForecast] = useState({});
+  const [dailyPeriods, setDailyPeriods] = useState({});
+  const [sunTimes, setSunTimes] = useState(null);
+  const [alerts, setAlerts] = useState([]);
 
-    // Fetching av værmelding
-    useEffect(() => {
-        async function loadData() {
-            try {
-                setLoading(true);
-                
-                //Værmelding
-                //const forecastData = await forecastRepository.getHourlyForecast(
-                const forecastData = await forecastRepository.getHourlyForecastGroupedByDate(
-                    location.lat,
-                    location.lon,
-                    hoursAhead
-                );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-                const dailyPeriodForecast = await forecastRepository.getDailyPeriodForecast(
-                    location.lat,
-                    location.lon,
-                    hoursAhead
-                );
-                
-                
-                const dateISO = forecastData.length > 0
-                        ? forecastData[0].date.split(".").reverse().join("-")
-                        : null;
-                
-                //dette med ISO til sun data er egentlig unødvendig tror jeg siden API-et selv fikser dette
-        
-                // Soltider
-                const sunData = dateISO? await sunriseRepository.getSunTimes(
-                        location.lat,
-                        location.lon,
-                        dateISO,
-                        "+01:00"
-                    )
-                    : null;
-                
-                // Soltider (repository/API håndterer dato selv)
-                
-                //prøver uten ISO
-                //const sunData = await sunriseRepository.getSunTimes(location.lat, location.lon);
+  useEffect(() => {
+	fetchInitialLocationName(setLocation, geocodingRepository, initialLat, initialLon);
+  }, 
+  [initialLat, initialLon, geocodingRepository]);	//tror dette gir DDOS på OpenCage...
+  //[initialLat, initialLon]);
 
-                //Farevarsler
-                const alertResults = await metAlertsRepository.findAlerts(location.lat, location.lon);
-                
-                //Oppdaterer states med settefunksjoner
-                setForecast(forecastData);
-                setDailyPeriods(dailyPeriodForecast);
-                setSunTimes(sunData);
-                setAlerts(alertResults.alerts);
-                setError(null);
-            } 
-            
-            catch (error) {
-                setError(error?.message ?? "Ukjent feil");
-            } 
-            
-            finally {
-                setLoading(false);
-            }
-        }
+  useEffect(() => {
+	async function loadData() {
+	  try {
+		setLoading(true);
 
-        loadData();
+		const tz = location.timezone ?? "UTC";
 
-    }, 
-    //Dependancy array for useEffect()
-    [location.lat, location.lon, hoursAhead]);  //refresher hvis antall timer frem endres eller lat/lon endres
+		const [forecastData, dailyPeriodForecast, alertResults] = await Promise.all([
+		  forecastRepository.getHourlyForecastGroupedByDate(
+			location.lat,
+			location.lon,
+			hoursAhead,
+			tz
+		  ),
+		  forecastRepository.getDailyPeriodForecast(
+			location.lat,
+			location.lon,
+			hoursAhead,
+			tz
+		  ),
+		  metAlertsRepository.findAlerts(location.lat, location.lon),
+		]);
 
-    //Rerunerer objekt med resulteter til view fra ViewModel
-    return {
-        //Vær
-        forecast,
-        sunTimes,
-        dailyPeriods,
+		// Finn "første dag" fra forecast (keys er DD.MM.YYYY hos deg)
+		const firstDateLabel = Object.keys(forecastData)[0] ?? null;
 
-        //Alerts
-        alerts,
+		// Hvis du legger inn dateISO på items (anbefalt):
+		// Hent ISO fra første element i første dag:
+		const firstItem = firstDateLabel ? forecastData[firstDateLabel]?.[0] : null;
+		const dateISO = firstItem?.dateISO ?? null;
 
-        //UI-states
-        loading,
-        error,
+		const sunData = dateISO
+		  ? await sunriseRepository.getSunTimes(
+			  location.lat,
+			  location.lon,
+			  dateISO,
+			  tz
+			)
+		  : null;
 
-        //Lokasjon
-        location,
+		setForecast(forecastData);
+		setDailyPeriods(dailyPeriodForecast);
+		setSunTimes(sunData);
+		setAlerts(alertResults?.alerts ?? []);
+		setError(null);
+	  } 
+	  
+	  catch (e) {
+		setError(e?.message ?? "Ukjent feil");
+	  } 
+	  
+	  finally {
+		setLoading(false);
+	  }
+	}
 
-        //Søkeresultater
-        query: searchViewModel.query,
-        suggestions: searchViewModel.suggestions,
-        onSearchChange: searchViewModel.onSearchChange,
-        onSuggestionSelected: searchViewModel.onSuggestionSelected
-    };
+	loadData();
+  }, [location.lat, location.lon, location.timezone, hoursAhead, forecastRepository, sunriseRepository, metAlertsRepository]);
+
+  return {
+	forecast,
+	sunTimes,
+	dailyPeriods,
+	alerts,
+	loading,
+	error,
+	location,
+	query: searchViewModel.query,
+	suggestions: searchViewModel.suggestions,
+	onSearchChange: searchViewModel.onSearchChange,
+	onSuggestionSelected: searchViewModel.onSuggestionSelected,
+  };
 }

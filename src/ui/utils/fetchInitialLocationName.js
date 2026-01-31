@@ -6,7 +6,7 @@ export async function fetchInitialLocationName (setLocation ,geocodingRepository
         if (result?.name) {
 
             //Oppdaterer lokasjonen dersom det finnes et navn.
-            setLocation({lat: initialLat, lon: initialLon, name: result.name});
+            setLocation({lat: initialLat, lon: initialLon, name: result.name, timezone: result.timezone});
         }
     } 
     

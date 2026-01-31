@@ -51,7 +51,8 @@ export default function useSearchViewModel(geocodingRepository, onLocationSelect
         onLocationSelected({ 
             lat: suggestion.lat, 
             lon: suggestion.lon, 
-            name: suggestion.name 
+            name: suggestion.name,
+            timezone: suggestion.timezone 
         });
 
         setQuery(suggestion.name);
