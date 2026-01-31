@@ -50,7 +50,7 @@ export default function ForecastTable({ forecast }) {
                                 {item.details.ultraviolet_index_clear_sky}
                             </td>
 
-                            <td className="weather-icon">
+                            <td>
                                 {iconFile && (
                                     <img
                                         src={`/weather_icons/200/${iconFile}`}

@@ -7,7 +7,7 @@ import "./ui/style/SolarInfo.css";
 import "./ui/style/SearchFeild.css";
 import "./ui/style/Alerts.css";
 import "./ui/style/Header.css";
-import "./ui/style/HomeScreen.css";
+import "./ui/style/ForecastTable.css";
 import "./ui/style/DayForecastCard.css";
 
 import OpenCageGeocodingDataSource from "./model/datasource/OpenCageGeocodingDataSource.js";
