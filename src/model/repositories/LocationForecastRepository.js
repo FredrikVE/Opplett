@@ -65,12 +65,18 @@ export default class LocationForecastRepository {
                 day: "2-digit",
                 timeZone: tz
             });
+            
+            const weatherSymbol =
+                entry.data.next_1_hours?.summary ??
+                entry.data.next_6_hours?.summary ??
+                entry.data.next_12_hours?.summary;
 
             return {
                 date: localDate,
                 localTime,
                 details: entry.data.instant.details,
-                weatherSymbol: entry.data.next_1_hours?.summary?.symbol_code
+                weatherSymbol: weatherSymbol?.symbol_code
+                //weatherSymbol: entry.data.next_1_hours?.summary?.symbol_code
             };
         });
     }
