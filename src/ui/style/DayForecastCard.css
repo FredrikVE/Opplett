@@ -1,75 +1,110 @@
-/*src/ui/style/DayForecastCard.css*/
+/* src/ui/style/DayForecastCard.css */
+
 .day-card {
-    border: var(--card-border, 1px solid #e0e0e0);
-    border-radius: var(--card-border-radius, 8px);
-    margin-bottom: 16px;
-    overflow: hidden;
-    background-color: var(--card-background, #fff);
+  border: 1px solid rgba(6, 22, 41, 0.08);
+  border-radius: 14px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  background: #fff;
+
+  box-shadow: 0 1px 2px rgba(6, 22, 41, 0.06);
+  transition: box-shadow 160ms ease, transform 160ms ease;
+}
+
+.day-card:hover {
+  box-shadow: 0 10px 22px rgba(6, 22, 41, 0.10);
+  transform: translateY(-1px);
 }
 
 .day-card-header {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
 
-    padding: 16px;
-    background: var(--card-header-background, #f6f6f6);
+  padding: 14px 16px;
+  background: linear-gradient(180deg, #f7fafc 0%, #f3f6fb 100%);
 
-    border: none;
-    cursor: pointer;
-    text-align: left;
-
-    font: inherit;
-    color: inherit;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
 }
 
 .day-card-header:hover {
-    background: var(--card-header-hover-background, #eeeeee);
+  filter: brightness(0.99);
+}
+
+.day-card-header:focus-visible {
+  outline: 3px solid rgba(23, 103, 206, 0.35);
+  outline-offset: -3px;
 }
 
 .day-card-date {
-    margin: 0;
-    font-size: var(--day-card-date-font-size, 1.1rem);
-    font-weight: var(--font-weight-bold);
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: -0.2px;
+  font-variant-numeric: var(--font-variant-numeric);
 }
 
 .day-card-toggle {
-    font-size: 0.9rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+
+  display: grid;
+  place-items: center;
+
+  /*background: rgba(196, 25, 34, 0.06);*/
+  color: rgba(41, 6, 6, 0.8);
+  transition: transform 180ms ease, 180ms ease;
 }
 
-.day-card-content {
-    padding: 0 8px 8px 8px;
+.day-card-header[aria-expanded="true"] .day-card-toggle {
+  transform: rotate(180deg);
+
 }
 
-
-.day-card-header {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: 16px;
-}
-
+/* ikonoppsummering */
 .day-card-periods {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  min-width: 0;
 }
 
 .day-card-period {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-width: 40px;
 }
 
 .day-card-period img {
-    opacity: 0.9;
+  opacity: 0.95;
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,0.06));
 }
 
 .day-card-period-label {
-    font-size: 0.7rem;
-    color: #6b7280; /* diskret grå */
-    line-height: 1;
+  font-size: 0.72rem;
+  color: var(--color-text-subtle);
+  line-height: 1;
+  white-space: nowrap;
 }
 
+/* smooth collapse/expand */
+.day-card-content {
+  padding: 10px 10px 12px 10px;
+  background: #fff;
+  border-top: 1px solid rgba(6, 22, 41, 0.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .day-card,
+  .day-card-toggle {
+    transition: none;
+  }
+}

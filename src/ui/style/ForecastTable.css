@@ -1,41 +1,81 @@
 /* src/ui/view/ForecastTable.css */
+
 .forecast-table {
-    width: 100%;
-    border-collapse: collapse;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 12px;
+  overflow: hidden;
+
+  border: 1px solid rgba(6, 22, 41, 0.08);
 }
 
-.forecast-table th {
-    color: var(--table-header-color);
-    font-size: var(--table-header-font-size);
-    font-weight: var(--table-header-font-weight);
-    line-height: var(--table-header-line-height);
-    text-align: left;
-    padding: 16px;
+.forecast-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+
+  background: #ffffff;
+  backdrop-filter: blur(6px);
+
+  color: var(--table-header-color);
+  font-size: var(--table-header-font-size);
+  font-weight: 600;
+  line-height: var(--table-header-line-height);
+  padding: 12px 14px;
+
+  border-bottom: 1px solid rgba(6, 22, 41, 0.10);
 }
 
 .forecast-table td {
-    padding: 20px;
-    border-bottom: var(--table-row-divider);
-    font-variant-numeric: var(--font-variant-numeric);
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(6, 22, 41, 0.06);
+  font-variant-numeric: var(--font-variant-numeric);
+  vertical-align: middle;
+}
+
+.forecast-table tbody tr:nth-child(even) {
+  background: rgba(23, 103, 206, 0.03);
+}
+
+.forecast-table tbody tr:hover {
+  background: rgba(23, 103, 206, 0.07);
 }
 
 .time {
-    font-weight: var(--font-weight-bold);
+  font-weight: 700;
+  color: rgba(6, 22, 41, 0.9);
+  white-space: nowrap;
 }
 
 .temperature {
-    font-size: var(--temperature-font-size);
-    line-height: var(--temperature-line-height);
+  font-size: var(--temperature-font-size);
+  line-height: var(--temperature-line-height);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* små “chips” for vind/nedbør */
+.wind,
+.precipitation {
+  font-size: 0.95rem;
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
 .precipitation {
-    font-size: var(--precipitation-font-size);
-    line-height: var(--precipitation-line-height);
-    color: var(--precipitation-color);
+  color: var(--precipitation-color);
+  font-weight: 600;
 }
 
 .wind {
-    font-size: var(--wind-font-size);
-    line-height: var(--wind-line-height);
-    color: var(--wind-color);
+  color: var(--wind-color);
+  font-weight: 600;
+}
+
+/* icon */
+.forecast-table td img {
+  width: 28px;
+  height: 28px;
+  opacity: 0.95;
 }
