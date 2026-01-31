@@ -1,29 +1,38 @@
-//src/geolocation/useGeolocation.js
+// src/geolocation/useGeolocation.js
 import { useEffect, useState } from 'react';
 
-export default function useGeolocation() {
-	//Statevariabler forr loading, error og data
-  	const [loading, setLoading] = useState(true);
-  	const [error, setError] = useState(null);
-  	const [coords, setCoords] = useState({});
+export function useGeolocation() {
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    
+    //Initialiserer startkoordinater som null for lat og lon
+    const [coords, setCoords] = useState({ lat: null, lon: null });
 
-	//useEffekt for å håndtere loading, error og oppdatering av data
-	useEffect(() => {
-		const onSucces = (error) => {
-			setLoading(false);
-			setError(null);
-			setCoords(error.coords);
-		};
+    useEffect(() => {
+        const onSuccess = (position) => {
+            
+            // Hvis suksess, så settes loading til false og error til null
+            setLoading(false);
+            setError(null);
 
-		const onError = (error) => {
-			setError(error);
-			setLoading(false);
-		};
-	
-		//Kaller på navigator og geolocasjon
-		navigator.geolocation.getCurrentPosition(onSucces, onError);
-	}, 
-	[]);
-	
-	return { loading, error, coords };
+            setCoords({
+                lat: position.coords.latitude,
+                lon: position.coords.longitude
+            });
+        };
+
+        // Hvis feil settes feilmeldingen til "error" og loading til false
+        const onError = (error) => {
+            setError(error);
+            setLoading(false);
+        };
+    
+        //Legger til en timeout for å unngå uendelig loading
+        const options = { timeout: 15_000 };
+
+        navigator.geolocation.getCurrentPosition(onSuccess, onError, options);
+    }, 
+    []);
+    
+    return { loading, error, coords };
 }

@@ -1,5 +1,6 @@
 // src/App.jsx
-import { useMemo, useState, useEffect } from "react";
+import { useMemo } from "react";
+import { useGeolocation } from "./geolocation/useGeolocation.js";
 
 import "./ui/style/App.css";
 import "./ui/style/SolarInfo.css";
@@ -22,51 +23,47 @@ import HomeScreenViewModel from "./ui/viewmodel/HomeScreenViewModel.js";
 import HomeScreen from "./ui/view/pages/HomeScreen.jsx";
 
 export default function App() {
-
     const hoursAhead = 120;
 
-    // Start alltid med fallback (unngår hook-feil)
-    const [coords, setCoords] = useState({          //denne løsningen er ikke helt god.. må fikses.
-        lat: 70.674705, // Hammerfest fallback
-        lon: 23.667911
-    });
+    //Henter først posisjon. coords starter som { lat: null, lon: null }
+    const { loading, error, coords } = useGeolocation();
 
-
-
-    // Hent enhetens lokasjon (oppdaterer kun state)
-    useEffect(() => {
-        if (!navigator.geolocation) return;
-
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                setCoords({
-                    lat: position.coords.latitude,
-                    lon: position.coords.longitude
-                });
-            },
-            () => {
-                // behold fallback
-            }
-        );
-    }, []);
-
-    // Datasources + repositories (stabile referanser)
-    const { locationForecastRepository, sunriseRepository, metAlertsRepository, geocodingRepository } = useMemo(() => {
-        const locationForecastDatasource = new LocationForecastDataSource();
-        const sunriseDataSource = new SunriseDataSource();
-        const geocodingDataSource = new OpenCageGeocodingDataSource();
-        const metAlertsDataSource = new MetAlertsDataSource();
-
+    //Oppretter repositories
+    const repositories = useMemo(() => {
         return {
-            locationForecastRepository: new LocationForecastRepository(locationForecastDatasource),
-            sunriseRepository: new SunriseRepository(sunriseDataSource),
-            metAlertsRepository: new MetAlertsRepository(metAlertsDataSource),
-            geocodingRepository: new OpenCageGeocodingRepository(geocodingDataSource)
+            locationForecastRepository: new LocationForecastRepository(new LocationForecastDataSource()),
+            sunriseRepository: new SunriseRepository(new SunriseDataSource()),
+            metAlertsRepository: new MetAlertsRepository(new MetAlertsDataSource()),
+            geocodingRepository: new OpenCageGeocodingRepository(new OpenCageGeocodingDataSource())
         };
     }, []);
 
-    
-    const homeScreenViewModel = HomeScreenViewModel(locationForecastRepository, sunriseRepository, metAlertsRepository, geocodingRepository, coords.lat, coords.lon, hoursAhead);
+    //Initialiser ViewModel her før før loading og error-sjekker
+    //Sender inn coords.lat/lon selv om de er null. ViewModelen håndterer ventingen.
+    const homeScreenViewModel = HomeScreenViewModel(
+        repositories.locationForecastRepository,
+        repositories.sunriseRepository,
+        repositories.metAlertsRepository,
+        repositories.geocodingRepository,
+        coords?.lat, 
+        coords?.lon,
+        hoursAhead
+    );
 
+    //Conditional Rendering med loading og error-stated
+    if (loading) {
+        return <div className="loading-screen">Henter din posisjon...</div>;
+    }
+
+    if (error) {
+        return (
+            <div className="error-screen">
+                <h2>Fant ikke posisjon</h2>
+                <p>Du må tillate posisjon for å bruke appen.</p>
+            </div>
+        );
+    }
+
+    //Når alt er klart vises appen
     return <HomeScreen viewModel={homeScreenViewModel} />;
 }
