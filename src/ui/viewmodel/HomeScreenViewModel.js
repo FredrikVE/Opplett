@@ -74,16 +74,19 @@ export default function HomeScreenViewModel( forecastRepository, sunriseReposito
 
         for (const date of Object.keys(forecastData)) {
             const firstItem = forecastData[date]?.[0];
+            console.log("løk", firstItem)
             if (!firstItem?.dateISO) continue;
 
             sunMap[date] =
                 await sunriseRepository.getSunTimes(
                     location.lat,
                     location.lon,
-                    //firstItem.dateISO,
+                    firstItem.dateISO,
                     tz
                 );
         }
+
+         console.log("sunmap: ",sunMap)
 
         setForecast(forecastData);
         setDailyPeriods(dailyPeriodForecast);
@@ -105,7 +108,7 @@ export default function HomeScreenViewModel( forecastRepository, sunriseReposito
     loadData();
   }, 
   [location.lat, location.lon, location.timezone, hoursAhead, forecastRepository, sunriseRepository, metAlertsRepository]);
-
+ 
   return {
     forecast,
     //sunTimes,
