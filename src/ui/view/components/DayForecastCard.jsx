@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useId } from "react";
 import ForecastTable from "./ForecastTable.jsx";
 import SolarInformation from "./SolarInformation.jsx";
 import { getWeatherIconFileName } from "../../utils/weatherIcons.js";
@@ -11,10 +11,9 @@ const LABELS_NO = {
   evening: "Kveld",
 };
 
-export default function DayForecastCard({ date, hourly, periods, sunTimes }) {
-  const [open, setOpen] = useState(false);
+export default function DayForecastCard({ date, hourly, periods, sunTimes, open, onToggle }) {
   const panelId = useId();
-  const toggle = () => setOpen((v) => !v);
+  const toggle = () => onToggle?.();
 
   const renderIcon = (key) => {
     const p = periods?.[key];
@@ -48,20 +47,25 @@ export default function DayForecastCard({ date, hourly, periods, sunTimes }) {
           </button>
         </td>
 
-        {ORDER.map((key) => (
-          <td key={key} className="day-card-cell-surface day-card-period-cell">
-            <button
-              className="day-card-cell-button day-card-period-button"
-              onClick={toggle}
-              aria-label={`${open ? "Skjul" : "Vis"} detaljer for ${LABELS_NO[key]}`}
-              aria-expanded={open}
-              aria-controls={panelId}
-              type="button"
-            >
-              {renderIcon(key)}
-            </button>
-          </td>
-        ))}
+        {/* Når åpen: ikke vis "oversikt"-ikonene (natt/morgen/...) */}
+        {open ? (
+          <td className="day-card-periods-hidden" colSpan={4} />
+        ) : (
+          ORDER.map((key) => (
+            <td key={key} className="day-card-cell-surface day-card-period-cell">
+              <button
+                className="day-card-cell-button day-card-period-button"
+                onClick={toggle}
+                aria-label={`${open ? "Skjul" : "Vis"} detaljer for ${LABELS_NO[key]}`}
+                aria-expanded={open}
+                aria-controls={panelId}
+                type="button"
+              >
+                {renderIcon(key)}
+              </button>
+            </td>
+          ))
+        )}
       </tr>
 
       {/* MIDT: Expanded content */}
