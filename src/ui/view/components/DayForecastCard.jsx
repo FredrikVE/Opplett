@@ -37,7 +37,6 @@ export default function DayForecastCard({
   sunTimes,
   open,
   onToggle,
-  isFirst = false, // <-- NY
 }) {
   const panelId = useId();
   const toggle = () => onToggle?.();
@@ -58,9 +57,6 @@ export default function DayForecastCard({
     );
   };
 
-  // <-- NY LOGIKK: skjul kun når første kort er åpent
-  const hidePeriodsRow = open && isFirst;
-
   return (
     <tbody className={`day-card-group ${open ? "is-open" : ""}`}>
       {/* TOPP: Summary-rad */}
@@ -77,8 +73,8 @@ export default function DayForecastCard({
           </button>
         </td>
 
-        {/* Skjul ikon-raden bare når første kort er åpent */}
-        {hidePeriodsRow ? (
+        {/* Når åpen: IKKE vis 6-timers-ikonene (gjelder ALLE åpne kort) */}
+        {open ? (
           <td className="day-card-periods-hidden" colSpan={4} />
         ) : (
           ORDER.map((key) => (
