@@ -40,6 +40,7 @@ export default function HomePage({ viewModel }) {
               <th className="col-period" scope="col">Morgen</th>
               <th className="col-period" scope="col">Ettermiddag</th>
               <th className="col-period" scope="col">Kveld</th>
+              <th className="col-toggle" scope="col"></th>
             </tr>
           </thead>
         )}
