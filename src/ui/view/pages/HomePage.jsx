@@ -13,7 +13,12 @@ export default function HomePage({ viewModel }) {
     setOpenDate((prev) => (prev === date ? null : date));
   };
 
-  const anyOpen = openDate !== null;
+  // Finn "første" dato i forecast-lista (den som vises øverst)
+  const entries = Object.entries(viewModel.forecast);
+  const firstDate = entries.length > 0 ? entries[0][0] : null;
+
+  // Skjul kun kolonne-overskriftene hvis første kort er åpent
+  const hideHeader = openDate !== null && openDate === firstDate;
 
   return (
     <div className="home-screen">
@@ -31,8 +36,8 @@ export default function HomePage({ viewModel }) {
       <AlertList alerts={viewModel.alerts} />
 
       <table className="forecast-overview-table">
-        {/* Skjul kolonne-overskrifter når et dagkort er åpent */}
-        {!anyOpen && (
+        {/* Skjul kolonne-overskrifter kun når første dagkort er åpent */}
+        {!hideHeader && (
           <thead>
             <tr>
               <th className="col-date" scope="col"></th>
@@ -45,7 +50,7 @@ export default function HomePage({ viewModel }) {
           </thead>
         )}
 
-        {Object.entries(viewModel.forecast).map(([date, hourly]) => (
+        {entries.map(([date, hourly], index) => (
           <DayForecastCard
             key={date}
             date={date}
@@ -54,6 +59,7 @@ export default function HomePage({ viewModel }) {
             sunTimes={viewModel.sunTimesByDate?.[date]}
             open={openDate === date}
             onToggle={() => toggleDate(date)}
+            isFirst={index === 0}
           />
         ))}
       </table>
