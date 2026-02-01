@@ -1,24 +1,28 @@
 /* src/ui/style/DayForecastCard.css */
 
 /* =========================
-   Table spacing strategy
-   - vi lager luft med en spacer-<tr>, ikke border-spacing
+   Table: vi lager luft med spacer-tr
 ========================= */
 .forecast-overview-table {
   border-collapse: separate;
-  border-spacing: 0; /* viktig: ellers får du glipper inni "kortet" */
+  border-spacing: 0;
 }
 
-/* Spacer mellom kort (egen tr nederst i hver day-card-group) */
+/* (Valgfritt) fjern borders i headeren også */
+.forecast-overview-table thead th {
+  border: none !important;
+}
+
+/* Spacer mellom kort */
 .day-card-spacer td {
-  height: 12px; /* justér etter smak */
+  height: 12px;
   padding: 0;
   border: none;
   background: transparent;
 }
 
 /* =========================
-   "Card" group (tbody)
+   Card group (tbody)
 ========================= */
 .day-card-group {
   filter: drop-shadow(0 1px 2px rgba(6, 22, 41, 0.06));
@@ -31,29 +35,55 @@
 }
 
 /* =========================
-   Top row surfaces (td)
-   - vi lager kortet av flere td
+   Borderless "surface" for kortet
+   - bakgrunn beholdes
+   - ALLE borders fjernes (inkl globale tabell-regler)
 ========================= */
-.day-card-cell-surface {
+.day-card-summary-row td,
+.day-card-body-row td,
+.day-card-toggle-row td {
   background: var(--card-bg);
-  border-top: 1px solid rgba(6, 22, 41, 0.08);
-  border-bottom: none;
-  padding: 10px 10px;
+  border: none !important;
 }
 
-/* venstre/høyre kant + radius på toppraden */
+/* Body cell padding */
+.day-card-body-cell {
+  padding: 0;
+}
+
+.day-card-body-inner {
+  padding: 10px 10px 12px;
+}
+
+/* Radius uten borders (bare på ytterkantene) */
 .day-card-summary-row td:first-child {
-  border-left: 1px solid rgba(6, 22, 41, 0.08);
   border-top-left-radius: 14px;
 }
 
 .day-card-summary-row td:last-child {
-  border-right: 1px solid rgba(6, 22, 41, 0.08);
   border-top-right-radius: 14px;
 }
 
+.day-card-toggle-cell {
+  border-bottom-left-radius: 14px;
+  border-bottom-right-radius: 14px;
+  padding: 0;
+}
+
 /* =========================
-   Buttons inside cells
+   Celler i summary: padding/align
+========================= */
+.day-card-date-cell {
+  padding: 14px 16px;
+}
+
+.day-card-period-cell {
+  padding: 8px 6px;
+  text-align: center;
+}
+
+/* =========================
+   Knapper i celler
 ========================= */
 .day-card-cell-button {
   width: 100%;
@@ -79,13 +109,7 @@
   outline-offset: -3px;
 }
 
-/* =========================
-   Date cell
-========================= */
-.day-card-date-cell {
-  padding: 14px 16px;
-}
-
+/* Dato-justering */
 .day-card-date-cell .day-card-cell-button {
   justify-content: flex-start;
   text-align: left;
@@ -99,50 +123,15 @@
   font-variant-numeric: var(--font-variant-numeric);
 }
 
-/* =========================
-   Period cells (icons)
-========================= */
-.day-card-period-cell {
-  padding: 8px 6px;
-  text-align: center;
-}
-
+/* Ikon-look */
 .day-card-period-button img {
   opacity: 0.95;
   filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.06));
 }
 
 /* =========================
-   Expanded content row
+   Chevron-knappen
 ========================= */
-.day-card-body-cell {
-  background: var(--card-bg);
-  border-left: 1px solid rgba(6, 22, 41, 0.08);
-  border-right: 1px solid rgba(6, 22, 41, 0.08);
-  border-top: 1px solid rgba(6, 22, 41, 0.06);
-
-  padding: 0;
-}
-
-.day-card-body-inner {
-  padding: 10px 10px 12px;
-}
-
-/* =========================
-   Bottom chevron row
-========================= */
-.day-card-toggle-cell {
-  background: var(--card-bg);
-  border-left: 1px solid rgba(6, 22, 41, 0.08);
-  border-right: 1px solid rgba(6, 22, 41, 0.08);
-  border-bottom: 1px solid rgba(6, 22, 41, 0.08);
-
-  border-bottom-left-radius: 14px;
-  border-bottom-right-radius: 14px;
-
-  padding: 0;
-}
-
 .day-card-toggle {
   width: 100%;
   height: 34px;
@@ -176,6 +165,21 @@
 
 .day-card-group.is-open .day-card-toggle .chevron {
   transform: rotate(180deg);
+}
+
+/* =========================
+   ForecastTable inni body: fjern alle linjer der også
+========================= */
+.day-card-body-inner table,
+.day-card-body-inner th,
+.day-card-body-inner td,
+.day-card-body-inner tr {
+  border: none !important;
+}
+
+/* (Valgfritt) hvis ForecastTable bruker box-shadow som "linje" */
+.day-card-body-inner * {
+  box-shadow: none;
 }
 
 /* =========================
