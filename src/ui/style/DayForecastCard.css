@@ -1,164 +1,151 @@
 /* src/ui/style/DayForecastCard.css */
-
 /* =========================
-   Card shell
-   ========================= */
-.day-card {
-  position: relative;
-  border: 1px solid rgba(6, 22, 41, 0.08);
-  border-radius: 14px;
-  margin-bottom: 14px;
-  overflow: hidden;
+	 The actual card surface
+========================= */
+.day-card-cell {
+	background: var(--card-bg);
+	border-radius: 14px;
+	border: 1px solid rgba(6, 22, 41, 0.08);
+	box-shadow: 0 1px 2px rgba(6, 22, 41, 0.06);
+	overflow: hidden;
 
-  /* ett “kort”-fargegrunnlag */
-  --card-bg: #fff;
-  background: var(--card-bg);
+	/* td kan ha default padding i noen resets */
+	padding: 0;
+	display: flex;
+	flex-direction: column;
 
-  box-shadow: 0 1px 2px rgba(6, 22, 41, 0.06);
-  transition: box-shadow 160ms ease, transform 160ms ease;
+	transition: box-shadow 160ms ease, transform 160ms ease;
 }
 
-.day-card:hover {
-  box-shadow: 0 10px 22px rgba(6, 22, 41, 0.10);
-  transform: translateY(-1px);
+.day-card-cell:hover {
+	box-shadow: 0 10px 22px rgba(6, 22, 41, 0.10);
+	transform: translateY(-1px);
 }
 
 /* =========================
-   Header (date + periods)
-   ========================= */
+	Header (date + periods)
+========================= */
 .day-card-header {
-  width: 100%;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  gap: 14px;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	gap: 14px;
 
-  padding: 14px 16px;
+	padding: 14px 16px;
 
-  /* Viktig: samme bakgrunn som kortet så “haken” matcher */
-  background: var(--card-bg);
-
-  border: none;
-  cursor: pointer;
-  text-align: left;
-  font: inherit;
-  color: inherit;
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	text-align: left;
+	font: inherit;
+	color: inherit;
 }
 
 .day-card-header:focus-visible {
-  outline: 3px solid rgba(23, 103, 206, 0.35);
-  outline-offset: -3px;
+	outline: 3px solid rgba(23, 103, 206, 0.35);
+	outline-offset: -3px;
 }
 
 .day-card-date {
-  margin: 0;
-  font-size: 1.05rem;
-  font-weight: var(--font-weight-bold);
-  letter-spacing: -0.2px;
-  font-variant-numeric: var(--font-variant-numeric);
+	margin: 0;
+	font-size: 1.05rem;
+	font-weight: var(--font-weight-bold);
+	letter-spacing: -0.2px;
+	font-variant-numeric: var(--font-variant-numeric);
+
+	/* holder dato “fast”, så ikonene får plassen */
+	flex: 0 0 auto;
 }
 
 /* =========================
-   Period icons
-   ========================= */
+	 Period icons
+========================= */
 .day-card-periods {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  min-width: 0;
+	display: flex;
+	justify-content: center;
+	gap: 16px;
+
+	/* tar resten av bredden */
+	flex: 1 1 auto;
+	min-width: 0;
 }
 
 .day-card-period {
-  display: grid;
-  justify-items: center;
-  gap: 4px;
-  min-width: 40px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	min-width: 40px;
 }
 
 .day-card-period img {
-  opacity: 0.95;
-  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.06));
+	opacity: 0.95;
+	filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.06));
 }
 
 .day-card-period-label {
-  font-size: 0.72rem;
-  color: var(--color-text-subtle);
-  line-height: 1;
-  white-space: nowrap;
+	font-size: 0.72rem;
+	color: var(--color-text-subtle);
+	line-height: 1;
+	white-space: nowrap;
 }
 
 /* =========================
-   Toggle row (chevron under icons)
-   ========================= */
-.day-card-toggle-row {
-  position: relative; /* ikke absolute når lukket */
-  width: 100%;
-  height: 26px;
-
-  border: none;
-  padding: 0;
-  margin: 0;
-
-  /* Samme bakgrunn som kortet, så den ikke får “annen farge” */
-  background: var(--card-bg);
-
-  display: grid;
-  place-items: center;
-
-  cursor: pointer;
-  color: rgba(6, 22, 41, 0.75);
+	 Expanded content (inside the same card)
+========================= */
+.day-card-body {
+	border-top: 1px solid rgba(6, 22, 41, 0.06); /* vises kun når open (hidden=false) */
+	background: transparent;
 }
 
-.day-card-toggle-row:hover {
-  color: rgba(6, 22, 41, 0.95);
-}
-
-.day-card-toggle-row:focus-visible {
-  outline: 3px solid rgba(23, 103, 206, 0.35);
-  outline-offset: 3px;
-}
-
-.day-card-toggle-row .chevron {
-  display: block;
-  transition: transform 180ms ease;
-}
-
-.day-card.is-open .day-card-toggle-row .chevron {
-  transform: rotate(180deg);
-}
-
-/* Når åpen: flytt chevron-raden til bunnen av kortet */
-.day-card.is-open .day-card-toggle-row {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 8px;
-  height: 34px;
-
-  /* Ikke skillelinje når den sitter nede */
-  border-top: none;
-
-  z-index: 2;
+.day-card-body-inner {
+	padding: 10px 10px 12px;
 }
 
 /* =========================
-   Content (table etc.)
-   ========================= */
-.day-card-content {
-  padding: 10px 10px 12px 10px;
-  background: var(--card-bg);
-  border-top: 1px solid rgba(6, 22, 41, 0.06);
+	 Bottom chevron toggle (always bottom, centered)
+========================= */
+.day-card-toggle {
+	width: 100%;
+	height: 34px;
 
-  /* plass til chevron når open */
-  padding-bottom: 54px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	background: transparent;
+	border: none;
+	padding: 0;
+	margin: 0;
+
+	cursor: pointer;
+	color: rgba(6, 22, 41, 0.75);
+}
+
+.day-card-toggle:hover {
+	color: rgba(6, 22, 41, 0.95);
+}
+
+.day-card-toggle:focus-visible {
+	outline: 3px solid rgba(23, 103, 206, 0.35);
+	outline-offset: -3px;
+}
+
+.day-card-toggle .chevron {
+	display: block;
+	transition: transform 180ms ease;
+}
+
+.day-card-row.is-open .day-card-toggle .chevron {
+	transform: rotate(180deg);
 }
 
 /* =========================
-   Reduced motion
-   ========================= */
+	 Reduced motion
+========================= */
 @media (prefers-reduced-motion: reduce) {
-  .day-card,
-  .day-card-toggle-row .chevron {
-    transition: none;
-  }
+	.day-card-cell,
+	.day-card-toggle .chevron {
+		transition: none;
+	}
 }

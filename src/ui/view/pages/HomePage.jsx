@@ -1,6 +1,4 @@
-// src/ui/view/pages/HomePage.jsx
 import SearchField from "../components/SearchField.jsx";
-//import SolarInformation from "../components/SolarInformation.jsx";
 import DayForecastCard from "../components/DayForecastCard.jsx";
 import AlertList from "../components/AlertList.jsx";
 
@@ -16,7 +14,7 @@ export default function HomePage({ viewModel }) {
 
     return (
         <div className="home-screen">
-
+            
             {/* Sideoverskrift */}
             <header className="page-header">
                 <h1>Værmelding: {viewModel.location.name}</h1>
@@ -38,17 +36,20 @@ export default function HomePage({ viewModel }) {
             <SolarInformation sunTimes={viewModel.sunTimes} />
             */}
 
-            {/* Dagkort */}
-            {Object.entries(viewModel.forecast).map(([date, hourly]) => (
-                <DayForecastCard
-                    key={date}
-                    date={date}
-                    hourly={hourly}
-                    periods={viewModel.dailyPeriods[date]?.periods}
-                    sunTimes={viewModel.sunTimesByDate?.[date]}
-                />
-            ))}
-
+            {/* Tabell med Dagkort */}
+            <table className="forecast-overview-table">
+                <tbody>
+                    {Object.entries(viewModel.forecast).map(([date, hourly]) => (
+                        <DayForecastCard
+                            key={date}
+                            date={date}
+                            hourly={hourly}
+                            periods={viewModel.dailyPeriods[date]?.periods}
+                            sunTimes={viewModel.sunTimesByDate?.[date]}
+                        />
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 }

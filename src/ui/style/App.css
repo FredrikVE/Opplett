@@ -25,6 +25,9 @@
   --color-text-base: #061629;
   --color-text-subtle: #4c5a66;
 
+  /* cards */
+  --card-bg: #fff;
+
   /* Table */
   --table-row-divider: 1px solid #b2cff5;
 

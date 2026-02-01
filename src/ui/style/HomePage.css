@@ -1,8 +1,7 @@
-/* src/ui/style/HomePage.css */
 /* Main container */
 .home-screen {
   width: 100%;
-  max-width: 860px;          /* litt bredere enn 720 når du vil ha “rom” */
+  max-width: 860px;
   margin: 0 auto;
   padding: 18px 14px 42px;
 }
@@ -13,8 +12,7 @@
   border: 1px solid rgba(6, 22, 41, 0.08);
   border-radius: 18px;
   box-shadow: 0 10px 28px rgba(6, 22, 41, 0.08);
-
-  padding: 18px;            /* dette gir “margin” inni */
+  padding: 18px;
 }
 
 /* Litt luft mellom seksjoner */
@@ -22,18 +20,17 @@
   margin-top: 16px;
 }
 
-/* Gjør kortene dine litt mer “kort på bakgrunn” */
-.day-card {
-  background: #fff; /* bare for å være sikker */
-}
-
-/* Hvis du vil at søkefeltet ikke skal være helt edge-to-edge */
 .search {
   margin: 12px 0 16px;
 }
 
-/* Optional: header kan være litt mer “tight” inni shell */
 .page-header {
   margin-bottom: 8px;
   padding-bottom: 10px;
+}
+
+/* === TABELL === */
+.forecast-overview-table {
+  border-collapse: separate;
+  border-spacing: 0 14px;
 }
