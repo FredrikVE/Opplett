@@ -1,171 +1,175 @@
 // src/model/repositories/LocationForecastRepository.js
 export default class LocationForecastRepository {
+	// Konstruktør som tar inn tilhørende datasource
+	constructor(locationForecastDataSource) {
+		this.datasource = locationForecastDataSource;
+	}
 
-    // Konstruktør som tar inn tilhørende datasource
-    constructor(locationForecastDataSource) {
-        this.datasource = locationForecastDataSource;
-    }
+	// Private hjelpemetoder
+	async #getRawTimeSeries(lat, lon, hoursAhead) {
+		// Krever at antall timer frem er definert. Derfor legger vi inn sjekker for dette.
+		if (hoursAhead === undefined || hoursAhead === null) {
+			throw new Error("hoursAhead must be specified");
+		}
 
-    // Private hjelpemetoder
-    async #getRawTimeSeries(lat, lon, hoursAhead) {
+		if (!Number.isInteger(hoursAhead) || hoursAhead <= 0) {
+			throw new Error("hoursAhead must be a positive integer");
+		}
 
-        // Krever at antall timer frem er definert. Derfor legger vi inn sjekker for dette.
-        if (hoursAhead === undefined || hoursAhead === null) {
-            throw new Error("hoursAhead must be specified");
-        }
+		const result = await this.datasource.fetchLocationForecast(lat, lon);
+		const timeseries = result.properties.timeseries;
 
-        if (!Number.isInteger(hoursAhead) || hoursAhead <= 0) {
-            throw new Error("hoursAhead must be a positive integer");
-        }
+		return timeseries.slice(0, hoursAhead);
+	}
 
-        const result = await this.datasource.fetchLocationForecast(lat, lon);
-        const timeseries = result.properties.timeseries;
+	#groupByDate(forecast) {
+		const grouped = {};
 
-        return timeseries.slice(0, hoursAhead);
-    }
+		for (const item of forecast) {
+			const date = item.date;
+			if (!grouped[date]) {
+				grouped[date] = [];
+			}
+			grouped[date].push(item);
+		}
 
-    #groupByDate(forecast) {
-        const grouped = {};
+		return grouped;
+	}
 
-        for (const item of forecast) {
-            const date = item.date;
-            if (!grouped[date]) {
-                grouped[date] = [];
-            }
-            grouped[date].push(item);
-        }
+	// =========================
+	// Public-metoder
+	// =========================
 
-        return grouped;
-    }
+	async getHourlyForecast(lat, lon, hoursAhead, timeZone) {
+		const timeseries = await this.#getRawTimeSeries(lat, lon, hoursAhead);
 
-    // =========================
-    // Public-metoder
-    // =========================
+		const tz = timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-    async getHourlyForecast(lat, lon, hoursAhead, timeZone) {
-        const timeseries = await this.#getRawTimeSeries(lat, lon, hoursAhead);
+		return timeseries.map((entry) => {
+			const date = new Date(entry.time); // UTC fra API
 
-        const tz = timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+			// Lokal tid (riktig timezone for lokasjonen)
+			const localTime = date.toLocaleTimeString("no-NO", {
+				hour: "2-digit",
+				minute: "2-digit",
+				timeZone: tz,
+			});
 
-        return timeseries.map(entry => {
+			// Lokal dato
+			const localDate = date.toLocaleDateString("no-NO", {
+				year: "numeric",
+				month: "2-digit",
+				day: "2-digit",
+				timeZone: tz,
+			});
 
-            const date = new Date(entry.time); // UTC fra API
+			const weatherSymbol =
+				entry.data.next_1_hours?.summary ??
+				entry.data.next_6_hours?.summary ??
+				entry.data.next_12_hours?.summary;
 
-            // Lokal tid (riktig timezone for lokasjonen)
-            const localTime = date.toLocaleTimeString("no-NO", {
-                hour: "2-digit",
-                minute: "2-digit",
-                timeZone: tz
-            });
+			return {
+				date: localDate,
+				localTime,
+				details: entry.data.instant.details,
+				weatherSymbol: weatherSymbol?.symbol_code,
+				//weatherSymbol: entry.data.next_1_hours?.summary?.symbol_code
+			};
+		});
+	}
 
-            // Lokal dato
-            const localDate = date.toLocaleDateString("no-NO", {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                timeZone: tz
-            });
-            
-            const weatherSymbol =
-                entry.data.next_1_hours?.summary ??
-                entry.data.next_6_hours?.summary ??
-                entry.data.next_12_hours?.summary;
+	async getHourlyForecastGroupedByDate(lat, lon, hoursAhead, timeZone) {
+		const forecast = await this.getHourlyForecast(lat, lon, hoursAhead, timeZone);
 
-            return {
-                date: localDate,
-                localTime,
-                details: entry.data.instant.details,
-                weatherSymbol: weatherSymbol?.symbol_code
-                //weatherSymbol: entry.data.next_1_hours?.summary?.symbol_code
-            };
-        });
-    }
+		return this.#groupByDate(forecast);
+	}
 
-    async getHourlyForecastGroupedByDate(lat, lon, hoursAhead, timeZone) {
-        const forecast = await this.getHourlyForecast(lat, lon, hoursAhead, timeZone);
+	async getDailyPeriodForecast(lat, lon, hoursAhead, timeZone) {
+		const timeseries = await this.#getRawTimeSeries(lat, lon, hoursAhead);
 
-        return this.#groupByDate(forecast);
-    }
+		const tz = timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-    async getDailyPeriodForecast(lat, lon, hoursAhead, timeZone) {
-        const timeseries = await this.#getRawTimeSeries(lat, lon, hoursAhead);
+		const TARGET_HOURS = {
+			night: 0,
+			morning: 6,
+			afternoon: 12,
+			evening: 18,
+		};
 
-        const tz = timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+		const result = {};
 
-        const TARGET_HOURS = {
-            night: 1,
-            morning: 7,
-            afternoon: 13,
-            evening: 18
-        };
+		// Gruppér først per dag
+		for (const entry of timeseries) {
+			const dateObj = new Date(entry.time);
 
-        const result = {};
+			const localDate = dateObj.toLocaleDateString("no-NO", {
+				year: "numeric",
+				month: "2-digit",
+				day: "2-digit",
+				timeZone: tz,
+			});
 
-        // Gruppér først per dag
-        for (const entry of timeseries) {
-            const dateObj = new Date(entry.time);
+			if (!result[localDate]) {
+				result[localDate] = {
+					date: localDate,
+					entries: [],
+				};
+			}
 
-            const localDate = dateObj.toLocaleDateString("no-NO", {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                timeZone: tz
-            });
+			result[localDate].entries.push(entry);
+		}
 
-            if (!result[localDate]) {
-                result[localDate] = {
-                    date: localDate,
-                    entries: []
-                };
-            }
+		// Finn perioder per dag
+		for (const date in result) {
+			const entries = result[date].entries;
+			const periods = {};
 
-            result[localDate].entries.push(entry);
-        }
+			for (const [key, targetHour] of Object.entries(TARGET_HOURS)) {
+				let bestEntry = null;
+				let bestDiff = Infinity;
 
-        // Finn perioder per dag
-        for (const date in result) {
-            const entries = result[date].entries;
-            const periods = {};
+				for (const entry of entries) {
+					const dateObj = new Date(entry.time);
 
-            for (const [key, targetHour] of Object.entries(TARGET_HOURS)) {
+					const hour = Number(
+						dateObj.toLocaleTimeString("no-NO", {
+							hour: "2-digit",
+							timeZone: tz,
+						})
+					);
 
-                let bestEntry = null;
-                let bestDiff = Infinity;
+					const diff = Math.abs(hour - targetHour);
 
-                for (const entry of entries) {
-                    const dateObj = new Date(entry.time);
+					if (diff < bestDiff) {
+						bestDiff = diff;
+						bestEntry = entry;
+					}
+				}
 
-                    const hour = Number(dateObj.toLocaleTimeString("no-NO", {
-                            hour: "2-digit",
-                            timeZone: tz
-                        })
-                    );
+				// --- FIX: fallback hvis next_6_hours mangler (typisk årsak til manglende kveld-ikon) ---
+				const next1 = bestEntry?.data?.next_1_hours;
+				const next6 = bestEntry?.data?.next_6_hours;
+				const next12 = bestEntry?.data?.next_12_hours;
 
-                    const diff = Math.abs(hour - targetHour);
+				// Prioriter 6h (perioder), fallback til 1h og 12h hvis 6h mangler
+				const pack = next6 ?? next1 ?? next12;
 
-                    if (diff < bestDiff) {
-                        bestDiff = diff;
-                        bestEntry = entry;
-                    }
-                }
+				const summary = pack?.summary;
+				const details = pack?.details;
 
-                const summary = bestEntry?.data?.next_6_hours?.summary;
-                const details = bestEntry?.data?.next_6_hours?.details;
+				if (summary?.symbol_code) {
+					periods[key] = {
+						weatherSymbol: summary.symbol_code,
+						symbolConfidence: summary.symbol_confidence,
+						details,
+					};
+				}
+			}
 
-                if (summary) {
-                    periods[key] = {
-                        weatherSymbol: summary.symbol_code,
-                        symbolConfidence: summary.symbol_confidence,
-                        details
-                    };
-                }
-            }
+			delete result[date].entries;
+			result[date].periods = periods;
+		}
 
-            delete result[date].entries;
-            result[date].periods = periods;
-        }
-
-        return result;
-    }
+		return result;
+	}
 }
-
