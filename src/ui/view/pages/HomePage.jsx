@@ -1,4 +1,4 @@
-// src/ui/view/pages/HomeScreen.jsx
+// src/ui/view/pages/HomePage.jsx
 import SearchField from "../components/SearchField.jsx";
 //import SolarInformation from "../components/SolarInformation.jsx";
 import DayForecastCard from "../components/DayForecastCard.jsx";
