@@ -29,8 +29,3 @@
   padding-bottom: 10px;
 }
 
-/* === TABELL === */
-.forecast-overview-table {
-  border-collapse: separate;
-  border-spacing: 0 14px;
-}

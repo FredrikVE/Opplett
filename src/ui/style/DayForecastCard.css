@@ -1,151 +1,189 @@
 /* src/ui/style/DayForecastCard.css */
+
 /* =========================
-	 The actual card surface
+   Table spacing strategy
+   - vi lager luft med en spacer-<tr>, ikke border-spacing
 ========================= */
-.day-card-cell {
-	background: var(--card-bg);
-	border-radius: 14px;
-	border: 1px solid rgba(6, 22, 41, 0.08);
-	box-shadow: 0 1px 2px rgba(6, 22, 41, 0.06);
-	overflow: hidden;
-
-	/* td kan ha default padding i noen resets */
-	padding: 0;
-	display: flex;
-	flex-direction: column;
-
-	transition: box-shadow 160ms ease, transform 160ms ease;
+.forecast-overview-table {
+  border-collapse: separate;
+  border-spacing: 0; /* viktig: ellers får du glipper inni "kortet" */
 }
 
-.day-card-cell:hover {
-	box-shadow: 0 10px 22px rgba(6, 22, 41, 0.10);
-	transform: translateY(-1px);
+/* Spacer mellom kort (egen tr nederst i hver day-card-group) */
+.day-card-spacer td {
+  height: 12px; /* justér etter smak */
+  padding: 0;
+  border: none;
+  background: transparent;
 }
 
 /* =========================
-	Header (date + periods)
+   "Card" group (tbody)
 ========================= */
-.day-card-header {
-	width: 100%;
-	display: flex;
-	align-items: center;
-	gap: 14px;
-
-	padding: 14px 16px;
-
-	background: transparent;
-	border: none;
-	cursor: pointer;
-	text-align: left;
-	font: inherit;
-	color: inherit;
+.day-card-group {
+  filter: drop-shadow(0 1px 2px rgba(6, 22, 41, 0.06));
+  transition: filter 160ms ease, transform 160ms ease;
 }
 
-.day-card-header:focus-visible {
-	outline: 3px solid rgba(23, 103, 206, 0.35);
-	outline-offset: -3px;
+.day-card-group:hover {
+  filter: drop-shadow(0 10px 22px rgba(6, 22, 41, 0.10));
+  transform: translateY(-1px);
+}
+
+/* =========================
+   Top row surfaces (td)
+   - vi lager kortet av flere td
+========================= */
+.day-card-cell-surface {
+  background: var(--card-bg);
+  border-top: 1px solid rgba(6, 22, 41, 0.08);
+  border-bottom: none;
+  padding: 10px 10px;
+}
+
+/* venstre/høyre kant + radius på toppraden */
+.day-card-summary-row td:first-child {
+  border-left: 1px solid rgba(6, 22, 41, 0.08);
+  border-top-left-radius: 14px;
+}
+
+.day-card-summary-row td:last-child {
+  border-right: 1px solid rgba(6, 22, 41, 0.08);
+  border-top-right-radius: 14px;
+}
+
+/* =========================
+   Buttons inside cells
+========================= */
+.day-card-cell-button {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: transparent;
+  border: none;
+  cursor: pointer;
+
+  color: inherit;
+  font: inherit;
+
+  padding: 0;
+  margin: 0;
+}
+
+.day-card-cell-button:focus-visible {
+  outline: 3px solid rgba(23, 103, 206, 0.35);
+  outline-offset: -3px;
+}
+
+/* =========================
+   Date cell
+========================= */
+.day-card-date-cell {
+  padding: 14px 16px;
+}
+
+.day-card-date-cell .day-card-cell-button {
+  justify-content: flex-start;
+  text-align: left;
 }
 
 .day-card-date {
-	margin: 0;
-	font-size: 1.05rem;
-	font-weight: var(--font-weight-bold);
-	letter-spacing: -0.2px;
-	font-variant-numeric: var(--font-variant-numeric);
-
-	/* holder dato “fast”, så ikonene får plassen */
-	flex: 0 0 auto;
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: -0.2px;
+  font-variant-numeric: var(--font-variant-numeric);
 }
 
 /* =========================
-	 Period icons
+   Period cells (icons)
 ========================= */
-.day-card-periods {
-	display: flex;
-	justify-content: center;
-	gap: 16px;
-
-	/* tar resten av bredden */
-	flex: 1 1 auto;
-	min-width: 0;
+.day-card-period-cell {
+  padding: 8px 6px;
+  text-align: center;
 }
 
-.day-card-period {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 4px;
-	min-width: 40px;
-}
-
-.day-card-period img {
-	opacity: 0.95;
-	filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.06));
-}
-
-.day-card-period-label {
-	font-size: 0.72rem;
-	color: var(--color-text-subtle);
-	line-height: 1;
-	white-space: nowrap;
+.day-card-period-button img {
+  opacity: 0.95;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.06));
 }
 
 /* =========================
-	 Expanded content (inside the same card)
+   Expanded content row
 ========================= */
-.day-card-body {
-	border-top: 1px solid rgba(6, 22, 41, 0.06); /* vises kun når open (hidden=false) */
-	background: transparent;
+.day-card-body-cell {
+  background: var(--card-bg);
+  border-left: 1px solid rgba(6, 22, 41, 0.08);
+  border-right: 1px solid rgba(6, 22, 41, 0.08);
+  border-top: 1px solid rgba(6, 22, 41, 0.06);
+
+  padding: 0;
 }
 
 .day-card-body-inner {
-	padding: 10px 10px 12px;
+  padding: 10px 10px 12px;
 }
 
 /* =========================
-	 Bottom chevron toggle (always bottom, centered)
+   Bottom chevron row
 ========================= */
+.day-card-toggle-cell {
+  background: var(--card-bg);
+  border-left: 1px solid rgba(6, 22, 41, 0.08);
+  border-right: 1px solid rgba(6, 22, 41, 0.08);
+  border-bottom: 1px solid rgba(6, 22, 41, 0.08);
+
+  border-bottom-left-radius: 14px;
+  border-bottom-right-radius: 14px;
+
+  padding: 0;
+}
+
 .day-card-toggle {
-	width: 100%;
-	height: 34px;
+  width: 100%;
+  height: 34px;
 
-	display: flex;
-	align-items: center;
-	justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-	background: transparent;
-	border: none;
-	padding: 0;
-	margin: 0;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
 
-	cursor: pointer;
-	color: rgba(6, 22, 41, 0.75);
+  cursor: pointer;
+  color: rgba(6, 22, 41, 0.75);
 }
 
 .day-card-toggle:hover {
-	color: rgba(6, 22, 41, 0.95);
+  color: rgba(6, 22, 41, 0.95);
 }
 
 .day-card-toggle:focus-visible {
-	outline: 3px solid rgba(23, 103, 206, 0.35);
-	outline-offset: -3px;
+  outline: 3px solid rgba(23, 103, 206, 0.35);
+  outline-offset: -3px;
 }
 
 .day-card-toggle .chevron {
-	display: block;
-	transition: transform 180ms ease;
+  display: block;
+  transition: transform 180ms ease;
 }
 
-.day-card-row.is-open .day-card-toggle .chevron {
-	transform: rotate(180deg);
+.day-card-group.is-open .day-card-toggle .chevron {
+  transform: rotate(180deg);
 }
 
 /* =========================
-	 Reduced motion
+   Reduced motion
 ========================= */
 @media (prefers-reduced-motion: reduce) {
-	.day-card-cell,
-	.day-card-toggle .chevron {
-		transition: none;
-	}
+  .day-card-group,
+  .day-card-toggle .chevron {
+    transition: none;
+  }
 }

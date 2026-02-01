@@ -38,18 +38,28 @@ export default function HomePage({ viewModel }) {
 
             {/* Tabell med Dagkort */}
             <table className="forecast-overview-table">
-                <tbody>
-                    {Object.entries(viewModel.forecast).map(([date, hourly]) => (
-                        <DayForecastCard
-                            key={date}
-                            date={date}
-                            hourly={hourly}
-                            periods={viewModel.dailyPeriods[date]?.periods}
-                            sunTimes={viewModel.sunTimesByDate?.[date]}
-                        />
-                    ))}
-                </tbody>
+                <thead>
+                    <tr>
+                    <th className="col-date" scope="col"></th>
+                    <th className="col-period" scope="col">Natt</th>
+                    <th className="col-period" scope="col">Morgen</th>
+                    <th className="col-period" scope="col">Ettermiddag</th>
+                    <th className="col-period" scope="col">Kveld</th>
+                    </tr>
+                </thead>
+
+                {Object.entries(viewModel.forecast).map(([date, hourly]) => (
+                    <DayForecastCard
+                    key={date}
+                    date={date}
+                    hourly={hourly}
+                    periods={viewModel.dailyPeriods[date]?.periods}
+                    sunTimes={viewModel.sunTimesByDate?.[date]}
+                    />
+                ))}
             </table>
+
+            
         </div>
     );
 }
