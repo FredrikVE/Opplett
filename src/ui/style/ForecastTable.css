@@ -1,27 +1,27 @@
 /* src/ui/view/ForecastTable.css */
 
-.forecast-table {
-  width: 100%;
-  border-spacing: 1rem;
-}
-
+/* Header */
 .forecast-table thead th {
   font-size: var(--table-header-font-size);
   line-height: var(--table-header-line-height);
-  border-bottom: 1px solid rgba(6, 22, 41, 0.10);
+  text-align: left;
+  padding: 12px 14px;
 }
 
+/* Celler */
 .forecast-table td {
   padding: 12px 14px;
-  border-bottom: 1px solid rgba(6, 22, 41, 0.1);
+  border-bottom: none; /* borderless */
   font-variant-numeric: var(--font-variant-numeric);
 }
 
-.forecast-table tbody tr:nth-child(even) {
+/* Zebra: legg bakgrunn på TD (mest robust) */
+.forecast-table tbody tr:nth-child(even) td {
   background: rgba(23, 103, 206, 0.03);
 }
 
-.forecast-table tbody tr:hover {
+/* Hover: også på TD */
+.forecast-table tbody tr:hover td {
   background: rgba(23, 103, 206, 0.07);
 }
 
