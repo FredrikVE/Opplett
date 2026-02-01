@@ -30,14 +30,7 @@ const ChevronIcon = ({ className = "" }) => (
   </svg>
 );
 
-export default function DayForecastCard({
-  date,
-  hourly,
-  periods,
-  sunTimes,
-  open,
-  onToggle,
-}) {
+export default function DayForecastCard({ date, hourly, periods, sunTimes, open, onToggle }) {
   const panelId = useId();
   const toggle = () => onToggle?.();
 
