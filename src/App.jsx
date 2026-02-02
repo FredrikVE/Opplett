@@ -20,7 +20,8 @@ import MetAlertsRepository from "./model/repositories/MetAlertsRepository.js";
 import SunriseRepository from "./model/repositories/SunriseRepository.js";
 import SunriseDataSource from "./model/datasource/SunriseDataSource.js";
 
-import HomeScreenViewModel from "./ui/viewmodel/HomeScreenViewModel.js";
+//import HomeScreenViewModel from "./ui/viewmodel/HomeScreenViewModel.js";
+import useHomeScreenViewModel from "./ui/viewmodel/HomeScreenViewModel.js";
 import HomePage from "./ui/view/pages/HomePage.jsx";
 
 export default function App() {
@@ -41,7 +42,7 @@ export default function App() {
 
     //Initialiser ViewModel her før før loading og error-sjekker
     //Sender inn coords.lat/lon selv om de er null. ViewModelen håndterer ventingen.
-    const homeScreenViewModel = HomeScreenViewModel(
+    const homeScreenViewModel = useHomeScreenViewModel(
         repositories.locationForecastRepository,
         repositories.sunriseRepository,
         repositories.metAlertsRepository,

@@ -1,17 +1,28 @@
-//src/ui/utils/fetchInitialLocationName.js
-export async function fetchInitialLocationName (setLocation ,geocodingRepository, initialLat, initialLon) {
-    try {
-        //henter koordinater fra geocoding repo
-        const result = await geocodingRepository.getCoordinates(`${initialLat}, ${initialLon}`);
-        if (result?.name) {
+// src/ui/utils/fetchInitialLocationName.js
+export async function fetchInitialLocationName(setLocation, geocodingRepository, lat, lon) {
+	try {
+		const result = await geocodingRepository.getCoordinates(`${lat}, ${lon}`);
 
-            //Oppdaterer lokasjonen dersom det finnes et navn.
-            setLocation({lat: initialLat, lon: initialLon, name: result.name, timezone: result.timezone});
-        }
-    } 
-    
-    catch (error) {
-        // stille fail – appen funker fortsatt uten navn
-        console.warn("Kunne ikke hente stedsnavn", error);
-    }
+		if (!result?.name) {
+			return;
+		}
+
+		setLocation((prev) => {
+			// Hvis navn og timezone allerede er satt og like → ingen endring
+			if (prev.name === result.name && prev.timezone === result.timezone) {
+				return prev;
+			}
+
+			return {
+				...prev,
+				name: result.name,
+				timezone: result.timezone,
+			};
+		});
+	} 
+	
+	catch (error) {
+		// stille fail – appen funker fortsatt uten navn
+		console.warn("Kunne ikke hente stedsnavn", error);
+	}
 }

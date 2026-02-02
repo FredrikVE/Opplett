@@ -1,25 +1,30 @@
 // src/model/repositories/LocationForecastRepository.js
 export default class LocationForecastRepository {
-	// Konstruktør som tar inn tilhørende datasource
 	constructor(locationForecastDataSource) {
 		this.datasource = locationForecastDataSource;
+
+		// Cache for rå timeseries
+		// key: `${lat},${lon},${hoursAhead}`
+		this._rawCache = new Map();
 	}
 
-	// Private hjelpemetoder
+	// -------------------------
+	// Private helpers
+	// -------------------------
 	async #getRawTimeSeries(lat, lon, hoursAhead) {
-		// Krever at antall timer frem er definert. Derfor legger vi inn sjekker for dette.
-		if (hoursAhead === undefined || hoursAhead === null) {
-			throw new Error("hoursAhead must be specified");
-		}
 
-		if (!Number.isInteger(hoursAhead) || hoursAhead <= 0) {
-			throw new Error("hoursAhead must be a positive integer");
+		const cacheKey = `${lat},${lon},${hoursAhead}`;
+		const cached = this._rawCache.get(cacheKey);
+
+		if (cached) {
+			return cached;
 		}
 
 		const result = await this.datasource.fetchLocationForecast(lat, lon);
-		const timeseries = result.properties.timeseries;
+		const timeseries = result.properties.timeseries.slice(0, hoursAhead);
 
-		return timeseries.slice(0, hoursAhead);
+		this._rawCache.set(cacheKey, timeseries);
+		return timeseries;
 	}
 
 	#groupByDate(forecast) {
@@ -36,9 +41,9 @@ export default class LocationForecastRepository {
 		return grouped;
 	}
 
-	// =========================
-	// Public-metoder
-	// =========================
+	// -------------------------
+	// Public API
+	// -------------------------
 
 	async getHourlyForecast(lat, lon, hoursAhead, timeZone) {
 		const timeseries = await this.#getRawTimeSeries(lat, lon, hoursAhead);
@@ -46,16 +51,14 @@ export default class LocationForecastRepository {
 		const tz = timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 		return timeseries.map((entry) => {
-			const date = new Date(entry.time); // UTC fra API
+			const date = new Date(entry.time);
 
-			// Lokal tid (riktig timezone for lokasjonen)
 			const localTime = date.toLocaleTimeString("no-NO", {
 				hour: "2-digit",
 				minute: "2-digit",
 				timeZone: tz,
 			});
 
-			// Lokal dato
 			const localDate = date.toLocaleDateString("no-NO", {
 				year: "numeric",
 				month: "2-digit",
@@ -73,14 +76,12 @@ export default class LocationForecastRepository {
 				localTime,
 				details: entry.data.instant.details,
 				weatherSymbol: weatherSymbol?.symbol_code,
-				//weatherSymbol: entry.data.next_1_hours?.summary?.symbol_code
 			};
 		});
 	}
 
 	async getHourlyForecastGroupedByDate(lat, lon, hoursAhead, timeZone) {
 		const forecast = await this.getHourlyForecast(lat, lon, hoursAhead, timeZone);
-
 		return this.#groupByDate(forecast);
 	}
 
@@ -98,7 +99,7 @@ export default class LocationForecastRepository {
 
 		const result = {};
 
-		// Gruppér først per dag
+		// Gruppér per dag
 		for (const entry of timeseries) {
 			const dateObj = new Date(entry.time);
 
@@ -110,16 +111,13 @@ export default class LocationForecastRepository {
 			});
 
 			if (!result[localDate]) {
-				result[localDate] = {
-					date: localDate,
-					entries: [],
-				};
+				result[localDate] = { entries: [] };
 			}
 
 			result[localDate].entries.push(entry);
 		}
 
-		// Finn perioder per dag
+		// Finn perioder
 		for (const date in result) {
 			const entries = result[date].entries;
 			const periods = {};
@@ -146,14 +144,11 @@ export default class LocationForecastRepository {
 					}
 				}
 
-				// --- FIX: fallback hvis next_6_hours mangler (typisk årsak til manglende kveld-ikon) ---
 				const next1 = bestEntry?.data?.next_1_hours;
 				const next6 = bestEntry?.data?.next_6_hours;
 				const next12 = bestEntry?.data?.next_12_hours;
 
-				// Prioriter 6h (perioder), fallback til 1h og 12h hvis 6h mangler
 				const pack = next6 ?? next1 ?? next12;
-
 				const summary = pack?.summary;
 				const details = pack?.details;
 
