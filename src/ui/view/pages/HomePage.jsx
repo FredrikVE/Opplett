@@ -1,5 +1,6 @@
 // src/ui/view/pages/HomePage.jsx
 import { useState } from "react";
+import LoadingSpinner from "../components/LoadingSpinner.jsx";
 import SearchField from "../components/SearchField.jsx";
 import DayForecastCard from "../components/DayForecastCard.jsx";
 import AlertList from "../components/AlertList.jsx";
@@ -10,8 +11,9 @@ export default function HomePage({ viewModel }) {
 	const [openDate, setOpenDate] = useState(null);
 
 	if (viewModel.loading) {
-		return <p>Laster værmelding…</p>;
+		return <LoadingSpinner text="Laster værmelding…" />;
 	}
+
 
 	if (viewModel.error) {
 		return <p>Feil: {viewModel.error}</p>;

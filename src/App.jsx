@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { useGeolocation } from "./geolocation/useGeolocation.js";
 
 import "./ui/style/App.css";
+import "./ui/style/LoadingSpinner.css"
 import "./ui/style/SolarInfo.css";
 import "./ui/style/SearchFeild.css";
 import "./ui/style/Alerts.css";
