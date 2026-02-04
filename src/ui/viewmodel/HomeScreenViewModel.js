@@ -25,6 +25,7 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
     const [forecast, setForecast] = useState({});
     const [dailyPeriods, setDailyPeriods] = useState({});
     const [sunTimesByDate, setSunTimesByDate] = useState({});
+    const [dailySummaryByDate, setDailySummaryByDate] = useState({});
     const [alerts, setAlerts] = useState([]);
 
     const [loading, setLoading] = useState(false);
@@ -55,9 +56,10 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
 
                 const tz = location.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone ?? "UTC";
 
-                const [forecastData, dailyPeriodForecast, alertResults ] = await Promise.all([
+                const [forecastData, dailyPeriodForecast, dailySummary, alertResults ] = await Promise.all([
                     forecastRepository.getHourlyForecastGroupedByDate(location.lat, location.lon, hoursAhead, tz),
 					forecastRepository.getDailyPeriodForecast(location.lat, location.lon, hoursAhead, tz),
+                    forecastRepository.getDailySummary(location.lat, location.lon, hoursAhead, tz),
                     metAlertsRepository.findAlerts(location.lat, location.lon)
                 ]);
 
@@ -70,6 +72,7 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
 
                 setForecast(forecastData);
                 setDailyPeriods(dailyPeriodForecast);
+                setDailySummaryByDate(dailySummary);
                 setSunTimesByDate(sunMap);
                 setAlerts(alertResults?.alerts ?? []);
                 setError(null);
@@ -99,6 +102,7 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
     return {
         forecast,
         dailyPeriods,
+        dailySummaryByDate,
         sunTimesByDate,
         alerts,
         loading,

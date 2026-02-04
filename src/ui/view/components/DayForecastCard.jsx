@@ -3,10 +3,8 @@ import ForecastTable from "./ForecastTable.jsx";
 import SolarInformation from "./SolarInformation.jsx";
 import { getWeatherIconFileName } from "../../utils/weatherIcons.js";
 
+/* Konstanter */
 
-/* Hjelpefunksjoner */
-
-//Consts for å definere verdier i table-headeren
 const ORDER = ["night", "morning", "afternoon", "evening"];
 
 const LABELS_NO = {
@@ -16,9 +14,7 @@ const LABELS_NO = {
 	evening: "Kveld",
 };
 
-// Gjenbrukbar SVG-komponent for chevron-ikonet.
-// className sendes inn som prop slik at ikonet kan styles forskjellig
-// avhengig av hvor det brukes (åpen/lukket tilstand, plassering, osv.).
+/* Chevron-ikon */
 const ChevronIcon = ({ className = "" }) => (
 	<svg
 		className={`chevron ${className}`}
@@ -38,29 +34,29 @@ const ChevronIcon = ({ className = "" }) => (
 	</svg>
 );
 
-//Funksjonskomponent som returnerer et interaktivt kort med værmelding
-export default function DayForecastCard({ date, hourly, periods, sunTimes, open, onToggle }) {
+/* Komponent */
+export default function DayForecastCard({
+	date,
+	hourly,
+	periods,
+	summary,
+	sunTimes,
+	open,
+	onToggle,
+}) {
 	const panelId = useId();
 
-	//Handlefunksjon som styrer toggle av kort
 	const toggle = () => {
 		onToggle();
 	};
 
-	//Funksjon som returnerer ikon for 6-timers perioden dersom data finnes, ellers ingenting
 	const renderIcon = (periodKey) => {
 		const period = periods?.[periodKey];
-		if (!period) {
-			return null;
-		}
+		if (!period) return null;
 
-		//Henter vær-ikon med utils-metode
 		const iconFile = getWeatherIconFileName(period.weatherSymbol);
-		if (!iconFile) {
-			return null;
-		}
+		if (!iconFile) return null;
 
-		//returnerer <img>-tag med ikonet om det finnes
 		return (
 			<img
 				src={`/weather_icons/200/${iconFile}`}
@@ -72,16 +68,14 @@ export default function DayForecastCard({ date, hourly, periods, sunTimes, open,
 		);
 	};
 
-	//Variabel for periode-celler
+	/* Periode-celler (natt/morgen/ettermiddag/kveld) */
 	let periodCells;
 
 	if (open) {
 		periodCells = (
 			<td className="day-card-periods-hidden" colSpan={4} />
 		);
-	} 
-
-	else {
+	} else {
 		periodCells = ORDER.map((key) => (
 			<td
 				key={key}
@@ -101,13 +95,13 @@ export default function DayForecastCard({ date, hourly, periods, sunTimes, open,
 		));
 	}
 
-	//Variabel som holder på Bunn-chevron som bare vises når kortet er åpent
+	/* Bunn-chevron */
 	let bottomToggleRow = null;
 
 	if (open) {
 		bottomToggleRow = (
 			<tr className="day-card-toggle-row">
-				<td className="day-card-toggle-cell" colSpan={6}>
+				<td className="day-card-toggle-cell" colSpan={9}>
 					<button
 						type="button"
 						className="day-card-toggle"
@@ -128,8 +122,8 @@ export default function DayForecastCard({ date, hourly, periods, sunTimes, open,
 
 			{/* TOPP: Sammendragsrad */}
 			<tr className="day-card-summary-row">
+				{/* Dato */}
 				<td className="day-card-cell-surface day-card-date-cell">
-
 					<button
 						type="button"
 						className="day-card-cell-button"
@@ -141,10 +135,34 @@ export default function DayForecastCard({ date, hourly, periods, sunTimes, open,
 					</button>
 				</td>
 
-				{/* Periode-celler */}
+				{/* Perioder */}
 				{periodCells}
 
-				{/* Chevron-kolonne */}
+				{/* Temperatur høy / lav */}
+				<td className="day-card-cell-surface day-card-temp-cell">
+					{summary ? (
+						<>
+							<strong>{Math.round(summary.maxTemp)}°</strong>{" "}
+							/ {Math.round(summary.minTemp)}°
+						</>
+					) : "–"}
+				</td>
+
+				{/* Nedbør */}
+				<td className="day-card-cell-surface day-card-precip-cell">
+					{summary && summary.totalPrecip > 0
+						? `${summary.totalPrecip.toFixed(1)} mm`
+						: "–"}
+				</td>
+
+				{/* Vind */}
+				<td className="day-card-cell-surface day-card-wind-cell">
+					{summary
+						? `${summary.avgWind.toFixed(1)} m/s`
+						: "–"}
+				</td>
+
+				{/* Chevron */}
 				<td className="day-card-cell-surface day-card-toggle-col">
 					<button
 						type="button"
@@ -164,7 +182,7 @@ export default function DayForecastCard({ date, hourly, periods, sunTimes, open,
 				<td
 					id={panelId}
 					className="day-card-body-cell"
-					colSpan={6}
+					colSpan={9}
 				>
 					<div className="day-card-body-inner">
 						<ForecastTable forecast={hourly} />
@@ -173,12 +191,12 @@ export default function DayForecastCard({ date, hourly, periods, sunTimes, open,
 				</td>
 			</tr>
 
-			{/* BUNN: Chevron */}
+			{/* BUNN */}
 			{bottomToggleRow}
 
 			{/* Spacer */}
 			<tr className="day-card-spacer" aria-hidden="true">
-				<td colSpan={6} />
+				<td colSpan={9} />
 			</tr>
 		</tbody>
 	);

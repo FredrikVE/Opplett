@@ -60,6 +60,9 @@ export default function HomePage({ viewModel }) {
 						<th className="col-period">Morgen</th>
 						<th className="col-period">Ettermiddag</th>
 						<th className="col-period">Kveld</th>
+						<th className="col-temp">Temp høy/lav</th>
+						<th className="col-precip">Nedbør</th>
+						<th className="col-wind">Vind</th>
 						<th className="col-toggle" />
 					</tr>
 				</thead>
@@ -71,6 +74,7 @@ export default function HomePage({ viewModel }) {
 						date={date}
 						hourly={hourly}
 						periods={viewModel.dailyPeriods[date]?.periods}
+						summary={viewModel.dailySummaryByDate[date]}
 						sunTimes={viewModel.sunTimesByDate[date]}
 						open={openDate === date}
 						isFirst={index === 0}
