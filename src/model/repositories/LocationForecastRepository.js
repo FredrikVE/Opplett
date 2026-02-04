@@ -169,120 +169,106 @@ export default class LocationForecastRepository {
 
 
 	async getDailySummary(lat, lon, hoursAhead, timeZone) {
-    const timeseries = await this.#getRawTimeSeries(lat, lon, hoursAhead);
-    const tz = timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+		const timeseries = await this.#getRawTimeSeries(lat, lon, hoursAhead);
+		const tz = timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-    const TARGET_HOURS = [0, 6, 12, 18];
-    const days = {};
+		const TARGET_HOURS = [0, 6, 12, 18];
+		const days = {};
 
-    /* -------- 1. Gruppér timeseries per dag -------- */
-    for (const entry of timeseries) {
-        const dateObj = new Date(entry.time);
+		/* -------- 1. Gruppér timeseries per dag -------- */
+		for (const entry of timeseries) {
+			const dateObj = new Date(entry.time);
 
-        const localDate = dateObj.toLocaleDateString("no-NO", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            timeZone: tz,
-        });
+			const localDate = dateObj.toLocaleDateString("no-NO", {
+				year: "numeric",
+				month: "2-digit",
+				day: "2-digit",
+				timeZone: tz,
+			});
 
-        if (!days[localDate]) {
-            days[localDate] = [];
-        }
+			if (!days[localDate]) {
+				days[localDate] = [];
+			}
 
-        days[localDate].push(entry);
-    }
+			days[localDate].push(entry);
+		}
 
-    const result = {};
+		const result = {};
 
-    /* -------- 2. Velg representativ entry per 6t-blokk -------- */
-    for (const date in days) {
-        const entries = days[date];
-        const blocks = [];
+		/* -------- 2. Velg representativ entry per 6t-blokk -------- */
+		for (const date in days) {
+			const entries = days[date];
+			const blocks = [];
 
-        for (const targetHour of TARGET_HOURS) {
-            let bestEntry = null;
-            let bestDiff = Infinity;
+			for (const targetHour of TARGET_HOURS) {
+				let bestEntry = null;
+				let bestDiff = Infinity;
 
-            for (const entry of entries) {
-                const dateObj = new Date(entry.time);
-                const hour = Number(
-                    dateObj.toLocaleTimeString("no-NO", {
-                        hour: "2-digit",
-                        hour12: false,
-                        timeZone: tz,
-                    })
-                );
+				for (const entry of entries) {
+					const dateObj = new Date(entry.time);
+					const hour = Number(
+						dateObj.toLocaleTimeString("no-NO", {
+							hour: "2-digit",
+							hour12: false,
+							timeZone: tz,
+						})
+					);
 
-                const diff = Math.abs(hour - targetHour);
+					const diff = Math.abs(hour - targetHour);
 
-                if (diff < bestDiff) {
-                    bestDiff = diff;
-                    bestEntry = entry;
-                }
-            }
+					if (diff < bestDiff) {
+						bestDiff = diff;
+						bestEntry = entry;
+					}
+				}
 
-            if (bestEntry) {
-                blocks.push(bestEntry);
-            }
-        }
+				if (bestEntry) {
+					blocks.push(bestEntry);
+				}
+			}
 
-        /* -------- 3. Beregn dagsoppsummering -------- */
-        let minTemp = Infinity;
-        let maxTemp = -Infinity;
-        let totalPrecip = 0;
-        const windSamples = [];
+			/* -------- 3. Beregn dagsoppsummering -------- */
+			let minTemp = Infinity;
+			let maxTemp = -Infinity;
+			let totalPrecip = 0;
+			const windSamples = [];
 
-        for (const entry of blocks) {
-            const next6 = entry.data.next_6_hours?.details;
-            const instant = entry.data.instant?.details;
+			for (const entry of blocks) {
+				const next6 = entry.data.next_6_hours?.details;
+				const instant = entry.data.instant?.details;
 
-            // Temperatur
-            if (next6?.air_temperature_min !== undefined) {
-                minTemp = Math.min(minTemp, next6.air_temperature_min);
-            }
+				// Temperatur
+				if (next6?.air_temperature_min !== undefined) {
+					minTemp = Math.min(minTemp, next6.air_temperature_min);
+				}
 
-            if (next6?.air_temperature_max !== undefined) {
-                maxTemp = Math.max(maxTemp, next6.air_temperature_max);
-            }
+				if (next6?.air_temperature_max !== undefined) {
+					maxTemp = Math.max(maxTemp, next6.air_temperature_max);
+				}
 
-            // Nedbør (ikke-overlappende 6t)
-            if (next6?.precipitation_amount !== undefined) {
-                totalPrecip += next6.precipitation_amount;
-            }
+				// Nedbør (ikke-overlappende 6t)
+				if (next6?.precipitation_amount !== undefined) {
+					totalPrecip += next6.precipitation_amount;
+				}
 
-            // Vind (representativ – ikke maks)
-            if (instant?.wind_speed !== undefined) {
-                windSamples.push(instant.wind_speed);
-            }
-        }
+				// Vind (representativ – ikke maks)
+				if (instant?.wind_speed !== undefined) {
+					windSamples.push(instant.wind_speed);
+				}
+			}
 
-        result[date] = {
-            minTemp: minTemp === Infinity ? null : minTemp,
-            maxTemp: maxTemp === -Infinity ? null : maxTemp,
-            totalPrecip,
-            avgWind:
-                windSamples.length > 0
-                    ? windSamples.reduce((a, b) => a + b, 0) /
-                      windSamples.length
-                    : null,
-        };
-    }
+			result[date] = {
+				minTemp: minTemp === Infinity ? null : minTemp,
+				maxTemp: maxTemp === -Infinity ? null : maxTemp,
+				totalPrecip,
+				avgWind:
+					windSamples.length > 0
+						? windSamples.reduce((a, b) => a + b, 0) /
+						windSamples.length
+						: null,
+			};
+		}
 
-    return result;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		return result;
+	}
 }
