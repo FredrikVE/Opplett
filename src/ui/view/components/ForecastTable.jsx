@@ -44,7 +44,7 @@ export default function ForecastTable({ forecast }) {
 
                             <td className="precipitation">
                                 {/*{item.details.precipitation_amount ?? 0} mm*/}
-                                {item.precipitation ?? 0} mm
+                                {item.precipitation} mm
                             </td>
 
                             <td>
