@@ -11,7 +11,7 @@ export default function HomePage({ viewModel }) {
 	const [openDate, setOpenDate] = useState(null);
 
 	if (viewModel.loading) {
-		return <LoadingSpinner text="Laster værmelding…" />;
+		return <LoadingSpinner/>;
 	}
 
 
