@@ -1,5 +1,7 @@
 // src/model/repositories/LocationForecastRepository.js
 export default class LocationForecastRepository {
+	
+	//Konstruktør som tar inn locationdatasource og lagrer et map for cahce.
 	constructor(locationForecastDataSource) {
 		this.datasource = locationForecastDataSource;
 
@@ -8,9 +10,7 @@ export default class LocationForecastRepository {
 		this._rawCache = new Map();
 	}
 
-	// -------------------------
-	// Private helpers
-	// -------------------------
+	// @@@ Private hjelpemetoder @@@ //
 	async #getRawTimeSeries(lat, lon, hoursAhead) {
 
 		const cacheKey = `${lat},${lon},${hoursAhead}`;
@@ -41,10 +41,9 @@ export default class LocationForecastRepository {
 		return grouped;
 	}
 
-	// -------------------------
-	// Public API
-	// -------------------------
 
+	// @@@ Public metoder som prosesserer og vidre sender bearbeidet data til veiwmodel // @@@
+	
 	async getHourlyForecast(lat, lon, hoursAhead, timeZone) {
 		const timeseries = await this.#getRawTimeSeries(lat, lon, hoursAhead);
 

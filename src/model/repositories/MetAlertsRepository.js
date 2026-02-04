@@ -47,25 +47,3 @@ export default class MetAlertsRepository {
         }
     }
 }
-
-/*
-//Testmain
-import MetAlertsDataSource from "../datasource/MetAlertsDataSource.js";
-
-const repo = new MetAlertsRepository(new MetAlertsDataSource());
-async function main() {
-     //hammerfest (to farevarsler samtidig)
-    const lat = 70.674705
-    const lon = 23.667911
-    //stavanger
-    //const lat = 58.952071;
-    //const lon = 5.671383;
-
-    const result = await repo.findAlerts(lat, lon);
-
-    console.log(result);    
-}
-
-
-main();
-*/
