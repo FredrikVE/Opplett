@@ -142,11 +142,36 @@ export default function DayForecastCard({
 				<td className="day-card-cell-surface day-card-temp-cell">
 					{summary ? (
 						<>
-							<strong>{Math.round(summary.maxTemp)}°</strong>{" "}
-							/ {Math.round(summary.minTemp)}°
+						<strong
+							style={{
+							color:
+								summary.maxTemp < 0
+								? "var(--temperature-minus-color)"
+								: "var(--temperature-plus-color)",
+							}}
+						>
+							{Math.round(summary.maxTemp)}°
+						</strong>
+
+						{" / "}
+
+						<span
+							style={{
+							color:
+								summary.minTemp < 0
+								? "var(--temperature-minus-color)"
+								: "var(--temperature-plus-color)",
+							}}
+						>
+							{Math.round(summary.minTemp)}°
+						</span>
 						</>
-					) : "–"}
+					) : (
+						"–"
+					)}
 				</td>
+
+
 
 				{/* Nedbør */}
 				<td className="day-card-cell-surface day-card-precip-cell">
@@ -158,7 +183,7 @@ export default function DayForecastCard({
 				{/* Vind */}
 				<td className="day-card-cell-surface day-card-wind-cell">
 					{summary
-						? `${summary.avgWind.toFixed(1)} m/s`
+						? `${Math.round(summary.avgWind)} m/s`
 						: "–"}
 				</td>
 
