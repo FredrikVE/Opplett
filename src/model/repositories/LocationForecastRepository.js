@@ -70,9 +70,19 @@ export default class LocationForecastRepository {
 				entry.data.next_6_hours?.summary ??
 				entry.data.next_12_hours?.summary;
 
+			
+			//NB! Dette må vi legge til for å få tall i "dags-tabellen"
+			// Vi buurde bruke denne metoden inne i getDailyPeriodForecast??
+			const precipitation = 
+				entry.data.next_1_hours?.details?.precipitation_amount ?? 
+				entry.data.next_6_hours?.details?.precipitation_amount ?? 
+				entry.data.next_12_hours?.details?.precipitation_amount
+			
+
 			return {
 				date: localDate,
 				localTime,
+				precipitation,								//NB! Dette må vi legge til for å få tall i "dags-tabellen"
 				details: entry.data.instant.details,
 				weatherSymbol: weatherSymbol?.symbol_code,
 			};
