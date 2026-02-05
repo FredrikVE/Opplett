@@ -84,9 +84,9 @@ export default class LocationForecastRepository {
 				entry.data.next_12_hours?.details?.precipitation_min
 
 			const precipitation_max = 
-				entry.data.next_1_hours?.details?.precipitation_min ?? 
-				entry.data.next_6_hours?.details?.precipitation_min ?? 
-				entry.data.next_12_hours?.details?.precipitation_min
+				entry.data.next_1_hours?.details?.precipitation_max ?? 
+				entry.data.next_6_hours?.details?.precipitation_max ?? 
+				entry.data.next_12_hours?.details?.precipitation_max
 
 			return {
 				date: localDate,
