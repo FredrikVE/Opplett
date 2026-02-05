@@ -35,15 +35,7 @@ const ChevronIcon = ({ className = "" }) => (
 );
 
 /* Komponent */
-export default function DayForecastCard({
-	date,
-	hourly,
-	periods,
-	summary,
-	sunTimes,
-	open,
-	onToggle,
-}) {
+export default function DayForecastCard({ date, hourly, periods, summary, sunTimes, open, onToggle }) {
 	const panelId = useId();
 
 	const toggle = () => {
@@ -75,7 +67,9 @@ export default function DayForecastCard({
 		periodCells = (
 			<td className="day-card-periods-hidden" colSpan={4} />
 		);
-	} else {
+	} 
+	
+	else {
 		periodCells = ORDER.map((key) => (
 			<td
 				key={key}

@@ -293,3 +293,53 @@ export default class LocationForecastRepository {
 		return result;
 	}
 }
+
+
+async function main() {
+
+	// Minimal datasource – bruker samme API som resten av prosjektet
+	class LocationForecastDataSource {
+		async fetchLocationForecast(lat, lon) {
+			const res = await fetch(
+				`https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat}&lon=${lon}`,
+				{
+					headers: {
+						"User-Agent": "location-forecast-test"
+					}
+				}
+			);
+
+			if (!res.ok) {
+				throw new Error("Kunne ikke hente forecast");
+			}
+
+			return res.json();
+		}
+	}
+
+	const datasource = new LocationForecastDataSource();
+	const repo = new LocationForecastRepository(datasource);
+
+	const lat = 60.10;
+	const lon = 9.58;
+	const hoursAhead = 72;
+	const timeZone = "Europe/Oslo";
+
+	try {
+		const dailySummary = await repo.getDailySummary(
+			lat,
+			lon,
+			hoursAhead,
+			timeZone
+		);
+
+		console.log("Daily summary mottatt!");
+		console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+		console.log(JSON.stringify(dailySummary, null, 2));
+	}
+	catch (error) {
+		console.log("Error fetching daily summary:", error.message);
+	}
+}
+
+main();
