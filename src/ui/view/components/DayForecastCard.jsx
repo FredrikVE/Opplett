@@ -44,10 +44,14 @@ export default function DayForecastCard({ date, hourly, periods, summary, sunTim
 
 	const renderIcon = (periodKey) => {
 		const period = periods?.[periodKey];
-		if (!period) return null;
+		if (!period) {
+			return null;
+		}
 
 		const iconFile = getWeatherIconFileName(period.weatherSymbol);
-		if (!iconFile) return null;
+		if (!iconFile) {
+			return null;
+		}
 
 		return (
 			<img
