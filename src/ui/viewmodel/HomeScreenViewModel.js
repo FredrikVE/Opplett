@@ -23,7 +23,6 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
 
     // Data state
     const [forecast, setForecast] = useState({});
-    const [dailyPeriods, setDailyPeriods] = useState({});
     const [sunTimesByDate, setSunTimesByDate] = useState({});
     const [dailySummaryByDate, setDailySummaryByDate] = useState({});
     const [alerts, setAlerts] = useState([]);
@@ -41,7 +40,7 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
             location.lat,
             location.lon
         );
-    }, [location.lat, location.lon, geocodingRepository]);
+    }, [location.lat, location.lon]);
 
 
     // Last forecast / alerts / sunrise
@@ -56,34 +55,42 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
 
                 const tz = location.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone ?? "UTC";
 
-                const [forecastData, dailyPeriodForecast, dailySummary, alertResults ] = await Promise.all([
-                    forecastRepository.getHourlyForecastGroupedByDate(location.lat, location.lon, hoursAhead, tz),
-					forecastRepository.getDailyPeriodForecast(location.lat, location.lon, hoursAhead, tz),
+                // Vi henter rådata for timer og det ferdige dagssammendraget parallelt
+                const [hourlyRaw, dailySummary, alertResults] = await Promise.all([
+                    forecastRepository.getHourlyForecast(location.lat, location.lon, hoursAhead, tz),
                     forecastRepository.getDailySummary(location.lat, location.lon, hoursAhead, tz),
                     metAlertsRepository.findAlerts(location.lat, location.lon)
                 ]);
 
-                const dateLabels = Object.keys(forecastData);
+                // Siden HomePage forventer at 'forecast' er gruppert på dato, gjør vi det her:
+                const groupedForecast = {};
+                for (const hour of hourlyRaw) {
+                    if (!groupedForecast[hour.date]) {
+                        groupedForecast[hour.date] = [];
+                    }
+                    groupedForecast[hour.date].push(hour);
+                }
+
+                const dateLabels = Object.keys(groupedForecast);
                 const sunMap = await sunriseRepository.getSunTimesForDateLabels(location.lat, location.lon, dateLabels, tz);
 
                 if (cancelled) {
-					return;
-				}
+                    return;
+                }
 
-                setForecast(forecastData);
-                setDailyPeriods(dailyPeriodForecast);
+                setForecast(groupedForecast);
                 setDailySummaryByDate(dailySummary);
                 setSunTimesByDate(sunMap);
                 setAlerts(alertResults?.alerts ?? []);
                 setError(null);
             } 
-			catch (error) {
+            catch (err) {
                 if (!cancelled) {
-                    setError(error?.message ?? "Ukjent feil");
+                    console.error("Feil ved henting av værdata:", err);
+                    setError(err?.message ?? "Ukjent feil ved henting av værdata");
                 }
             } 
-			
-			finally {
+            finally {
                 if (!cancelled) {
                     setLoading(false);
                 }
@@ -101,7 +108,6 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
     // Returnerer data til view
     return {
         forecast,
-        dailyPeriods,
         dailySummaryByDate,
         sunTimesByDate,
         alerts,

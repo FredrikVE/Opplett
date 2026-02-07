@@ -1,187 +1,231 @@
 // src/model/repositories/LocationForecastRepository.js
 export default class LocationForecastRepository {
-    constructor(locationForecastDataSource) {
-        this.datasource = locationForecastDataSource;
-        this._rawCache = new Map();
-    }
-
-    // @@@ Private hjelpemetoder @@@ //
-
-    async #getRawTimeSeries(lat, lon, hoursAhead) {
-        const cacheKey = `${lat},${lon},${hoursAhead}`;
-        if (this._rawCache.has(cacheKey)) return this._rawCache.get(cacheKey);
-
-        const result = await this.datasource.fetchLocationForecast(lat, lon);
-        const timeseries = result.properties.timeseries.slice(0, hoursAhead);
-
-        this._rawCache.set(cacheKey, timeseries);
-        return timeseries;
-    }
-
-    #groupEntriesByDate(timeseries, tz) {
-        return timeseries.reduce((acc, entry) => {
-            const localDate = new Date(entry.time).toLocaleDateString("no-NO", {
-                year: "numeric", month: "2-digit", day: "2-digit", timeZone: tz
-            });
-            if (!acc[localDate]) acc[localDate] = [];
-            acc[localDate].push(entry);
-            return acc;
-        }, {});
-    }
-
-    #findBestEntryForHour(entries, targetHour, tz) {
-        let bestEntry = null;
-        let minDiff = Infinity;
-
-        for (const entry of entries) {
-            const dateObj = new Date(entry.time);
-            const currentLocalHour = Number(dateObj.toLocaleTimeString("no-NO", {
-                hour: "2-digit", hour12: false, timeZone: tz
-            }));
-            
-            const diff = Math.abs(currentLocalHour - targetHour);
-            if (diff < minDiff) {
-                minDiff = diff;
-                bestEntry = entry;
-            }
-        }
-        return bestEntry;
-    }
-
-    // @@@ Public API @@@ //
     
-    async getHourlyForecast(lat, lon, hoursAhead, timeZone) {
-        const timeseries = await this.#getRawTimeSeries(lat, lon, hoursAhead);
-        const tz = timeZone ?? "Europe/Oslo";
+    constructor(datasource) {
+        this.datasource = datasource;
+        this.cache = new Map();
+    }
 
-        return timeseries.map((entry) => {
-            const date = new Date(entry.time);
-            const data = entry.data;
-            const next1 = data.next_1_hours;
-            const next6 = data.next_6_hours;
-            const next12 = data.next_12_hours;
-
-            return {
-                date: date.toLocaleDateString("no-NO", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: tz }),
-                localTime: date.toLocaleTimeString("no-NO", { hour: "2-digit", minute: "2-digit", timeZone: tz }),
-                // Gjeninnfører logikken for å sjekke 1t, så 6t, så 12t
-                precipitation_amount: next1?.details?.precipitation_amount ?? next6?.details?.precipitation_amount ?? next12?.details?.precipitation_amount ?? 0,
-                precipitation_min: next1?.details?.precipitation_min ?? next6?.details?.precipitation_min ?? next12?.details?.precipitation_min,
-                precipitation_max: next1?.details?.precipitation_max ?? next6?.details?.precipitation_max ?? next12?.details?.precipitation_max,
-                details: data.instant.details,
-                weatherSymbol: (next1 ?? next6 ?? next12)?.summary?.symbol_code,
-            };
+    // ---------- TID ----------
+    #localDate(entry, tz) {
+        return new Date(entry.time).toLocaleDateString("no-NO", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            timeZone: tz
         });
     }
 
-    async getHourlyForecastGroupedByDate(lat, lon, hoursAhead, timeZone) {
-        const forecast = await this.getHourlyForecast(lat, lon, hoursAhead, timeZone);
-        return forecast.reduce((acc, item) => {
-            if (!acc[item.date]) acc[item.date] = [];
-            acc[item.date].push(item);
-            return acc;
-        }, {});
-    }
-
-    async getDailyPeriodForecast(lat, lon, hoursAhead, timeZone) {
-        const timeseries = await this.#getRawTimeSeries(lat, lon, hoursAhead);
-        const tz = timeZone ?? "Europe/Oslo";
-        
-		const TARGET_HOURS = { 
-			night: 0, 
-			morning: 6, 
-			afternoon: 12, 
-			evening: 18 
-		};
-
-        const groupedDays = this.#groupEntriesByDate(timeseries, tz);
-
-		
-        return Object.fromEntries(
-            Object.entries(groupedDays).map(([date, entries]) => {
-                const periods = {};
-                for (const [label, hour] of Object.entries(TARGET_HOURS)) {
-                    const entry = this.#findBestEntryForHour(entries, hour, tz);
-                    if (!entry) continue;
-
-                    // Prioriterer 6t for perioder (morgen/dag/osv) slik som originalen
-                    const pack = entry.data.next_6_hours ?? entry.data.next_1_hours ?? entry.data.next_12_hours;
-                    if (pack?.summary?.symbol_code) {
-                        periods[label] = {
-                            weatherSymbol: pack.summary.symbol_code,
-                            details: pack.details,
-                        };
-                    }
-                }
-                return [date, { periods }];
+    #localHour(entry, tz) {
+        return Number(
+            new Date(entry.time).toLocaleTimeString("no-NO", {
+                hour: "2-digit",
+                hour12: false,
+                timeZone: tz
             })
         );
     }
 
+    // ---------- DATA ----------
+    async #getTimeseries(lat, lon, hoursAhead) {
+        const key = `${lat},${lon},${hoursAhead}`;
+        if (this.cache.has(key)) {
+            return this.cache.get(key);
+        }
+
+        const res = await this.datasource.fetchLocationForecast(lat, lon);
+        const ts = res.properties.timeseries.slice(0, hoursAhead);
+
+        this.cache.set(key, ts);
+        return ts;
+    }
+
+    // ---------- TIMEVARSEL ----------
+    async getHourlyForecast(lat, lon, hoursAhead, timeZone) {
+        const timeseries = await this.#getTimeseries(lat, lon, hoursAhead);
+        const hourly = [];
+
+        for (const entry of timeseries) {
+
+            const date = this.#localDate(entry, timeZone);
+            const localTime = this.#localHour(entry, timeZone);
+
+            const weatherSymbol = entry.data.next_1_hours?.summary?.symbol_code ?? entry.data.next_6_hours?.summary?.symbol_code;
+            const oneHourPrecip = entry.data.next_1_hours?.details?.precipitation_amount;
+            const sixHourPrecip = entry.data.next_6_hours?.details?.precipitation_amount ?? 0;
+
+            const temp = entry.data.instant.details.air_temperature;
+            const wind = entry.data.instant.details.wind_speed;
+
+            hourly.push({
+                date,
+                localTime,
+                weatherSymbol,
+                oneHourPrecip,
+                sixHourPrecip,
+                temp,
+                wind
+            });
+        }
+
+        return hourly;
+    }
+
+    // ---------- DAGSSAMMENDRAG ----------
     async getDailySummary(lat, lon, hoursAhead, timeZone) {
-        const timeseries = await this.#getRawTimeSeries(lat, lon, hoursAhead);
-        const tz = timeZone ?? "Europe/Oslo";
-        const groupedDays = this.#groupEntriesByDate(timeseries, tz);
-        const TARGET_HOURS = [0, 6, 12, 18];
+        const hourlyForecast = await this.getHourlyForecast(lat, lon, hoursAhead, timeZone);
+        const hoursPerDay = this.#groupHoursByDate(hourlyForecast);
 
-        return Object.fromEntries(
-            Object.entries(groupedDays).map(([date, entries]) => {
-                // Vi henter representativ data for hver 6. time (0, 6, 12, 18)
-                const blocks = TARGET_HOURS.map(h => this.#findBestEntryForHour(entries, h, tz)).filter(Boolean);
+        const dailySummary = {};
 
-                let minTemp = Infinity;
-                let maxTemp = -Infinity;
-                let totalPrecip = 0;
-                const windSamples = [];
+        for (const date in hoursPerDay) {
+            const hoursInDay = hoursPerDay[date];
 
-                blocks.forEach(entry => {
-                    const next6 = entry.data.next_6_hours?.details;
-                    const instant = entry.data.instant?.details;
+            const { minTemp, maxTemp } = this.#calculateMinMaxTemp(hoursInDay);
+            const totalPrecip = this.#calculateTotalPrecip(hoursInDay);
+            const avgWind = this.#calculateAvgWind(hoursInDay);
 
-                    // Bruker METs egne min/max verdier hvis de finnes (mer nøyaktig)
-                    if (next6?.air_temperature_min !== undefined) minTemp = Math.min(minTemp, next6.air_temperature_min);
-                    if (next6?.air_temperature_max !== undefined) maxTemp = Math.max(maxTemp, next6.air_temperature_max);
-                    
-                    // Fallback til instant hvis 6t-vindu mangler
-                    if (next6?.air_temperature_min === undefined && instant?.air_temperature) {
-                        minTemp = Math.min(minTemp, instant.air_temperature);
-                        maxTemp = Math.max(maxTemp, instant.air_temperature);
-                    }
+            const symbolNight = this.#getSymbolAtSpecificHour(hoursInDay, 0);
+            const symbolMorning = this.#getSymbolAtSpecificHour(hoursInDay, 6);
+            const symbolAfternoon = this.#getSymbolAtSpecificHour(hoursInDay, 12);
+            const symbolEvening = this.#getSymbolAtSpecificHour(hoursInDay, 18);
 
-                    if (next6?.precipitation_amount !== undefined) totalPrecip += next6.precipitation_amount;
-                    if (instant?.wind_speed !== undefined) windSamples.push(instant.wind_speed);
-                });
+            dailySummary[date] = {
+                minTemp,
+                maxTemp,
+                totalPrecip,
+                avgWind,
+                symbolNight,
+                symbolMorning,
+                symbolAfternoon,
+                symbolEvening
+            };
+        }
 
-                return [date, {
-                    minTemp: minTemp === Infinity ? null : minTemp,
-                    maxTemp: maxTemp === -Infinity ? null : maxTemp,
-                    totalPrecip: Number(totalPrecip.toFixed(1)),
-                    avgWind: windSamples.length > 0 ? (windSamples.reduce((a, b) => a + b, 0) / windSamples.length) : null
-                }];
-            })
-        );
+        return dailySummary;
+    }
+
+    // ---------- HJELPEMETODE FOR PERIODESYMBOLER ----------
+    #getSymbolAtSpecificHour(hours, targetHour) {
+        let bestEntry = null;
+        let minDiff = Infinity;
+
+        for (const h of hours) {
+            const diff = Math.abs(h.localTime - targetHour);
+            if (diff < minDiff) {
+                minDiff = diff;
+                bestEntry = h;
+            }
+        }
+
+        if (!bestEntry || minDiff > 3) return null;
+
+        return bestEntry.weatherSymbol; 
+    }
+
+    #groupHoursByDate(hourlyForecast) {
+        const result = {};
+
+        for (const hour of hourlyForecast) {
+            if (!result[hour.date]) {
+                result[hour.date] = [];
+            }
+            result[hour.date].push(hour);
+        }
+
+        return result;
+    }
+
+    #calculateMinMaxTemp(hours) {
+        const temperatures = [];
+
+        for (const h of hours) {
+            temperatures.push(h.temp);
+        }
+
+        return {
+            minTemp: Math.round(Math.min(...temperatures)),
+            maxTemp: Math.round(Math.max(...temperatures))
+        };
+    }
+
+    #calculateTotalPrecip(hours) {
+        let totalPrecip = 0;
+        let coveredUntilHour = -1;
+
+        for (const h of hours) {
+
+            // 1. Hopp over timer som allerede er dekket av en 6-timersblokk
+            if (h.localTime < coveredUntilHour) {
+                continue;
+            }
+
+            // 2. Bruk 1-times nedbør hvis tilgjengelig (korttidsvarsel)
+            if (h.oneHourPrecip != null) {
+                totalPrecip += h.oneHourPrecip;
+                continue;
+            }
+
+            // 3. Fallback til 6-timers nedbør (langtidsvarsel)
+            if (h.sixHourPrecip > 0) {
+                totalPrecip += h.sixHourPrecip;
+                coveredUntilHour = h.localTime + 6;
+            }
+        }
+
+        return Number(totalPrecip.toFixed(1));
+    }
+
+    #calculateAvgWind(hours) {
+        // 1. Samle vind for dagtid (09–18)
+        const daytimeWinds = [];
+
+        for (const h of hours) {
+            if (h.localTime >= 9 && h.localTime <= 18) {
+                daytimeWinds.push(h.wind);
+            }
+        }
+
+        // 2. Velg hvilke vindverdier som skal brukes
+        const winds = [];
+
+        if (daytimeWinds.length > 0) {
+            for (const w of daytimeWinds) {
+                winds.push(w);
+            }
+        } 
+        
+        else {
+            for (const h of hours) {
+                winds.push(h.wind);
+            }
+        }
+
+        // 3. Sorter stigende
+        winds.sort((a, b) => a - b);
+
+        // 4. 75-percentil (yr.no-aktig presentasjon)
+        if (winds.length === 0) {
+            return 0;
+        }
+
+        const index = Math.floor(winds.length * 0.75);
+        return Math.ceil(winds[index]);
     }
 }
 
 import LocationForecastDataSource from "../datasource/LocationForecastDataSource.js"
 async function main() {
 
-
-
 	const repo = new LocationForecastRepository(new LocationForecastDataSource());
 
-	const lat = 60.10;
-	const lon = 9.58;
-	const hoursAhead = 72;
+	const lat = 68.799759;
+	const lon = 16.541850;
+	const hoursAhead = 120;
 	const timeZone = "Europe/Oslo";
 
 	try {
-		const dailySummary = await repo.getDailySummary(
-			lat,
-			lon,
-			hoursAhead,
-			timeZone
-		);
+		const dailySummary = await repo.getDailySummary(lat, lon, hoursAhead, timeZone);
 
 		console.log("Daily summary mottatt!");
 		console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");

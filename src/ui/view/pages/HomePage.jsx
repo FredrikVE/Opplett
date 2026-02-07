@@ -7,81 +7,75 @@ import AlertList from "../components/AlertList.jsx";
 
 export default function HomePage({ viewModel }) {
 
-	//state for å holde styr på åpne/lukkete kort
-	const [openDate, setOpenDate] = useState(null);
+    const [openDate, setOpenDate] = useState(null);
 
-	if (viewModel.loading) {
-		return <LoadingSpinner/>;
-	}
+    if (viewModel.loading) {
+        return <LoadingSpinner/>;
+    }
 
+    if (viewModel.error) {
+        return <p>Feil: {viewModel.error}</p>;
+    }
+    
+    const entries = Object.entries(viewModel.forecast); 
+    const firstDate = entries[0]?.[0];                  
 
-	if (viewModel.error) {
-		return <p>Feil: {viewModel.error}</p>;
-	}
-	
-	const entries = Object.entries(viewModel.forecast); // Gjør forecast-objektet om til en liste som kan itereres
-	const firstDate = entries[0]?.[0];                  // Datoen til første dag hvis den ikke er tom
+    const toggleDate = (date) => {                      
+        setOpenDate(previousDate => {
+            if (previousDate === date) {
+                return null;                            
+            }
+            return date;                                
+        });
+    };
 
-	const toggleDate = (date) => {                      // Håndterer åpning og lukking av dagkort
-		setOpenDate(previousDate => {
-			if (previousDate === date) {
-				return null;                            // Klikk på åpent kort -> lukk alle
-			}
+    const hideHeader = openDate === firstDate;           
 
-			return date;                                // Klikk på nytt kort -> åpne valgt dato
-		});
-	};
+    return (
+        <div className="home-screen">
+            <header className="page-header">
+                <h1>Værmelding: {viewModel.location.name}</h1>
+            </header>
 
-	const hideHeader = openDate === firstDate;           // Skjul tabell-header når første dag er åpen
+            <SearchField
+                query={viewModel.query}
+                suggestions={viewModel.suggestions}
+                onSearchChange={viewModel.onSearchChange}
+                onSuggestionSelected={viewModel.onSuggestionSelected}
+            />
 
+            <AlertList alerts={viewModel.alerts} />
 
+            <table className="forecast-overview-table">
+                {!hideHeader && (
+                <thead>
+                    <tr>
+                        <th className="col-date" />
+                        <th className="col-period">Natt</th>
+                        <th className="col-period">Morgen</th>
+                        <th className="col-period">Ettermiddag</th>
+                        <th className="col-period">Kveld</th>
+                        <th className="col-temp">Temp høy/lav</th>
+                        <th className="col-precip">Nedbør</th>
+                        <th className="col-wind">Vind</th>
+                        <th className="col-toggle" />
+                    </tr>
+                </thead>
+                )}
 
-	return (
-		<div className="home-screen">
-			<header className="page-header">
-				<h1>Værmelding: {viewModel.location.name}</h1>
-			</header>
-
-			<SearchField
-				query={viewModel.query}
-				suggestions={viewModel.suggestions}
-				onSearchChange={viewModel.onSearchChange}
-				onSuggestionSelected={viewModel.onSuggestionSelected}
-			/>
-
-			<AlertList alerts={viewModel.alerts} />
-
-			<table className="forecast-overview-table">
-				{!hideHeader && (
-				<thead>
-					<tr>
-						<th className="col-date" />
-						<th className="col-period">Natt</th>
-						<th className="col-period">Morgen</th>
-						<th className="col-period">Ettermiddag</th>
-						<th className="col-period">Kveld</th>
-						<th className="col-temp">Temp høy/lav</th>
-						<th className="col-precip">Nedbør</th>
-						<th className="col-wind">Vind</th>
-						<th className="col-toggle" />
-					</tr>
-				</thead>
-				)}
-
-				{entries.map(([date, hourly], index) => (
-					<DayForecastCard
-						key={date}
-						date={date}
-						hourly={hourly}
-						periods={viewModel.dailyPeriods[date]?.periods}
-						summary={viewModel.dailySummaryByDate[date]}
-						sunTimes={viewModel.sunTimesByDate[date]}
-						open={openDate === date}
-						isFirst={index === 0}
-						onToggle={() => toggleDate(date)}
-					/>
-				))}
-			</table>
-		</div>
-	);
+                {entries.map(([date, hourly], index) => (
+                    <DayForecastCard
+                        key={date}
+                        date={date}
+                        hourly={hourly}
+                        summary={viewModel.dailySummaryByDate[date]}
+                        sunTimes={viewModel.sunTimesByDate[date]}
+                        open={openDate === date}
+                        isFirst={index === 0}
+                        onToggle={() => toggleDate(date)}
+                    />
+                ))}
+            </table>
+        </div>
+    );
 }

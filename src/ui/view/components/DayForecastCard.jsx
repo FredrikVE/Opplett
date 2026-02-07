@@ -3,18 +3,18 @@ import ForecastTable from "./ForecastTable.jsx";
 import SolarInformation from "./SolarInformation.jsx";
 import { getWeatherIconFileName } from "../../utils/weatherIcons.js";
 
-/* Konstanter */
+// Konstanter for tabell-overskrifter i GUI
+const ORDER = ["symbolNight", "symbolMorning", "symbolAfternoon", "symbolEvening"];
 
-const ORDER = ["night", "morning", "afternoon", "evening"];
-
+//Oversett labels til norsk som er lettere å lese
 const LABELS_NO = {
-	night: "Natt",
-	morning: "Morgen",
-	afternoon: "Ettermiddag",
-	evening: "Kveld",
+    symbolNight: "Natt",
+    symbolMorning: "Morgen",
+    symbolAfternoon: "Ettermiddag",
+    symbolEvening: "Kveld",
 };
 
-/* Chevron-ikon */
+//Chevron-ikon
 const ChevronIcon = ({ className = "" }) => (
 	<svg
 		className={`chevron ${className}`}
@@ -35,20 +35,22 @@ const ChevronIcon = ({ className = "" }) => (
 );
 
 /* Komponent */
-export default function DayForecastCard({ date, hourly, periods, summary, sunTimes, open, onToggle }) {
+export default function DayForecastCard({ date, hourly, summary, sunTimes, open, onToggle }) {
 	const panelId = useId();
 
 	const toggle = () => {
 		onToggle();
 	};
 
+	//Rendrer ikon fra symbolkode til assoiert ikon
 	const renderIcon = (periodKey) => {
-		const period = periods?.[periodKey];
-		if (!period) {
+		const symbolCode = summary?.[periodKey];
+		
+		if (!symbolCode) {
 			return null;
 		}
 
-		const iconFile = getWeatherIconFileName(period.weatherSymbol);
+		const iconFile = getWeatherIconFileName(symbolCode);
 		if (!iconFile) {
 			return null;
 		}
@@ -64,7 +66,7 @@ export default function DayForecastCard({ date, hourly, periods, summary, sunTim
 		);
 	};
 
-	/* Periode-celler (natt/morgen/ettermiddag/kveld) */
+	//Periode-celler (natt/morgen/ettermiddag/kveld)
 	let periodCells;
 
 	if (open) {
@@ -93,7 +95,7 @@ export default function DayForecastCard({ date, hourly, periods, summary, sunTim
 		));
 	}
 
-	/* Bunn-chevron */
+	//Bunn-chevron
 	let bottomToggleRow = null;
 
 	if (open) {
