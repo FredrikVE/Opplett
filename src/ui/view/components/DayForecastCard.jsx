@@ -144,9 +144,6 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, open,
                 </tr>
             )}
 
-            <tr className="day-card-spacer" aria-hidden="true">
-                <td colSpan={9} />
-            </tr>
         </tbody>
     );
 }

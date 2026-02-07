@@ -1,32 +1,49 @@
 /* src/ui/style/DayForecastCard.css */
 
 .forecast-overview-table {
-    border-collapse: separate;
-    border-spacing: 0;
+    border-collapse: collapse; /* VIKTIG: Endret fra separate for å fjerne glipper */
     width: 100%;
 }
 
+/* Vi lager luft mellom kortene ved å legge en usynlig border på bunnen av hver gruppe */
+.day-card-group::after {
+    content: "";
+    display: table-row;
+    height: 15px; /* Dette styrer avstanden mellom kortene */
+}
+
 .forecast-overview-table :where(td, th, tr) {
-    border: none !important;
+    border: none;
+	border-collapse: collapse;
 }
 
 /* --- KORT-LOGIKK FOR SØMLØS OVERGANG --- */
 
-.day-card-summary-row td:first-child { border-top-left-radius: 16px; }
-.day-card-summary-row td:last-child { border-top-right-radius: 16px; }
+/* Topp-radius */
+.day-card-summary-row td:first-child { 
+	border-top-left-radius: 16px;
+}
 
-/* Når kortet er LUKKET: Rund av bunnen på summary-raden */
-.day-card-group:not(.is-open) .day-card-summary-row td:first-child { border-bottom-left-radius: 16px; }
-.day-card-group:not(.is-open) .day-card-summary-row td:last-child { border-bottom-right-radius: 16px; }
+.day-card-summary-row td:last-child { 
+	border-top-right-radius: 16px; 
+}
 
-/* Når kortet er ÅPENT: Fjern radius i midten for å tette glippen */
-.is-open .day-card-summary-row td {
-    border-bottom-left-radius: 0 !important;
-    border-bottom-right-radius: 0 !important;
+/* Bunn-radius når LUKKET */
+.day-card-group:not(.is-open) .day-card-summary-row td:first-child { 
+	border-bottom-left-radius: 16px; 
+}
+
+.day-card-group:not(.is-open) .day-card-summary-row td:last-child { 
+	border-bottom-right-radius: 16px; 
+}
+
+/* Bunn-radius når ÅPEN (på toggle-raden) */
+.day-card-toggle-cell {
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
 }
 
 /* --- CELLER OG PADDING --- */
-
 .day-card-summary-row td {
     background: var(--card-bg);
     vertical-align: middle;
@@ -40,22 +57,18 @@
 }
 
 .day-card-body-inner {
-    padding: 0 28px 20px; 
+    padding: 0 28px 0; 
     background: var(--card-bg);
 }
 
 /* --- BUNN-KNAPPEN (Lukkefeltet) --- */
-
 .day-card-toggle-row td {
     background: var(--card-bg);
-    padding-top: 10px;
-    padding-bottom: 20px; /* Litt mer luft i bunnen av kortet */
-    border-bottom-left-radius: 16px;
-    border-bottom-right-radius: 16px;
+    padding-top: 0;
+    padding-bottom: 22px;
     vertical-align: middle;
 }
 
-/* Sørger for at chevronen i bunnen er helt sentrert */
 .day-card-bottom-chevron {
     display: flex;
     justify-content: center;
@@ -64,14 +77,7 @@
     opacity: 0.4;
 }
 
-.day-card-bottom-chevron .chevron {
-    width: 24px;
-    height: 24px;
-    transform: rotate(180deg); /* Alltid pek oppover når kortet skal lukkes */
-}
-
-/* --- HOVER OG KLIKKBARHET --- */
-
+/* --- HOVER OG KLIKK --- */
 .clickable-row {
     cursor: pointer;
 }
@@ -80,110 +86,57 @@
     background-color: #f8f9fa;
 }
 
-/* Spacer mellom kortene */
-.day-card-spacer td {
-    height: 16px;
-    background: transparent;
-}
-
-/* --- DETALJER --- */
-
+/* --- DETALJER (Dato, Temp, Vind, Nedbør) --- */
 .day-card-date-cell { 
 	padding-left: 28px; 
 }
 
 .day-card-date { 
 	margin: 0; 
-	font-size: 1rem; 
-	font-weight: 600;
-}
-
-.icon-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+	font-size: 1rem;
+	font-weight: 600; 
 }
 
 .icon-wrapper img {
-    width: 40px;
-    height: 40px;
+	width: 40px;
+	height: 40px; 
 }
 
-/* Chevron i høyre kolonne (summary-rad) */
+.temp-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+}
+
+.temp-max.is-warm, .temp-min.is-warm { color: var(--temperature-plus-color); }
+.temp-max.is-cold, .temp-min.is-cold { color: var(--temperature-minus-color); }
+
+.day-card-precip { 
+	color: var(--precipitation-color); 
+	font-weight: 600; 
+	text-align: center; 
+}
+.day-card-wind { 
+	color: var(--wind-color);
+	font-weight: 600; 
+	text-align: center; 
+}
+
 .day-card-disclosure {
-    opacity: 0.3;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+	opacity: 0.3;
+	display: flex; 
+	justify-content: 
+	center; 
 }
 
-.day-card-disclosure .chevron {
-    width: 24px;
-    height: 24px;
-    transition: transform 300ms ease;
+.day-card-disclosure .chevron { 
+	width: 24px; 
+	height: 24px; 
+	transition: transform 300ms ease; 
 }
 
-.is-open .day-card-disclosure .chevron {
-    transform: rotate(180deg);
-}
-
-/* Legg til dette nederst i DayForecastCard.css */
-
-.temp-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 4px;
-    font-size: 1rem;
-    font-weight: 400;
-}
-
-/* Farge for plussgrader (varm) */
-.temp-max.is-warm, 
-.temp-min.is-warm {
-    color: var(--temperature-plus-color);
-}
-
-/* Farge for minusgrader (kald) */
-.temp-max.is-cold, 
-.temp-min.is-cold {
-    color: var(--temperature-minus-color);
-}
-
-.temp-divider {
-    color: rgba(6, 22, 41, 0.3);
-    margin: 0 2px;
-}
-
-/* --- FARGER FOR OPPSUMMERINGSTALL --- */
-
-.day-card-precip {
-    color: var(--precipitation-color);
-    font-weight: 600;
-    font-size: 0.95rem;
-    text-align: center;
-}
-
-.day-card-wind {
-    color: var(--wind-color);
-    font-weight: 600;
-    font-size: 0.95rem;
-    text-align: center;
-}
-
-/* --- JUSTERING AV TEMPERATUR (For å matche vekten) --- */
-
-.temp-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 4px;
-    font-size: 1rem;
-    /* Gjør temperaturen litt tydeligere nå som de andre tallene har farge */
-    font-weight: 600; 
-}
-
-/* Fjerner opacity på datoen så den ikke ser utvasket ut ved siden av fargene */
-.day-card-date {
-    opacity: 1;
+.is-open .day-card-disclosure .chevron { 
+	transform: rotate(180deg); 
 }
