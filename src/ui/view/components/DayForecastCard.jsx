@@ -38,29 +38,18 @@ const ChevronIcon = ({ className = "" }) => (
 export default function DayForecastCard({ date, hourly, summary, sunTimes, open, onToggle }) {
     const panelId = useId();
 
-    const toggle = () => {
-        onToggle();
-    };
-
-    // Håndter tastatur (Enter/Space) for tilgjengelighet
     const handleKeyDown = (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            toggle();
+            onToggle();
         }
     };
 
     const renderIcon = (periodKey) => {
         const symbolCode = summary?.[periodKey];
-
-        if (!symbolCode) {
-            return null;
-        }
-
+        if (!symbolCode) return null;
         const iconFile = getWeatherIconFileName(symbolCode);
-        if (!iconFile) {
-            return null;
-        }
+        if (!iconFile) return null;
 
         return (
             <img
@@ -73,107 +62,66 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, open,
         );
     };
 
-    // Periode-celler: Nå uten interne knapper
-    let periodCells;
-    if (open) {
-        periodCells = <td className="day-card-periods-hidden" colSpan={4} />;
-    } 
-    
-    else {
-        periodCells = ORDER.map((key) => (
-            <td key={key} className="day-card-cell-surface day-card-period-cell">
-                {renderIcon(key)}
-            </td>
-        ));
-    }
-
-    // BUNN: Gjør hele cellen klikkbar
-    let bottomToggleRow = null;
-    if (open) {
-        bottomToggleRow = (
-            <tr 
-                className="day-card-toggle-row" 
-                onClick={toggle}
-                style={{ cursor: 'pointer' }}
-            >
-                <td className="day-card-toggle-cell" colSpan={9}>
-                    <div className="day-card-toggle">
-                        <ChevronIcon className="up" style={{ transform: 'rotate(180deg)' }} />
-                    </div>
-                </td>
-            </tr>
-        );
-    }
-
     return (
         <tbody className={`day-card-group ${open ? "is-open" : ""}`}>
-            {/* TOPP: Hele raden er nå klikkbar */}
+            {/* TOPP: Klikkbar rad */}
             <tr 
-                className="day-card-summary-row"
-                onClick={toggle}
+                className="day-card-summary-row clickable-row"
+                onClick={onToggle}
                 onKeyDown={handleKeyDown}
                 tabIndex="0"
                 role="button"
                 aria-expanded={open}
                 aria-controls={panelId}
-                style={{ cursor: 'pointer' }}
             >
-                {/* Dato */}
                 <td className="day-card-cell-surface day-card-date-cell">
                     <h2 className="day-card-date">{date}</h2>
                 </td>
 
                 {/* Perioder */}
-                {periodCells}
+                {!open ? (
+                    ORDER.map((key) => (
+                        <td key={key} className="day-card-cell-surface day-card-period-cell">
+                            <div className="icon-wrapper">
+                                {renderIcon(key)}
+                            </div>
+                        </td>
+                    ))
+                ) : (
+                    <td className="day-card-periods-hidden" colSpan={4} />
+                )}
 
-                {/* Temperatur, Nedbør, Vind - Nå bare tekst/data, ikke knapper */}
+                {/* Info-celler */}
                 <td className="day-card-cell-surface day-card-temp-cell">
                     {!open && summary && (
-                        <>
-                            <strong
-                                style={{
-                                    color: summary.maxTemp < 0
-                                        ? "var(--temperature-minus-color)"
-                                        : "var(--temperature-plus-color)",
-                                }}
-                            >
+                        <div className="temp-container">
+                            <strong className={`temp-max ${summary.maxTemp < 0 ? 'is-cold' : 'is-warm'}`}>
                                 {Math.round(summary.maxTemp)}°
                             </strong>
-                            {" / "}
-                            <span
-                                style={{
-                                    color: summary.minTemp < 0
-                                        ? "var(--temperature-minus-color)"
-                                        : "var(--temperature-plus-color)",
-                                }}
-                            >
+                            <span className="temp-divider"> / </span>
+                            <span className={`temp-min ${summary.minTemp < 0 ? 'is-cold' : 'is-warm'}`}>
                                 {Math.round(summary.minTemp)}°
                             </span>
-                        </>
+                        </div>
                     )}
                 </td>
 
                 <td className="day-card-cell-surface day-card-precip-cell">
-                    {!open && summary && summary.totalPrecip > 0
-                        ? `${summary.totalPrecip.toFixed(1)} mm`
-                        : null}
+                    {!open && summary && summary.totalPrecip > 0 ? `${summary.totalPrecip.toFixed(1)} mm` : null}
                 </td>
 
                 <td className="day-card-cell-surface day-card-wind-cell">
-                    {!open && summary
-                        ? `${Math.round(summary.avgWind)} m/s`
-                        : null}
+                    {!open && summary ? `${Math.round(summary.avgWind)} m/s` : null}
                 </td>
 
-                {/* Chevron-celle */}
                 <td className="day-card-cell-surface day-card-toggle-col">
                     <div className="day-card-disclosure">
-                        <ChevronIcon className={open ? "open" : ""} />
+                        <ChevronIcon />
                     </div>
                 </td>
             </tr>
 
-            {/* MIDT: Utvidet innhold (Klikk her vil IKKE lukke kortet, som er forventet) */}
+            {/* MIDT: Innhold */}
             <tr className="day-card-body-row" hidden={!open}>
                 <td id={panelId} className="day-card-body-cell" colSpan={9}>
                     <div className="day-card-body-inner">
@@ -183,8 +131,16 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, open,
                 </td>
             </tr>
 
-            {/* BUNN */}
-            {bottomToggleRow}
+            {/* BUNN: Klikkbar lukkeknapp */}
+            {open && (
+                <tr className="day-card-toggle-row clickable-row" onClick={onToggle}>
+                    <td className="day-card-toggle-cell" colSpan={9}>
+                        <div className="day-card-bottom-chevron">
+                            <ChevronIcon />
+                        </div>
+                    </td>
+                </tr>
+            )}
 
             <tr className="day-card-spacer" aria-hidden="true">
                 <td colSpan={9} />

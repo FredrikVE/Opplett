@@ -1,268 +1,149 @@
 /* src/ui/style/DayForecastCard.css */
 
-/* =========================
-	Table: vi lager luft med spacer-tr
-========================= */
 .forecast-overview-table {
-	border-collapse: separate;
-	border-spacing: 0;
-	/* (valgfritt) stabiliser kolonnebredder */
-	/* table-layout: fixed; */
-	/* width: 100%; */
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
 }
 
-/* (Valgfritt) fjern borders i headeren også */
-.forecast-overview-table thead th {
-	border: none !important;
+.forecast-overview-table :where(td, th, tr) {
+    border: none !important;
 }
 
-/* Spacer mellom kort */
-.day-card-spacer td {
-	height: 12px;
-	padding: 0;
-	border: none;
-	background: transparent;
+/* --- KORT-LOGIKK FOR SØMLØS OVERGANG --- */
+
+.day-card-summary-row td:first-child { border-top-left-radius: 16px; }
+.day-card-summary-row td:last-child { border-top-right-radius: 16px; }
+
+/* Når kortet er LUKKET: Rund av bunnen på summary-raden */
+.day-card-group:not(.is-open) .day-card-summary-row td:first-child { border-bottom-left-radius: 16px; }
+.day-card-group:not(.is-open) .day-card-summary-row td:last-child { border-bottom-right-radius: 16px; }
+
+/* Når kortet er ÅPENT: Fjern radius i midten for å tette glippen */
+.is-open .day-card-summary-row td {
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
 }
 
-/* =========================
-	Card group (tbody)
-========================= */
-.day-card-group {
-	filter: drop-shadow(0 1px 2px rgba(6, 22, 41, 0.06));
-	transition: filter 160ms ease, transform 160ms ease;
+/* --- CELLER OG PADDING --- */
+
+.day-card-summary-row td {
+    background: var(--card-bg);
+    vertical-align: middle;
+    padding-top: 32px; 
+    padding-bottom: 32px;
 }
 
-.day-card-group:hover {
-	filter: drop-shadow(0 10px 22px rgba(6, 22, 41, 0.10));
-	transform: translateY(-1px);
-}
-
-/* =========================
-	Borderless "surface" for kortet
-	- bakgrunn beholdes
-	- ALLE borders fjernes (inkl globale tabell-regler)
-========================= */
-.day-card-summary-row td,
-.day-card-body-row td,
-.day-card-toggle-row td {
-	background: var(--card-bg);
-	border: none !important;
-}
-
-/* Body cell padding */
 .day-card-body-cell {
-	padding: 0;
+    background: var(--card-bg);
+    padding: 0;
 }
 
 .day-card-body-inner {
-	padding: 10px 10px 12px;
+    padding: 0 28px 20px; 
+    background: var(--card-bg);
 }
 
-/* =========================
-	Radius uten borders (bare på ytterkantene)
-========================= */
-.day-card-summary-row td:first-child {
-	border-top-left-radius: 14px;
+/* --- BUNN-KNAPPEN (Lukkefeltet) --- */
+
+.day-card-toggle-row td {
+    background: var(--card-bg);
+    padding-top: 10px;
+    padding-bottom: 20px; /* Litt mer luft i bunnen av kortet */
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+    vertical-align: middle;
 }
 
-.day-card-summary-row td:last-child {
-	border-top-right-radius: 14px;
+/* Sørger for at chevronen i bunnen er helt sentrert */
+.day-card-bottom-chevron {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    opacity: 0.4;
 }
 
-/* Når kortet er LUKKET: gi bunn-radius på summary-raden også */
-.day-card-group:not(.is-open) .day-card-summary-row td:first-child {
-	border-bottom-left-radius: 14px;
+.day-card-bottom-chevron .chevron {
+    width: 24px;
+    height: 24px;
+    transform: rotate(180deg); /* Alltid pek oppover når kortet skal lukkes */
 }
 
-.day-card-group:not(.is-open) .day-card-summary-row td:last-child {
-	border-bottom-right-radius: 14px;
+/* --- HOVER OG KLIKKBARHET --- */
+
+.clickable-row {
+    cursor: pointer;
 }
 
-/* Når kortet er ÅPENT: bunn-radius ligger på toggle-cella */
-.day-card-toggle-cell {
-	border-bottom-left-radius: 14px;
-	border-bottom-right-radius: 14px;
-	padding: 0;
+.clickable-row:hover td {
+    background-color: #f8f9fa !important;
 }
 
-/* =========================
-	Celler i summary: padding/align
-========================= */
-.day-card-date-cell {
-	padding: 16px 18px; /* mer luft */
+/* Spacer mellom kortene */
+.day-card-spacer td {
+    height: 16px;
+    background: transparent !important;
 }
 
-.day-card-period-cell {
-	padding: 12px 10px; /* mer luft */
-	text-align: center;
+/* --- DETALJER --- */
+
+.day-card-date-cell { padding-left: 28px !important; }
+.day-card-date { margin: 0; font-size: 1.2rem; font-weight: 700; }
+
+.icon-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-/* Når åpen: colSpan={4}-cella */
-.day-card-periods-hidden {
-	padding: 12px 10px; /* hindrer at raden føles "mindre" */
+.icon-wrapper img {
+    width: 42px;
+    height: 42px;
 }
 
-/* =========================
-	EGEN CHEVRON-KOLONNE (disclosure)
-========================= */
-.col-toggle {
-	width: 44px;
-}
-
-.day-card-toggle-col {
-	width: 44px;
-	padding: 0;
-}
-
-/* Knappen i chevron-kolonnen */
+/* Chevron i høyre kolonne (summary-rad) */
 .day-card-disclosure {
-	width: 44px;
-	height: 100%;
-	min-height: 44px;
-
-	display: flex;
-	align-items: center;
-	justify-content: center;
-
-	background: transparent;
-	border: none;
-	padding: 0;
-	margin: 0;
-
-	cursor: pointer;
-	color: rgba(6, 22, 41, 0.65);
+    opacity: 0.3;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.day-card-disclosure:hover {
-	color: rgba(6, 22, 41, 0.95);
-}
-
-.day-card-disclosure:focus-visible {
-	outline: 3px solid rgba(23, 103, 206, 0.35);
-	outline-offset: 2px;
-}
-
-/* Rotasjon for disclosure chevron når åpen */
 .day-card-disclosure .chevron {
-	display: block;
-	transition: transform 180ms ease;
+    width: 24px;
+    height: 24px;
+    transition: transform 300ms ease;
 }
 
-.day-card-group.is-open .day-card-disclosure .chevron {
-	transform: rotate(180deg);
+.is-open .day-card-disclosure .chevron {
+    transform: rotate(180deg);
 }
 
-/* =========================
-	Knapper i celler
-========================= */
-.day-card-cell-button {
-	width: 100%;
-	height: 100%;
+/* Legg til dette nederst i DayForecastCard.css */
 
-	display: flex;
-	align-items: center;
-	justify-content: center;
-
-	background: transparent;
-	border: none;
-	cursor: pointer;
-
-	color: inherit;
-	font: inherit;
-
-	padding: 0;
-	margin: 0;
-
-	/* Bonus: litt større/jevnere klikkflate */
-	min-height: 44px;
+.temp-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    font-size: 1.1rem;
+    font-weight: 600;
 }
 
-.day-card-cell-button:focus-visible {
-	outline: 3px solid rgba(23, 103, 206, 0.35);
-	outline-offset: -3px;
+/* Farge for plussgrader (varm) */
+.temp-max.is-warm, 
+.temp-min.is-warm {
+    color: var(--temperature-plus-color);
 }
 
-/* Dato-justering */
-.day-card-date-cell .day-card-cell-button {
-	justify-content: flex-start;
-	text-align: left;
+/* Farge for minusgrader (kald) */
+.temp-max.is-cold, 
+.temp-min.is-cold {
+    color: var(--temperature-minus-color);
 }
 
-.day-card-date {
-	margin: 0;
-	font-size: 1.05rem;
-	font-weight: var(--font-weight-bold);
-	letter-spacing: -0.2px;
-	font-variant-numeric: var(--font-variant-numeric);
-}
-
-/* Ikon-look */
-.day-card-period-button img {
-	opacity: 0.95;
-	filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.06));
-}
-
-/* =========================
-	Chevron-knappen (bunn)
-========================= */
-.day-card-toggle {
-	width: 100%;
-	height: 38px; /* litt mer luft enn 34px */
-
-	display: flex;
-	align-items: center;
-	justify-content: center;
-
-	background: transparent;
-	border: none;
-	padding: 0;
-	margin: 0;
-
-	cursor: pointer;
-	color: rgba(6, 22, 41, 0.75);
-}
-
-.day-card-toggle:hover {
-	color: rgba(6, 22, 41, 0.95);
-}
-
-.day-card-toggle:focus-visible {
-	outline: 3px solid rgba(23, 103, 206, 0.35);
-	outline-offset: -3px;
-}
-
-/* Rotasjon + animasjon (bunn chevron) */
-.day-card-toggle .chevron {
-	display: block;
-	transition: transform 180ms ease;
-}
-
-.day-card-group.is-open .day-card-toggle .chevron {
-	transform: rotate(180deg);
-}
-
-/* =========================
-	ForecastTable inni body: fjern alle linjer der også
-========================= */
-.day-card-body-inner table,
-.day-card-body-inner th,
-.day-card-body-inner td,
-.day-card-body-inner tr {
-	border: none !important;
-}
-
-/* (Valgfritt) hvis ForecastTable bruker box-shadow som "linje" */
-.day-card-body-inner * {
-	box-shadow: none;
-}
-
-/* =========================
-	Reduced motion
-========================= */
-@media (prefers-reduced-motion: reduce) {
-	.day-card-group,
-	.day-card-disclosure .chevron,
-	.day-card-toggle .chevron {
-		transition: none;
-	}
+.temp-divider {
+    color: rgba(6, 22, 41, 0.3);
+    margin: 0 2px;
 }
