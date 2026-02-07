@@ -1,4 +1,4 @@
-//src/ui/view/components/ForecastTable.jsx
+// src/ui/view/components/ForecastTable.jsx
 import { getWeatherIconFileName } from "../../utils/weatherIcons.js";
 
 export default function ForecastTable({ forecast }) {
@@ -17,23 +17,33 @@ export default function ForecastTable({ forecast }) {
 
             <tbody>
                 {forecast.map((item) => {
-                    // Vi bruker verdiene vi flater ut i LocationForecastRepository
                     const wind = item.wind;
-                    // Gust ligger fremdeles i den rå details-blokken
                     const gust = item.details?.wind_speed_of_gust;
                     const iconFile = getWeatherIconFileName(item.weatherSymbol);
                     const uvIndex = item.details?.ultraviolet_index_clear_sky;
 
+                    // EKSPLISITT NEDBØRSLOGIKK
+                    let precipDisplay = "–";
+                    let isLongTerm = false;
+
+                    // 1. Sjekk om vi har timesvarsel (prioriteres alltid)
+                    if (item.oneHourPrecip !== undefined) {
+                        precipDisplay = `${item.oneHourPrecip} mm`;
+                    } 
+                    // 2. Hvis ikke, sjekk om vi har 6-timersvarsel med faktisk nedbør
+                    else if (item.sixHourPrecip > 0) {
+                        precipDisplay = `${item.sixHourPrecip} mm`;
+                        isLongTerm = true;
+                    }
+
                     return (
                         <tr key={`${item.date}-${item.localTime}`}>
-                            {/* Viser tidspunkt som f.eks "14" */}
                             <td className="time">{item.localTime}</td>
 
                             <td
                                 className="temperature"
                                 style={{
-                                    color:
-                                        item.temp < 0
+                                    color: item.temp < 0
                                             ? "var(--temperature-minus-color)"
                                             : "var(--temperature-plus-color)",
                                 }}
@@ -47,13 +57,11 @@ export default function ForecastTable({ forecast }) {
                             </td>
 
                             <td className="precipitation">
-                                {/* Viser nedbør for den spesifikke timen */}
-                                {item.oneHourPrecip ?? 0} mm
+                                {precipDisplay}
+                                {isLongTerm && <small style={{ display: 'block', fontSize: '0.7em' }}>/6t</small>}
                             </td>
 
-                            <td>
-                                {uvIndex ?? "–"}
-                            </td>
+                            <td>{uvIndex ?? "–"}</td>
 
                             <td>
                                 {iconFile && (

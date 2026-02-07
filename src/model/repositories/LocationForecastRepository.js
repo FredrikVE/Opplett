@@ -60,33 +60,44 @@ export default class LocationForecastRepository {
         const hourly = [];
 
         for (const entry of timeseries) {
-
             const date = this.#localDate(entry, timeZone);
             const localTime = this.#localHour(entry, timeZone);
 
-            const weatherSymbol = entry.data.next_1_hours?.summary?.symbol_code ?? entry.data.next_6_hours?.summary?.symbol_code;
-            const oneHourPrecip = entry.data.next_1_hours?.details?.precipitation_amount;
-            const sixHourPrecip = entry.data.next_6_hours?.details?.precipitation_amount ?? 0;
+            //Finn værsymbol (prioriterer neste time, faller tilbake på 6 timer)
+            const weatherSymbol = entry.data.next_1_hours?.summary?.symbol_code 
+                               ?? entry.data.next_6_hours?.summary?.symbol_code;
 
-            const temp = entry.data.instant.details.air_temperature;
-            const wind = entry.data.instant.details.wind_speed;
-            const uv = entry.data.instant.details.ultraviolet_index_clear_sky;
+            //Hent ut regnmengder fra API-et
+            const amountNextHour = entry.data.next_1_hours?.details?.precipitation_amount;
+            const amountNextSixHours = entry.data.next_6_hours?.details?.precipitation_amount;
+
+            let detailedPrecipitation = undefined;       // Vi skiller mellom detaljert (time for time) og fallback (6-timers bolker).
+            let fallbackPrecipitation = 0;
+
+            if (amountNextHour !== undefined) {          // KORTTIDSVARSEL: Vi har detaljer per time.
+                detailedPrecipitation = amountNextHour;  // Vi bruker denne verdien (selv om den er 0.0) og ignorerer 6-timers perioden.
+                fallbackPrecipitation = 0; 
+            } 
+            else {                                          //Elles, LANGTIDSVARSEL: Detaljer per time mangler fra MET.
+                fallbackPrecipitation = amountNextSixHours ?? 0;    // Da bruker vi 6-timers bolken som kilde.
+            }
 
             hourly.push({
                 date,
                 localTime,
                 weatherSymbol,
-                oneHourPrecip,
-                sixHourPrecip,
-                temp,
-                wind,
-                uv,
+                oneHourPrecip: detailedPrecipitation, 
+                sixHourPrecip: fallbackPrecipitation,
+                temp: entry.data.instant.details.air_temperature,
+                wind: entry.data.instant.details.wind_speed,
+                uv: entry.data.instant.details.ultraviolet_index_clear_sky,
                 details: entry.data.instant.details
             });
         }
 
         return hourly;
     }
+
 
     // ---------- DAGSSAMMENDRAG ----------
     async getDailySummary(lat, lon, hoursAhead, timeZone) {
