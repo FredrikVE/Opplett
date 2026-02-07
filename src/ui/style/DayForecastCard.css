@@ -57,16 +57,20 @@
 }
 
 .day-card-body-inner {
-    padding: 0 28px 0; 
+    padding: 0 28px 0;
     background: var(--card-bg);
+    display: flex;
+    flex-direction: column;
 }
 
 /* --- BUNN-KNAPPEN (Lukkefeltet) --- */
 .day-card-toggle-row td {
     background: var(--card-bg);
-    padding-top: 0;
-    padding-bottom: 22px;
-    vertical-align: middle;
+    padding: 0;             /* Nullstiller alt */
+    height: 3rem;           /* Vi setter en fast høyde på selve cella i stedet for padding */
+    vertical-align: middle; /* Sentrerer chevronen perfekt i de 40 pikslene */
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
 }
 
 .day-card-bottom-chevron {
@@ -139,4 +143,29 @@
 
 .is-open .day-card-disclosure .chevron { 
 	transform: rotate(180deg); 
+}
+
+/* Finn .clickable-row og oppdater fokus-stilen */
+
+.clickable-row:focus-visible {
+	/* Bruker box-shadow som følger border-radius perfekt */
+    box-shadow: inset 0 0 0 2px var(--brand-color, #1767ce);
+    
+    /* Viktig: Sørg for at hjørnene på skyggen matcher kortet */
+    border-radius: 16px;
+}
+
+/* Spesialhåndtering for summary-raden når kortet er ÅPENT */
+/* Da skal ikke bunnen av fokus-ringen være rund, akkurat som kortet */
+.is-open .day-card-summary-row:focus-visible {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+/* Lukkeknappen i bunn trenger også runding kun nede når den får fokus */
+.day-card-toggle-row:focus-visible {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
 }
