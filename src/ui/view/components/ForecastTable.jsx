@@ -1,4 +1,4 @@
-// src/ui/view/components/ForecastTable.jsx
+//src/ui/view/components/ForecastTable.jsx
 import { getWeatherIconFileName } from "../../utils/weatherIcons.js";
 
 export default function ForecastTable({ forecast }) {
