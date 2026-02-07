@@ -80,7 +80,7 @@ export default function HomePage({ viewModel }) {
                         key={date}
                         date={date}
                         hourly={hourly}
-                        colCount={colCount} // Her sendes den magiske 9-eren dynamisk
+                        colCount={colCount}
                         summary={viewModel.dailySummaryByDate[date]}
                         sunTimes={viewModel.sunTimesByDate[date]}
                         open={openDate === date}
