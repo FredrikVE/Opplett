@@ -1,3 +1,4 @@
+// src/ui/view/pages/HomePage.jsx
 import { useState } from "react";
 import LoadingSpinner from "../components/LoadingSpinner.jsx";
 import SearchField from "../components/SearchField.jsx";
@@ -34,23 +35,23 @@ export default function HomePage({ viewModel }) {
     const firstDate = entries[0]?.[0];
 
     const toggleDate = (date) => {
-    setOpenDate((previousOpenDate) => {
-        if (previousOpenDate === date) { // Hvis datoen vi klikket på allerede er den som er åpen
-            return null;                 //returnerer vi null (lukk kortet)
-        } 
-        else {
-            return date;                //ellers returnerer vi den nye datoen (åpne det nye kortet)
-        }
-    });
-};
+        setOpenDate((previousOpenDate) => {
+            if (previousOpenDate === date) { // Hvis datoen vi klikket på allerede er den som er åpen
+                return null;                 // returnerer vi null (lukk kortet)
+            } 
+            else {
+                return date;                // ellers returnerer vi den nye datoen (åpne det nye kortet)
+            }
+        });
+    };
 
-    //Skjul header hvis det første kortet er åpent
+    // Skjul header hvis det første kortet er åpent
     const hideHeader = openDate === firstDate;
 
     return (
         <div className="home-screen">
             <header className="page-header">
-                <h1>Værmelding: {viewModel.location.name}</h1>
+                <h1>Værmelding: {viewModel.location.name || "Min posisjon"}</h1>
             </header>
 
             <SearchField
@@ -58,6 +59,7 @@ export default function HomePage({ viewModel }) {
                 suggestions={viewModel.suggestions}
                 onSearchChange={viewModel.onSearchChange}
                 onSuggestionSelected={viewModel.onSuggestionSelected}
+                onResetToDeviceLocation={viewModel.onResetToDeviceLocation} // Lagt til her
             />
 
             <AlertList alerts={viewModel.alerts} />

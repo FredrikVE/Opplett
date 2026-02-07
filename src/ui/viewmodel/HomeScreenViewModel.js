@@ -118,5 +118,7 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
         suggestions: searchViewModel.suggestions,
         onSearchChange: searchViewModel.onSearchChange,
         onSuggestionSelected: searchViewModel.onSuggestionSelected,
+        // HER ER ENDRINGEN: Vi sender funksjonen videre til Viewet
+        onResetToDeviceLocation: () => searchViewModel.onResetLocation(initialLat, initialLon),
     };
 }

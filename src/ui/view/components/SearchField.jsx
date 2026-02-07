@@ -1,16 +1,13 @@
+// src/ui/view/components/SearchField.jsx
 import { useState } from "react";
 
-export default function SearchField({ query, suggestions, onSearchChange, onSuggestionSelected }) {
-    
-    // useState for indeks til aktivt autocomplete-forslag.
-    // -1 betyr at ingen forslag er valgt.
-    // Brukes for navigasjon med piltaster (ArrowUp / ArrowDown)
-    // og valg med Enter.
+export default function SearchField({ query, suggestions, onSearchChange, onSuggestionSelected, onResetToDeviceLocation }) {
     const [activeIndex, setActiveIndex] = useState(-1);
 
-    //arrow funksjon for å håndtere keyboard trykk.
     const handleKeyDown = (event) => {
-        if (!suggestions.length) return;
+        if (!suggestions.length) {
+            return;
+        }
 
         switch (event.key) {
             case "ArrowDown":
@@ -43,40 +40,50 @@ export default function SearchField({ query, suggestions, onSearchChange, onSugg
 
     return (
         <div className="search">
-           
-            <input
-                id="location-search"
-                className="search-input"
-                type="text"
-                placeholder="Søk sted, by eller adresse…"
+            <div className="search-input-container">
+                <input
+                    id="location-search"
+                    className="search-input"
+                    type="text"
+                    placeholder="Søk sted, by eller adresse…"
+                    value={query}
+                    onChange={(event) => {
+                        onSearchChange(event.target.value);
+                        setActiveIndex(-1);
+                    }}
+                    onKeyDown={handleKeyDown}
+                    autoComplete="off"
+                />
                 
-                value={query}
-
-                onChange={(event) => {
-                    onSearchChange(event.target.value);
-                    setActiveIndex(-1);
-                }}
-
-                onKeyDown={handleKeyDown}
-                autoComplete="off"
-            />
+                <button 
+                    type="button"
+                    className="reset-location-btn"
+                    onClick={onResetToDeviceLocation}
+                    title="Bruk min posisjon"
+                >
+                    <svg 
+                        width="20" 
+                        height="20" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                    >
+                        <polygon points="3 11 22 2 13 21 11 13 3 11" />
+                    </svg>
+                </button>
+            </div>
 
             {suggestions.length > 0 && (
-                <ul
-                    id="search-suggestions"
-                    className="search-suggestions"
-                    role="listbox"
-                >
+                <ul id="search-suggestions" className="search-suggestions" role="listbox">
                     {suggestions.map((s, index) => (
                         <li
                             key={`${s.lat}-${s.lon}`}
                             role="option"
                             aria-selected={index === activeIndex}
-                            
-                            className={`search-suggestion ${
-                                index === activeIndex ? "active" : ""
-                            }`}
-                            
+                            className={`search-suggestion ${index === activeIndex ? "active" : ""}`}
                             onMouseEnter={() => setActiveIndex(index)}
                             onMouseDown={() => onSuggestionSelected(s)}
                         >

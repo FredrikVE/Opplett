@@ -221,6 +221,7 @@ export default class LocationForecastRepository {
     }
 }
 
+/*
 import LocationForecastDataSource from "../datasource/LocationForecastDataSource.js"
 async function main() {
 
@@ -244,3 +245,4 @@ async function main() {
 }
 
 main();
+*/
