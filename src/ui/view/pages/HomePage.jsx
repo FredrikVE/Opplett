@@ -34,10 +34,17 @@ export default function HomePage({ viewModel }) {
     const firstDate = entries[0]?.[0];
 
     const toggleDate = (date) => {
-        setOpenDate(prev => (prev === date ? null : date));
-    };
+    setOpenDate((previousOpenDate) => {
+        if (previousOpenDate === date) { // Hvis datoen vi klikket på allerede er den som er åpen
+            return null;                 //returnerer vi null (lukk kortet)
+        } 
+        else {
+            return date;                //ellers returnerer vi den nye datoen (åpne det nye kortet)
+        }
+    });
+};
 
-    // Din logikk: Skjul header hvis det første kortet er åpent
+    //Skjul header hvis det første kortet er åpent
     const hideHeader = openDate === firstDate;
 
     return (
