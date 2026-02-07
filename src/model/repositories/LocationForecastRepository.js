@@ -7,6 +7,7 @@ export default class LocationForecastRepository {
     }
 
     // ---------- TID ----------
+    /*
     #localDate(entry, tz) {
         return new Date(entry.time).toLocaleDateString("no-NO", {
             year: "numeric",
@@ -14,6 +15,19 @@ export default class LocationForecastRepository {
             day: "2-digit",
             timeZone: tz
         });
+    }
+    */
+   #localDate(entry, tz) {
+        const date = new Date(entry.time);
+        const dateString = date.toLocaleDateString("no-NO", {
+            weekday: "long",
+            day: "numeric",
+            month: "short", // feb i stedet for februar
+            timeZone: tz
+        });
+
+        // Gjør første bokstav stor: "lørdag 7. februar" -> "Lørdag 7. februar"
+        return dateString.charAt(0).toUpperCase() + dateString.slice(1);
     }
 
     #localHour(entry, tz) {
