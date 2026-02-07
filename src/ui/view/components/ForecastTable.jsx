@@ -2,7 +2,9 @@
 import { getWeatherIconFileName } from "../../utils/weatherIcons.js";
 
 const formatPrecipitation = (data) => {
-    if (!data) return "–";
+    if (!data) {
+        return "–";
+    }
 
     const { amount, min, max } = data;
 
