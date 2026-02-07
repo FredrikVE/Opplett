@@ -1,4 +1,3 @@
-// src/ui/view/pages/HomePage.jsx
 import { useState } from "react";
 import LoadingSpinner from "../components/LoadingSpinner.jsx";
 import SearchField from "../components/SearchField.jsx";
@@ -6,30 +5,40 @@ import DayForecastCard from "../components/DayForecastCard.jsx";
 import AlertList from "../components/AlertList.jsx";
 
 export default function HomePage({ viewModel }) {
-
     const [openDate, setOpenDate] = useState(null);
 
+    // 1. Definer tabellstrukturen ett sted
+    const tableConfig = [
+        { id: "date", label: "" },
+        { id: "night", label: "Natt" },
+        { id: "morning", label: "Morgen" },
+        { id: "afternoon", label: "Ettermiddag" },
+        { id: "evening", label: "Kveld" },
+        { id: "temp", label: "Temp høy/lav" },
+        { id: "precip", label: "Nedbør" },
+        { id: "wind", label: "Vind" },
+        { id: "toggle", label: "" }
+    ];
+
+    const colCount = tableConfig.length;
+
     if (viewModel.loading) {
-        return <LoadingSpinner/>;
+        return <LoadingSpinner />;
     }
 
     if (viewModel.error) {
         return <p>Feil: {viewModel.error}</p>;
     }
-    
-    const entries = Object.entries(viewModel.forecast); 
-    const firstDate = entries[0]?.[0];                  
 
-    const toggleDate = (date) => {                      
-        setOpenDate(previousDate => {
-            if (previousDate === date) {
-                return null;                            
-            }
-            return date;                                
-        });
+    const entries = Object.entries(viewModel.forecast);
+    const firstDate = entries[0]?.[0];
+
+    const toggleDate = (date) => {
+        setOpenDate(prev => (prev === date ? null : date));
     };
 
-    const hideHeader = openDate === firstDate;           
+    // Din logikk: Skjul header hvis det første kortet er åpent
+    const hideHeader = openDate === firstDate;
 
     return (
         <div className="home-screen">
@@ -48,19 +57,15 @@ export default function HomePage({ viewModel }) {
 
             <table className="forecast-overview-table">
                 {!hideHeader && (
-                <thead>
-                    <tr>
-                        <th className="col-date" />
-                        <th className="col-period">Natt</th>
-                        <th className="col-period">Morgen</th>
-                        <th className="col-period">Ettermiddag</th>
-                        <th className="col-period">Kveld</th>
-                        <th className="col-temp">Temp høy/lav</th>
-                        <th className="col-precip">Nedbør</th>
-                        <th className="col-wind">Vind</th>
-                        <th className="col-toggle" />
-                    </tr>
-                </thead>
+                    <thead>
+                        <tr>
+                            {tableConfig.map((col) => (
+                                <th key={col.id} className={`col-${col.id}`}>
+                                    {col.label}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
                 )}
 
                 {entries.map(([date, hourly], index) => (
@@ -68,6 +73,7 @@ export default function HomePage({ viewModel }) {
                         key={date}
                         date={date}
                         hourly={hourly}
+                        colCount={colCount} // Her sendes den magiske 9-eren dynamisk
                         summary={viewModel.dailySummaryByDate[date]}
                         sunTimes={viewModel.sunTimesByDate[date]}
                         open={openDate === date}
