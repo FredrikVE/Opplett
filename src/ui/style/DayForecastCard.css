@@ -154,3 +154,36 @@
     color: rgba(6, 22, 41, 0.3);
     margin: 0 2px;
 }
+
+/* --- FARGER FOR OPPSUMMERINGSTALL --- */
+
+.day-card-precip {
+    color: var(--precipitation-color);
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-align: center;
+}
+
+.day-card-wind {
+    color: var(--wind-color);
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-align: center;
+}
+
+/* --- JUSTERING AV TEMPERATUR (For å matche vekten) --- */
+
+.temp-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    font-size: 1rem;
+    /* Gjør temperaturen litt tydeligere nå som de andre tallene har farge */
+    font-weight: 600; 
+}
+
+/* Fjerner opacity på datoen så den ikke ser utvasket ut ved siden av fargene */
+.day-card-date {
+    opacity: 1;
+}

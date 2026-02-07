@@ -106,11 +106,13 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, open,
                     )}
                 </td>
 
-                <td className="day-card-cell-surface day-card-precip-cell">
+                {/* NEDBØR: Lagt til klassen day-card-precip */}
+                <td className="day-card-cell-surface day-card-precip-cell day-card-precip">
                     {!open && summary && summary.totalPrecip > 0 ? `${summary.totalPrecip.toFixed(1)} mm` : null}
                 </td>
 
-                <td className="day-card-cell-surface day-card-wind-cell">
+                {/* VIND: Lagt til klassen day-card-wind */}
+                <td className="day-card-cell-surface day-card-wind-cell day-card-wind">
                     {!open && summary ? `${Math.round(summary.avgWind)} m/s` : null}
                 </td>
 
