@@ -77,19 +77,26 @@
 }
 
 .clickable-row:hover td {
-    background-color: #f8f9fa !important;
+    background-color: #f8f9fa;
 }
 
 /* Spacer mellom kortene */
 .day-card-spacer td {
     height: 16px;
-    background: transparent !important;
+    background: transparent;
 }
 
 /* --- DETALJER --- */
 
-.day-card-date-cell { padding-left: 28px !important; }
-.day-card-date { margin: 0; font-size: 1.2rem; font-weight: 700; }
+.day-card-date-cell { 
+	padding-left: 28px; 
+}
+
+.day-card-date { 
+	margin: 0; 
+	font-size: 1rem; 
+	font-weight: 600;
+}
 
 .icon-wrapper {
     display: flex;
@@ -98,8 +105,8 @@
 }
 
 .icon-wrapper img {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
 }
 
 /* Chevron i høyre kolonne (summary-rad) */
@@ -127,8 +134,8 @@
     justify-content: center;
     align-items: center;
     gap: 4px;
-    font-size: 1.1rem;
-    font-weight: 600;
+    font-size: 1rem;
+    font-weight: 400;
 }
 
 /* Farge for plussgrader (varm) */
