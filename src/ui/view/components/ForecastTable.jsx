@@ -1,6 +1,19 @@
 // src/ui/view/components/ForecastTable.jsx
 import { getWeatherIconFileName } from "../../utils/weatherIcons.js";
 
+const formatPrecipitation = (data) => {
+    if (!data) return "–";
+
+    const { amount, min, max } = data;
+
+    // Hvis det er et intervall (min og max er forskjellige)
+    if (min !== undefined && max !== undefined && min !== max) {
+        return `${min} – ${max} mm`;
+    }
+    // Ellers vanlig mengde (f.eks. "0 mm" eller "1.2 mm")
+    return `${amount} mm`;
+};
+
 export default function ForecastTable({ forecast }) {
     return (
         <table className="forecast-table">
@@ -17,24 +30,9 @@ export default function ForecastTable({ forecast }) {
 
             <tbody>
                 {forecast.map((item) => {
-                    const wind = item.wind;
-                    const gust = item.details?.wind_speed_of_gust;
                     const iconFile = getWeatherIconFileName(item.weatherSymbol);
-                    const uvIndex = item.details?.ultraviolet_index_clear_sky;
-
-                    // EKSPLISITT NEDBØRSLOGIKK
-                    let precipDisplay = "–";
-                    let isLongTerm = false;
-
-                    // 1. Sjekk om vi har timesvarsel (prioriteres alltid)
-                    if (item.oneHourPrecip !== undefined) {
-                        precipDisplay = `${item.oneHourPrecip} mm`;
-                    } 
-                    // 2. Hvis ikke, sjekk om vi har 6-timersvarsel med faktisk nedbør
-                    else if (item.sixHourPrecip > 0) {
-                        precipDisplay = `${item.sixHourPrecip} mm`;
-                        isLongTerm = true;
-                    }
+                    const gust = item.details?.wind_speed_of_gust;
+                    const p = item.precipitation;
 
                     return (
                         <tr key={`${item.date}-${item.localTime}`}>
@@ -52,16 +50,16 @@ export default function ForecastTable({ forecast }) {
                             </td>
 
                             <td className="wind">
-                                {Math.round(wind)}
+                                {Math.round(item.wind)}
                                 {gust != null && ` (${Math.round(gust)})`} m/s
                             </td>
 
                             <td className="precipitation">
-                                {precipDisplay}
-                                {isLongTerm && <small style={{ display: 'block', fontSize: '0.7em' }}>/6t</small>}
+                                {formatPrecipitation(p)}
+                                {p.isPeriod}
                             </td>
 
-                            <td>{uvIndex ?? "–"}</td>
+                            <td>{item.uv ?? "–"}</td>
 
                             <td>
                                 {iconFile && (

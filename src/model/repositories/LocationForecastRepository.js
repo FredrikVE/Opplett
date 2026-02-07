@@ -1,4 +1,4 @@
-// src/model/repositories/LocationForecastRepository.js
+//src/model/repositories/LocationForecastRepository.js
 export default class LocationForecastRepository {
     
     constructor(datasource) {
@@ -7,26 +7,14 @@ export default class LocationForecastRepository {
     }
 
     // ---------- TID ----------
-    /*
     #localDate(entry, tz) {
-        return new Date(entry.time).toLocaleDateString("no-NO", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            timeZone: tz
-        });
-    }
-    */
-   #localDate(entry, tz) {
         const date = new Date(entry.time);
         const dateString = date.toLocaleDateString("no-NO", {
             weekday: "long",
             day: "numeric",
-            month: "short", // feb i stedet for februar
+            month: "short",
             timeZone: tz
         });
-
-        // Gjør første bokstav stor: "lørdag 7. februar" -> "Lørdag 7. februar"
         return dateString.charAt(0).toUpperCase() + dateString.slice(1);
     }
 
@@ -61,43 +49,58 @@ export default class LocationForecastRepository {
 
         for (const entry of timeseries) {
             const date = this.#localDate(entry, timeZone);
-            const localTime = this.#localHour(entry, timeZone);
+            const startHour = this.#localHour(entry, timeZone);
 
-            //Finn værsymbol (prioriterer neste time, faller tilbake på 6 timer)
+            // Finn værsymbol
             const weatherSymbol = entry.data.next_1_hours?.summary?.symbol_code 
                                ?? entry.data.next_6_hours?.summary?.symbol_code;
 
-            //Hent ut regnmengder fra API-et
-            const amountNextHour = entry.data.next_1_hours?.details?.precipitation_amount;
-            const amountNextSixHours = entry.data.next_6_hours?.details?.precipitation_amount;
+            // Hent ut nedbørsdetaljer
+            const next1h = entry.data.next_1_hours?.details;
+            const next6h = entry.data.next_6_hours?.details;
 
-            let detailedPrecipitation = undefined;       // Vi skiller mellom detaljert (time for time) og fallback (6-timers bolker).
-            let fallbackPrecipitation = 0;
+            let precipData = { 
+                amount: 0, 
+                min: 0, 
+                max: 0, 
+                isPeriod: false 
+            };
 
-            if (amountNextHour !== undefined) {          // KORTTIDSVARSEL: Vi har detaljer per time.
-                detailedPrecipitation = amountNextHour;  // Vi bruker denne verdien (selv om den er 0.0) og ignorerer 6-timers perioden.
-                fallbackPrecipitation = 0; 
+            let endHour = startHour + 1;
+            if (next1h !== undefined) {
+                // KORTTIDSVARSEL (1 time)
+                precipData.amount = next1h.precipitation_amount;
+                precipData.min = next1h.precipitation_amount_min ?? next1h.precipitation_amount;
+                precipData.max = next1h.precipitation_amount_max ?? next1h.precipitation_amount;
+                precipData.isPeriod = false;
+                endHour = startHour + 1;
             } 
-            else {                                          //Elles, LANGTIDSVARSEL: Detaljer per time mangler fra MET.
-                fallbackPrecipitation = amountNextSixHours ?? 0;    // Da bruker vi 6-timers bolken som kilde.
+            else if (next6h !== undefined) {
+                // LANGTIDSVARSEL (6 timer)
+                precipData.amount = next6h.precipitation_amount ?? 0;
+                precipData.min = next6h.precipitation_amount_min ?? (next6h.precipitation_amount ?? 0);
+                precipData.max = next6h.precipitation_amount_max ?? (next6h.precipitation_amount ?? 0);
+                precipData.isPeriod = true;
+                endHour = startHour + 6;
             }
+
+            // Juster slutttid for midnatt
+            if (endHour >= 24) endHour -= 24;
 
             hourly.push({
                 date,
-                localTime,
+                localTime: startHour,
+                endTime: endHour,
                 weatherSymbol,
-                oneHourPrecip: detailedPrecipitation, 
-                sixHourPrecip: fallbackPrecipitation,
+                precipitation: precipData,
                 temp: entry.data.instant.details.air_temperature,
                 wind: entry.data.instant.details.wind_speed,
                 uv: entry.data.instant.details.ultraviolet_index_clear_sky,
                 details: entry.data.instant.details
             });
         }
-
         return hourly;
     }
-
 
     // ---------- DAGSSAMMENDRAG ----------
     async getDailySummary(lat, lon, hoursAhead, timeZone) {
@@ -109,31 +112,58 @@ export default class LocationForecastRepository {
         for (const date in hoursPerDay) {
             const hoursInDay = hoursPerDay[date];
 
-            const { minTemp, maxTemp } = this.#calculateMinMaxTemp(hoursInDay);
-            const totalPrecip = this.#calculateTotalPrecip(hoursInDay);
-            const avgWind = this.#calculateAvgWind(hoursInDay);
-
-            const symbolNight = this.#getSymbolAtSpecificHour(hoursInDay, 0);
-            const symbolMorning = this.#getSymbolAtSpecificHour(hoursInDay, 6);
-            const symbolAfternoon = this.#getSymbolAtSpecificHour(hoursInDay, 12);
-            const symbolEvening = this.#getSymbolAtSpecificHour(hoursInDay, 18);
+            const temperatures = this.#calculateMinMaxTemp(hoursInDay);
+            const precip = this.#calculateTotalPrecip(hoursInDay); // SSOT for summering
+            const wind = this.#calculateAvgWind(hoursInDay);
 
             dailySummary[date] = {
-                minTemp,
-                maxTemp,
-                totalPrecip,
-                avgWind,
-                symbolNight,
-                symbolMorning,
-                symbolAfternoon,
-                symbolEvening
+                minTemp: temperatures.minTemp,
+                maxTemp: temperatures.maxTemp,
+                totalPrecip: precip.total,
+                precipMin: precip.min,
+                precipMax: precip.max,
+                avgWind: wind,
+                symbolNight: this.#getSymbolAtSpecificHour(hoursInDay, 0),
+                symbolMorning: this.#getSymbolAtSpecificHour(hoursInDay, 6),
+                symbolAfternoon: this.#getSymbolAtSpecificHour(hoursInDay, 12),
+                symbolEvening: this.#getSymbolAtSpecificHour(hoursInDay, 18)
             };
         }
 
         return dailySummary;
     }
 
-    // ---------- HJELPEMETODE FOR PERIODESYMBOLER ----------
+    // PRIVATE HJELPEMETODER
+    #calculateTotalPrecip(hours) {
+        let total = 0;
+        let minTotal = 0;
+        let maxTotal = 0;
+        let coveredUntilHour = -1;
+
+        for (const h of hours) {
+            const p = h.precipitation;
+
+            // 1. Hopp over hvis timen allerede er dekket av en 6-timers bolk
+            if (h.localTime < coveredUntilHour && p.isPeriod) continue;
+
+            // 2. Legg til verdier
+            total += p.amount;
+            minTotal += p.min;
+            maxTotal += p.max;
+
+            // 3. Hvis dette var en 6-timers bolk, merk de neste timene som dekket
+            if (p.isPeriod) {
+                coveredUntilHour = h.localTime + 6;
+            }
+        }
+
+        return {
+            total: Number(total.toFixed(1)),
+            min: Number(minTotal.toFixed(1)),
+            max: Number(maxTotal.toFixed(1))
+        };
+    }
+
     #getSymbolAtSpecificHour(hours, targetHour) {
         let bestEntry = null;
         let minDiff = Infinity;
@@ -145,98 +175,47 @@ export default class LocationForecastRepository {
                 bestEntry = h;
             }
         }
+        if (!bestEntry || minDiff > 3) {
+            return null;
+        }
 
-        if (!bestEntry || minDiff > 3) return null;
-
-        return bestEntry.weatherSymbol; 
+        return bestEntry.weatherSymbol;
     }
 
     #groupHoursByDate(hourlyForecast) {
         const result = {};
-
         for (const hour of hourlyForecast) {
-            if (!result[hour.date]) {
-                result[hour.date] = [];
-            }
+            if (!result[hour.date]) result[hour.date] = [];
             result[hour.date].push(hour);
         }
-
         return result;
     }
 
     #calculateMinMaxTemp(hours) {
         const temperatures = [];
-
         for (const h of hours) {
             temperatures.push(h.temp);
         }
-
         return {
             minTemp: Math.round(Math.min(...temperatures)),
             maxTemp: Math.round(Math.max(...temperatures))
         };
     }
 
-    #calculateTotalPrecip(hours) {
-        let totalPrecip = 0;
-        let coveredUntilHour = -1;
-
-        for (const h of hours) {
-
-            // 1. Hopp over timer som allerede er dekket av en 6-timersblokk
-            if (h.localTime < coveredUntilHour) {
-                continue;
-            }
-
-            // 2. Bruk 1-times nedbør hvis tilgjengelig (korttidsvarsel)
-            if (h.oneHourPrecip != null) {
-                totalPrecip += h.oneHourPrecip;
-                continue;
-            }
-
-            // 3. Fallback til 6-timers nedbør (langtidsvarsel)
-            if (h.sixHourPrecip > 0) {
-                totalPrecip += h.sixHourPrecip;
-                coveredUntilHour = h.localTime + 6;
-            }
-        }
-
-        return Number(totalPrecip.toFixed(1));
-    }
-
     #calculateAvgWind(hours) {
-        // 1. Samle vind for dagtid (09–18)
         const daytimeWinds = [];
-
         for (const h of hours) {
             if (h.localTime >= 9 && h.localTime <= 18) {
                 daytimeWinds.push(h.wind);
             }
         }
 
-        // 2. Velg hvilke vindverdier som skal brukes
-        const winds = [];
-
-        if (daytimeWinds.length > 0) {
-            for (const w of daytimeWinds) {
-                winds.push(w);
-            }
-        } 
-        
-        else {
-            for (const h of hours) {
-                winds.push(h.wind);
-            }
-        }
-
-        // 3. Sorter stigende
-        winds.sort((a, b) => a - b);
-
-        // 4. 75-percentil (yr.no-aktig presentasjon)
+        const winds = daytimeWinds.length > 0 ? daytimeWinds : hours.map(h => h.wind);
         if (winds.length === 0) {
             return 0;
         }
 
+        winds.sort((a, b) => a - b);
         const index = Math.floor(winds.length * 0.75);
         return Math.ceil(winds[index]);
     }

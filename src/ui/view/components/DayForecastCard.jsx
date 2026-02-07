@@ -95,9 +95,9 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, open,
                 <td className="day-card-cell-surface day-card-temp-cell">
                     {!open && summary && (
                         <div className="temp-container">
-                            <strong className={`temp-max ${summary.maxTemp < 0 ? 'is-cold' : 'is-warm'}`}>
+                            <span className={`temp-max ${summary.maxTemp < 0 ? 'is-cold' : 'is-warm'}`}>
                                 {Math.round(summary.maxTemp)}°
-                            </strong>
+                            </span>
                             <span className="temp-divider"> / </span>
                             <span className={`temp-min ${summary.minTemp < 0 ? 'is-cold' : 'is-warm'}`}>
                                 {Math.round(summary.minTemp)}°
