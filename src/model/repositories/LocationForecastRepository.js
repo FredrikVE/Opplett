@@ -70,6 +70,7 @@ export default class LocationForecastRepository {
 
             const temp = entry.data.instant.details.air_temperature;
             const wind = entry.data.instant.details.wind_speed;
+            const uv = entry.data.instant.details.ultraviolet_index_clear_sky;
 
             hourly.push({
                 date,
@@ -78,7 +79,9 @@ export default class LocationForecastRepository {
                 oneHourPrecip,
                 sixHourPrecip,
                 temp,
-                wind
+                wind,
+                uv,
+                details: entry.data.instant.details
             });
         }
 
