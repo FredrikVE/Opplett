@@ -21,9 +21,9 @@ export default function ForecastTable({ forecast }) {
                 <tr>
                     <th>Tid</th>
                     <th>Temp</th>
+                    <th>UV</th>
                     <th>Vind</th>
                     <th>Nedbør</th>
-                    <th>UV</th>
                     <th>Vær</th>
                 </tr>
             </thead>
@@ -36,8 +36,11 @@ export default function ForecastTable({ forecast }) {
 
                     return (
                         <tr key={`${item.date}-${item.localTime}`}>
+                            
+                            {/* Klokkeslett */}
                             <td className="time">{item.localTime}</td>
 
+                            {/* Temperatur */}
                             <td
                                 className="temperature"
                                 style={{
@@ -48,19 +51,23 @@ export default function ForecastTable({ forecast }) {
                             >
                                 {Math.round(item.temp)} °C
                             </td>
+                            
+                            {/* UV */}
+                            <td>{item.uv ?? "–"}</td>
 
+                            {/* Vind */}
                             <td className="wind">
                                 {Math.round(item.wind)}
                                 {gust != null && ` (${Math.round(gust)})`} m/s
                             </td>
-
+                            
+                            {/* Nedbør */}
                             <td className="precipitation">
                                 {formatPrecipitation(p)}
                                 {p.isPeriod}
                             </td>
 
-                            <td>{item.uv ?? "–"}</td>
-
+                            {/* Værikon */}
                             <td>
                                 {iconFile && (
                                     <img
