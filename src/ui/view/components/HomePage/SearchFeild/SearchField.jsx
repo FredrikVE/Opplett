@@ -1,4 +1,4 @@
-// src/ui/view/components/SearchField.jsx
+// src/ui/view/components/SearchField/SearchField.jsx
 import { useState } from "react";
 
 export default function SearchField({ query, suggestions, onSearchChange, onSuggestionSelected, onResetToDeviceLocation }) {

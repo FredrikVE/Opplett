@@ -1,5 +1,5 @@
-// src/ui/view/components/ForecastTable.jsx
-import { getWeatherIconFileName } from "../../utils/weatherIcons.js";
+//src/ui/view/components/HomePage/ForecastTable/ForecastTable.jsx
+import { getWeatherIconFileName } from "../../../../utils/weatherIcons.js";
 
 const formatPrecipitation = (data) => {
     if (!data) {

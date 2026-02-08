@@ -27,7 +27,7 @@ import SunriseRepository from "./model/repositories/SunriseRepository.js";
 //ViewModel og View
 import useHomeScreenViewModel from "./ui/viewmodel/HomeScreenViewModel.js";
 import HomePage from "./ui/view/pages/HomePage.jsx";
-import LoadingSpinner from "./ui/view/components/LoadingSpinner.jsx";
+import LoadingSpinner from "./ui/view/components/LoadingSpinner/LoadingSpinner.jsx";
 
 //Initialiserer instanser utenfor komponentens livssyklus for stabilitet og unødvendige re-renders.
 //Dette hindrer doble instanser ved re-renders og fikser teller-problemet i loggen.

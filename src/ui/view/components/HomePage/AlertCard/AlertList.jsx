@@ -1,4 +1,4 @@
-// src/ui/view/components/AlertList.jsx
+// src/ui/view/components/HomePage/AlertCard/AlertList.jsx
 import AlertItem from "./AlertItem.jsx";
 
 export default function AlertList({ alerts }) {

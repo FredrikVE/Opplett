@@ -1,4 +1,4 @@
-// src/ui/view/components/SolarInformation.jsx
+//src/ui/view/components/HomePage/ForecastTable/SolarInformation.jsx
 export default function SolarInformation({ sunTimes }) {
     if (!sunTimes) return null;
 

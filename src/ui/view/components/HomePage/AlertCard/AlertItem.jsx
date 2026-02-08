@@ -1,6 +1,6 @@
-//src/ui/view/components/AlertItem.jsx
-import { getAlertIconFileName } from "../../utils/getAlertIconFileName.js";
-import { getRiskLevelText } from "../../utils/getRiskLevelText.js";
+//src/ui/view/components/HomePage/AlertCard/AlertItem.jsx
+import { getAlertIconFileName } from "../../../../utils/getAlertIconFileName.js";
+import { getRiskLevelText } from "../../../../utils/getRiskLevelText.js";
 
 export default function AlertItem({ alert }) {
 

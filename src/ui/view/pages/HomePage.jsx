@@ -1,9 +1,9 @@
 import { useState } from "react";
-import LoadingSpinner from "../components/LoadingSpinner.jsx";
-import SearchField from "../components/SearchField.jsx";
-import DayForecastCard from "../components/DayForecastCard.jsx";
-import AlertList from "../components/AlertList.jsx";
-import Meteogram from "../components/Meteogram.jsx";
+import LoadingSpinner from "../components/LoadingSpinner/LoadingSpinner.jsx";
+import SearchField from "../components/HomePage/SearchFeild/SearchField.jsx";
+import DayForecastCard from "../components/HomePage/ForecastTable/DayForecastCard.jsx";
+import AlertList from "../components/HomePage/AlertCard/AlertList.jsx";
+import Meteogram from "../components/HomePage/Graph/Meteogram.jsx";
 
 export default function HomePage({ viewModel }) {
     const [openDate, setOpenDate] = useState(null);

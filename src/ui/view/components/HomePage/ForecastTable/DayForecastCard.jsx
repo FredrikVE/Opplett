@@ -1,7 +1,8 @@
+//src/ui/view/components/HomePage/ForecastTable/DayForecastCard.jsx
 import { useId } from "react";
 import ForecastTable from "./ForecastTable.jsx";
 import SolarInformation from "./SolarInformation.jsx";
-import { getWeatherIconFileName } from "../../utils/weatherIcons.js";
+import { getWeatherIconFileName } from "../../../../utils/weatherIcons.js";
 
 const ORDER = ["symbolNight", "symbolMorning", "symbolAfternoon", "symbolEvening"];
 
