@@ -4,6 +4,7 @@ import SearchField from "../components/HomePage/SearchFeild/SearchField.jsx";
 import DayForecastCard from "../components/HomePage/ForecastTable/DayForecastCard.jsx";
 import AlertList from "../components/HomePage/AlertCard/AlertList.jsx";
 import Meteogram from "../components/HomePage/Graph/Meteogram.jsx";
+import WindMeteogram from "../components/HomePage/Graph/WindMeteogram.jsx";
 
 export default function HomePage({ viewModel }) {
     const [openDate, setOpenDate] = useState(null);
@@ -98,6 +99,12 @@ export default function HomePage({ viewModel }) {
                             hourlyData={allHourlyData}
                             getLocalHour={viewModel.getLocalHour}
                             formatLocalDateTime={viewModel.formatLocalDateTime}
+                            formatLocalDate={viewModel.formatLocalDate}
+                        />
+
+                        <WindMeteogram
+                             hourlyData={allHourlyData}
+                            getLocalHour={viewModel.getLocalHour}
                             formatLocalDate={viewModel.formatLocalDate}
                         />
 
