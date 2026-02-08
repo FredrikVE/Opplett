@@ -43,15 +43,7 @@ export default function App() {
     const { loading, error, coords } = useGeolocation();
 
     //Initialiser ViewModel med dependancy injection av repositories
-    const homeScreenViewModel = useHomeScreenViewModel(
-        locationRepo,
-        sunriseRepo,
-        alertsRepo,
-        geoRepo,
-        coords?.lat, 
-        coords?.lon,
-        hoursAhead
-    );
+    const homeScreenViewModel = useHomeScreenViewModel(locationRepo, sunriseRepo, alertsRepo, geoRepo, coords?.lat,  coords?.lon, hoursAhead);
 
     if (loading) {
         return (
