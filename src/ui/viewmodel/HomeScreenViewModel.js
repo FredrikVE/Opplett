@@ -2,8 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { fetchInitialLocationName } from "../utils/fetchInitialLocationName.js";
 import useSearchViewModel from "./SearchViewModel.js";
 
-export default function useHomeScreenViewModel( forecastRepository, sunriseRepository, metAlertsRepository, geocodingRepository, initialLat, initialLon, hoursAhead ) {
-    //Statevariabler
+export default function useHomeScreenViewModel(forecastRepository, sunriseRepository, metAlertsRepository, geocodingRepository, initialLat, initialLon, hoursAhead) {
     const [location, setLocation] = useState({ lat: null, lon: null, name: null, timezone: null });
     const [forecast, setForecast] = useState({});
     const [sunTimesByDate, setSunTimesByDate] = useState({});
@@ -12,38 +11,64 @@ export default function useHomeScreenViewModel( forecastRepository, sunriseRepos
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    // Hindrer duplikate API-kall: useRef oppdateres synkront og blokkerer 
-    // identiske forespørsler umiddelbart uten å vente på neste render.
     const lastFetchedRef = useRef("");
-
-    //Initialiserer searchViewmodell
     const searchViewModel = useSearchViewModel(geocodingRepository, setLocation);
 
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ //
+    // SSOT for tidsformatering til LocationForecastRepository() og SunriseRepository()           //
+    // Her defineres hvordan tid skal se ut i hele appen                                         //
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ //
+    const formatToLocalTime = (isoString, tz) => {
+        if (!isoString) {
+            return "--:--";
+        }
+        return new Date(isoString).toLocaleTimeString("nb-NO", {
+            timeZone: tz,
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+        });
+    };
 
-    // Oppdater koordinater når GPS/initial verdier er klare
+    const formatToLocalDateLabel = (isoString, tz) => {
+        const date = new Date(isoString);
+        const label = date.toLocaleDateString("nb-NO", {
+            weekday: "long",
+            day: "numeric",
+            month: "short",
+            timeZone: tz
+        });
+        return label.charAt(0).toUpperCase() + label.slice(1);
+    };
+
+
+    // UseEffect for å sette startkoordinater fra brukerpossisjon
     useEffect(() => {
         if (initialLat && initialLon) {
             setLocation((prev) => ({
-                ...prev, 
+                ...prev,
                 lat: initialLat, 
-                lon: initialLon
+                lon: initialLon 
             }));
         }
-    }, [initialLat, initialLon]);   //dependancy array lytter til endringer i initLat/initLon
+    }, [initialLat, initialLon]);   //Dependancy array lytter etter endringer på init-lat/lon
 
-    // Hent stedsnavn og tidssone basert på koordinater
+
+    //UseEffect for å sette stedsnavn fra geo-lokasjon.
     useEffect(() => {
         if (!location.lat || !location.lon) {
             return;
         }
 
-        fetchInitialLocationName(setLocation, geocodingRepository, location.lat, location.lon
-        );
+        fetchInitialLocationName(setLocation, geocodingRepository, location.lat, location.lon);
     }, 
+    
     [location.lat, location.lon]);
 
-    //UseEffect for datahenting
+
+    //UseEffect for å gjøre API-kall ved å laste inn data fra repositories og legge disse inn i statevariabler
     useEffect(() => {
+
         if (!location.lat || !location.lon) {
             return;
         }
@@ -52,78 +77,84 @@ export default function useHomeScreenViewModel( forecastRepository, sunriseRepos
 
         async function loadData() {
             const currentKey = `${location.lat},${location.lon},${hoursAhead}`;
-            
-            
             if (lastFetchedRef.current === currentKey) {
-                return;                                     // Sjekker om vi allerede har startet henting for disse koordinatene
+                return;
             }
-
-            lastFetchedRef.current = currentKey;            // Lås døra med en gang (synkront)
-
-            //Debug-logging
-            console.log("DEBUG: loadData starter for:", currentKey);
+            
+            lastFetchedRef.current = currentKey;
 
             try {
                 setLoading(true);
+
+                // Finn tidssone (Fallback til nettleserens tidssone hvis OpenCage ikke har svart ennå)
                 const tz = location.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone ?? "UTC";
 
-                // 1. Hent rådata parallelt
+                //Henter data fra Repositories
                 const [hourlyRaw, dailySummary, alertResults] = await Promise.all([
                     forecastRepository.getHourlyForecast(location.lat, location.lon, hoursAhead, tz),
                     forecastRepository.getDailySummary(location.lat, location.lon, hoursAhead, tz),
                     metAlertsRepository.findAlerts(location.lat, location.lon)
                 ]);
 
-                //Grupper forecast per ISO-dato (særlig for SunRise)
+                //Formater og grupper værmelding til Sunrise og Forecast
                 const groupedForecast = {};
                 for (const hour of hourlyRaw) {
                     const key = hour.dateISO;
                     if (!groupedForecast[key]) {
-                        groupedForecast[key] = { label: hour.dateLabel, hours: [] };
+                        groupedForecast[key] = { 
+                            label: formatToLocalDateLabel(hour.timeISO, tz), 
+                            hours: [] 
+                        };
                     }
                     groupedForecast[key].hours.push(hour);
                 }
 
-                //Henter soltider for de unike datoene
+                // 3. Hent og formater soltider
                 const isoDates = Object.keys(groupedForecast);
-                const sunMap = await sunriseRepository.getSunTimesForDates(location.lat, location.lon, isoDates, tz);
+                const rawSunMap = await sunriseRepository.getSunTimesForDates(location.lat, location.lon, isoDates);
+                
+                const formattedSunMap = {};
+                for (const [date, times] of Object.entries(rawSunMap)) {
+                    formattedSunMap[date] = {
+                        sunrise: formatToLocalTime(times.sunrise, tz),
+                        sunset: formatToLocalTime(times.sunset, tz)
+                    };
+                }
 
                 if (cancelled) {
                     return;
                 }
 
-                //Bruker settermetoder for å lagre data i statevariablene
+                //Bruker UseState sine sette-funksjoner for å oppdatere data-states
                 setForecast(groupedForecast);
                 setDailySummaryByDate(dailySummary);
-                setSunTimesByDate(sunMap);
+                setSunTimesByDate(formattedSunMap);
                 setAlerts(alertResults?.alerts ?? []);
                 setError(null);
-
             } 
-            
+
             catch (error) {
                 if (!cancelled) {
-                    console.error("Feil ved henting av værdata:", error);
-                    setError(error?.message ?? "Ukjent feil ved henting av værdata");
-                    lastFetchedRef.current = ""; // Åpne for nytt forsøk ved feil
+                    setError(error?.message ?? "Feil ved henting av data");
+                    lastFetchedRef.current = "";
                 }
-            } 
-            
+            }
+
             finally {
-                if (!cancelled) {
-                    setLoading(false);
-                }
+                if (!cancelled) setLoading(false);
             }
         }
 
-        // En bitteliten "debounce" (50ms) fjerner støyen fra koordinat-hopping i oppstarten
         const timer = setTimeout(loadData, 50);
 
+        //Clean-up-function
         return () => {
             cancelled = true;
             clearTimeout(timer);
         };
-    }, [location.lat, location.lon, hoursAhead]);
+    }, 
+    
+    [location.lat, location.lon, hoursAhead]);      //Dependancy array lytter etter endringer på lat/lon og houersAhead (som er konstant)
 
     return {
         forecast,

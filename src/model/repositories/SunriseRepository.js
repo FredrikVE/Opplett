@@ -1,20 +1,18 @@
 // src/model/repositories/SunriseRepository.js
+
 export default class SunriseRepository {
+
+    // Konstuktør som initialiserer datasource og map for caching
     constructor(sunriseDataSource) {
         this.datasource = sunriseDataSource;
         this.cache = new Map();
     }
 
-    /**
-     * Henter soltider for én spesifikk dato.
-     * @param {number} lat - Breddegrad
-     * @param {number} lon - Lengdegrad
-     * @param {string} dateISO - Dato i formatet YYYY-MM-DD
-     * @param {string} timeZone - Tidssone (f.eks. "Europe/Oslo")
-     */
-    async getSunTimes(lat, lon, dateISO, timeZone) {
-        // Vi inkluderer ikke tz i cachenøkkelen da koordinater + dato er unikt nok,
-        // men beholder det for formatering.
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ //
+    // Henter soltider for én spesifikk dato.                                         //
+    // Returnerer nå rå ISO-strenger istedenfor ferdigformaterte klokkeslett.         //
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ //
+    async getSunTimes(lat, lon, dateISO) {
         const key = `${lat},${lon},${dateISO}`;
 
         if (this.cache.has(key)) {
@@ -24,51 +22,31 @@ export default class SunriseRepository {
         const result = await this.datasource.fetchSunrise(lat, lon, dateISO);
         const { sunrise, sunset } = result?.properties ?? {};
 
-        // Intern hjelper for å formatere tidspunktet lokalt
-        const format = (isoString) => {
-            if (!isoString) {
-                return null;
-            }
-
-            const date = new Date(isoString);
-
-            if (isNaN(date.getTime())) {
-                return null;
-            }
-
-            return new Intl.DateTimeFormat("nb-NO", {
-                timeZone,
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: false,
-            }).format(date);
-        };
-
+        // fjerner format-hjelperen og returnerer råverdier
         const output = {
-            sunrise: format(sunrise?.time),
-            sunset: format(sunset?.time),
+            sunrise: sunrise?.time ?? null, // F.eks. "2026-02-08T07:45:00Z"
+            sunset: sunset?.time ?? null,   // F.eks. "2026-02-08T16:30:00Z"
         };
 
         this.cache.set(key, output);
         return output;
     }
 
-    /**
-     * Henter soltider for en liste med ISO-datoer.
-     * Returnerer et objekt der hver ISO-dato er en nøkkel.
-     */
-    async getSunTimesForDates(lat, lon, isoDates, timeZone) {
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ //
+    //  Henter soltider for en liste med ISO-datoer.    //
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ //
+    async getSunTimesForDates(lat, lon, isoDates) {
+
         if (!Array.isArray(isoDates)) {
-            return {};
+            return {};                          //returnerer tomt objekt-litteral hvis array med ISO-dates ikke finnes
         }
 
         const tasks = isoDates.map(async (isoDate) => {
             try {
-                // Returnerer paret [dato, soltider] for Object.fromEntries
-                const sunTimes = await this.getSunTimes(lat, lon, isoDate, timeZone);
+                const sunTimes = await this.getSunTimes(lat, lon, isoDate);
                 return [isoDate, sunTimes];
             } 
-            
+
             catch (error) {
                 console.warn(`Kunne ikke hente soltider for ${isoDate}:`, error.message);
                 return [isoDate, { sunrise: null, sunset: null }];
@@ -76,8 +54,6 @@ export default class SunriseRepository {
         });
 
         const results = await Promise.all(tasks);
-        
-        // Returnerer et objekt som ser slik ut: { "2026-02-08": { sunrise: "08:00", ... } }
         return Object.fromEntries(results);
     }
 }
