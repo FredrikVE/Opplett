@@ -1,4 +1,6 @@
-/* Main container */
+/*src/ui/style/HomePage.css*/
+
+/* --- Hovedstruktur --- */
 .home-screen {
   width: 100%;
   max-width: 860px;
@@ -6,26 +8,89 @@
   padding: 18px 14px 42px;
 }
 
-/* “Sheet” som alt ligger i */
-.home-shell {
-  background: #ffffff;
-  border: 1px solid rgba(6, 22, 41, 0.08);
-  border-radius: 18px;
-  box-shadow: 0 10px 28px rgba(6, 22, 41, 0.08);
-  padding: 18px;
-}
-
-/* Litt luft mellom seksjoner */
-.home-shell > * + * {
-  margin-top: 16px;
-}
-
-.search {
-  margin: 12px 0 16px;
-}
-
 .page-header {
   margin-bottom: 8px;
   padding-bottom: 10px;
 }
 
+/* --- Modus-velger (Tabell/Graf) --- */
+.view-mode-selector {
+  display: flex;
+  justify-content: center; /* Senterer bryteren for et moderne utseende */
+  margin: 20px 0;
+}
+
+.toggle-container {
+  background: #f0f2f5;
+  padding: 4px;
+  border-radius: 12px;
+  display: flex;
+  border: 1px solid #e1e4e8;
+}
+
+.toggle-container button {
+  border: none;
+  background: transparent;
+  padding: 8px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #586069;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.toggle-container button.active {
+  background: #ffffff;
+  color: #0366d6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Graf-seksjonen --- */
+.meteogram-section {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 15px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(6, 22, 41, 0.08);
+  box-shadow: 0 10px 28px rgba(6, 22, 41, 0.08);
+}
+
+.meteogram-container {
+  width: 100%;
+  overflow: hidden; /* Sørger for at Highcharts ikke "stikker ut" */
+}
+
+/* --- Tabell-layout (Løsningen på "det stygge") --- */
+.forecast-overview-table {
+  width: 100%;
+  border-spacing: 0;
+  border-collapse: collapse;
+  table-layout: fixed; /* KRITISK: Låser kolonnebreddene slik at header flukter med rader */
+}
+
+.table-header-row th {
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Definisjon av kolonnebredder som matcher DayForecastCard */
+.col-date { width: 22%; text-align: left !important; }
+.col-night, .col-morning, .col-afternoon, .col-evening { width: 9%; }
+.col-temp { width: 16%; }
+.col-precip { width: 10%; }
+.col-wind { width: 10%; }
+.col-toggle { width: 6%; }
+
+/* Feilmeldinger */
+.error-msg {
+  background: #fff5f5;
+  color: #c53030;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #feb2b2;
+  margin: 20px 0;
+}
