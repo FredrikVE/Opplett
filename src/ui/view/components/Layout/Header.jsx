@@ -1,16 +1,35 @@
-//src/ui/view/components/Layout/Header.jsx
-export default function Header({ locationName }) {
+// src/ui/view/components/Layout/Header.jsx
+import { useState } from "react";
+
+export default function Header() {
+    const [menuOpen, setMenuOpen] = useState(false);
+
     return (
         <header className="main-header">
             <div className="header-content">
                 <div className="logo">
-                    <span className="logo-icon">☀️</span>
                     <span className="logo-text">VærVarselet</span>
                 </div>
-                <nav className="header-nav">
-                    <h1>{locationName || "Søker posisjon..."}</h1>
-                </nav>
+
+
+                {/* Hamburger-knapp */}
+                <button
+                    className="hamburger"
+                    onClick={() => setMenuOpen(!menuOpen)}
+                    aria-label="Åpne meny"
+                >
+                    ☰
+                </button>
             </div>
+
+            {/* Dropdown-meny */}
+            {menuOpen && (
+                <div className="mobile-menu">
+                    <button onClick={() => setMenuOpen(false)}>Innstillinger</button>
+                    <button onClick={() => setMenuOpen(false)}>Favoritter</button>
+                    <button onClick={() => setMenuOpen(false)}>Om appen</button>
+                </div>
+            )}
         </header>
     );
 }
