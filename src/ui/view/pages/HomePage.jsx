@@ -9,7 +9,7 @@ export default function HomePage({ viewModel }) {
     const [openDate, setOpenDate] = useState(null);
     const [viewMode, setViewMode] = useState("table"); // 'table' eller 'graph'
 
-    // Tabellstruktur (SSOT for kolonneoverskrifter)
+    // Tabellstruktur
     const tableConfig = [
         { id: "date", label: "" },
         { id: "night", label: "Natt" },
@@ -34,7 +34,7 @@ export default function HomePage({ viewModel }) {
 
     // Konverterer forecast-objektet til en liste for mapping
     const entries = Object.entries(viewModel.forecast);
-    const firstDate = entries[0]?.[0]; // Dette vil nå være en ISO-streng (f.eks. "2026-02-08")
+    const firstDate = entries[0]?.[0]; // ISO-streng (f.eks. "2026-02-08")
     
     // Data til grafen (neste 48 timer)
     const allHourlyData = entries.flatMap(([, dayData]) => dayData.hours).slice(0, 48);
@@ -45,7 +45,9 @@ export default function HomePage({ viewModel }) {
 
     const handleViewChange = (mode) => {
         setViewMode(mode);
-        if (mode === "graph") setOpenDate(null); // Lukker ekspanderte rader når man ser på grafen
+        if (mode === "graph") {                   // Lukker ekspanderte rader
+            setOpenDate(null);
+        }
     };
 
     // Skjuler headeren hvis det første kortet er ekspandert
@@ -89,7 +91,13 @@ export default function HomePage({ viewModel }) {
                 {viewMode === "graph" ? (
                     /* GRAF-VISNING */
                     <section className="meteogram-section">
-                        <Meteogram hourlyData={allHourlyData} />
+                        {/* Her sender vi med timezone fra viewModel.location. 
+                            Dette sikrer at grafen følger SSOT for tidssone satt i SearchViewModel/HomeViewModel.
+                        */}
+                        <Meteogram 
+                            hourlyData={allHourlyData} 
+                            timezone={viewModel.location.timezone} 
+                        />
                     </section>
                 ) : (
                     /* TABELL-VISNING */
