@@ -14,77 +14,85 @@ import { buildTooltip } from './graphConfig/tooltip.js';
 import { buildPlotOptions } from './graphConfig/plotOptions.js';
 
 export default function Meteogram({ hourlyData, getLocalHour, formatLocalDateTime, formatLocalDate }) {
-	
-	const options = useMemo(() => {
-		if (!hourlyData?.length) {
-			return null;
-		}
+    
+    const options = useMemo(() => {
+        if (!hourlyData?.length) {
+            return null;
+        }
 
-		//Domene, graf-datasett (ingen tidssone, ingen Intl)
-		const data = mapHourlyForecastToMeteogram(
-			hourlyData,
-			getLocalHour
-		);
+        // Domene, graf-datasett (Nå inkludert weatherSymbols)
+        const data = mapHourlyForecastToMeteogram(
+            hourlyData,
+            getLocalHour
+        );
 
-		//Visuell gruppering (dager / zebra-striper)
-		const dayBands = buildDayBands(
-			data.firstTimestamp,
-			data.lastTimestamp,
-			data.midnights
-		);
+        // Visuell gruppering (dager / zebra-striper)
+        const dayBands = buildDayBands(
+            data.firstTimestamp,
+            data.lastTimestamp,
+            data.midnights
+        );
 
-		//Highcharts-konfigurasjon
-		return {
-			chart: {
-				height: 380,
-				backgroundColor: 'transparent',
-				spacingBottom: 40,
-				style: { fontFamily: 'inherit' }
-			},
-			time: { useUTC: true },
-			title: { text: null },
-			credits: { enabled: false },
+        // Highcharts-konfigurasjon
+        return {
+            chart: {
+                height: 450, // Økt fra 380 for å gi plass til værsymboler og mer "luft"
+                backgroundColor: 'transparent',
+                spacingTop: 10,    // Ekstra luft i toppen over ikonene
+                spacingBottom: 20,
+                spacingLeft: 0,
+                spacingRight: 0,
+                style: { fontFamily: 'inherit' }
+            },
+            time: { useUTC: true },
+            title: { text: null },
+            credits: { enabled: false },
 
-			//X-akse: timer + dato (all tid injisert)
-			xAxis: buildXAxis(
-				data,
-				dayBands,
-				getLocalHour,
-				formatLocalDate
-			),
+            // X-akse: timer + dato
+            xAxis: buildXAxis(
+                data,
+                dayBands,
+                getLocalHour,
+                formatLocalDate
+            ),
 
-			//Y-akser
-			yAxis: buildYAxis(data.midnights),
+            // Y-akser: Temperatur, Nedbør og nå Ikon-aksen
+            yAxis: buildYAxis(data.midnights),
 
-			plotOptions: buildPlotOptions(),
+            plotOptions: buildPlotOptions(),
 
-			series: buildSeries(data),
+            // Serien inkluderer nå Vær-ikoner (scatter), Temperatur og Nedbør
+            series: buildSeries(data),
 
-			//Tooltip: full dato + klokkeslett
-			tooltip: buildTooltip(formatLocalDateTime),
+            // Tooltip: full dato + klokkeslett
+            tooltip: buildTooltip(formatLocalDateTime),
 
-			legend: {
-				verticalAlign: 'top',
-				itemStyle: {
-					fontWeight: 'bold'
-				}
-			}
-		};
-	}, [
-		hourlyData,
-		getLocalHour,
-		formatLocalDateTime,
-		formatLocalDate
-	]);
+            legend: {
+                verticalAlign: 'top',
+                align: 'center',
+                itemStyle: {
+                    fontWeight: 'bold',
+                    fontSize: '12px'
+                },
+                // Margin for å dytte legend litt ned så den ikke klistrer seg i toppen
+                margin: 10 
+            }
+        };
+    }, [
+        hourlyData,
+        getLocalHour,
+        formatLocalDateTime,
+        formatLocalDate
+    ]);
 
-	if (!options) {
-		return null;
-	}
+    if (!options) {
+        return null;
+    }
 
-	return (
-		<HighchartsReact
-			highcharts={Highcharts}
-			options={options}
-		/>
-	);
+    return (
+        <HighchartsReact
+            highcharts={Highcharts}
+            options={options}
+        />
+    );
 }
