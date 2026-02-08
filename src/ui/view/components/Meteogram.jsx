@@ -230,13 +230,6 @@ export default function Meteogram({ hourlyData, timezone }) {
   if (!options) return null;
 
   return (
-    <div style={{ 
-      padding: '16px 20px 24px', 
-      background: '#fff', 
-      borderRadius: 16, 
-      boxShadow: '0 8px 24px rgba(0,0,0,0.08)' 
-    }}>
-      <HighchartsReact highcharts={Highcharts} options={options} />
-    </div>
+    <HighchartsReact highcharts={Highcharts} options={options} />
   );
 }
