@@ -94,10 +94,13 @@ export default function HomePage({ viewModel }) {
                         {/* Her sender vi med timezone fra viewModel.location. 
                             Dette sikrer at grafen følger SSOT for tidssone satt i SearchViewModel/HomeViewModel.
                         */}
-                        <Meteogram 
-                            hourlyData={allHourlyData} 
-                            timezone={viewModel.location.timezone} 
+                        <Meteogram
+                            hourlyData={allHourlyData}
+                            getLocalHour={viewModel.getLocalHour}
+                            formatLocalDateTime={viewModel.formatLocalDateTime}
+                            formatLocalDate={viewModel.formatLocalDate}
                         />
+
                     </section>
                 ) : (
                     /* TABELL-VISNING */

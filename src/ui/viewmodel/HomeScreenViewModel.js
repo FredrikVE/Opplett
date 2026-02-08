@@ -41,6 +41,53 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
         return label.charAt(0).toUpperCase() + label.slice(1);
     };
 
+    const getTimezone = () => {
+        return (
+            location.timezone ??
+            Intl.DateTimeFormat().resolvedOptions().timeZone ??
+            "UTC"
+        );
+    };
+
+    const formatLocalDate = (timestampMs) => {
+        const tz = getTimezone();
+
+        return new Date(timestampMs)
+            .toLocaleDateString("nb-NO", {
+                weekday: "short",
+                day: "numeric",
+                month: "short",
+                timeZone: tz
+            });
+    };
+
+
+
+    const getLocalHour = (timestampMs) => {
+        const tz = getTimezone();
+
+        return Number(
+            new Date(timestampMs).toLocaleTimeString("nb-NO", {
+                timeZone: tz,
+                hour: "numeric",
+                hour12: false
+            })
+        );
+    };
+
+    const formatLocalDateTime = (timestampMs) => {
+        const tz = getTimezone();
+
+        return new Date(timestampMs).toLocaleString("nb-NO", {
+            timeZone: tz,
+            weekday: "long",
+            day: "numeric",
+            month: "short",
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+    };
+
 
     // UseEffect for å sette startkoordinater fra brukerpossisjon
     useEffect(() => {
@@ -164,6 +211,11 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
         loading,
         error,
         location,
+
+        getLocalHour,
+	    formatLocalDateTime,
+        formatLocalDate,
+
         query: searchViewModel.query,
         suggestions: searchViewModel.suggestions,
         onSearchChange: searchViewModel.onSearchChange,
