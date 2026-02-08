@@ -7,8 +7,10 @@ import Meteogram from "../components/HomePage/Graph/Meteogram.jsx";
 import WindMeteogram from "../components/HomePage/Graph/WindMeteogram.jsx";
 
 export default function HomePage({ viewModel }) {
+
+    //States for UI-mekanikk
     const [openDate, setOpenDate] = useState(null);
-    const [viewMode, setViewMode] = useState("table"); // 'table' eller 'graph'
+    const [viewMode, setViewMode] = useState("table");
 
     // Tabellstruktur
     const tableConfig = [
