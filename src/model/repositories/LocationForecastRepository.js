@@ -84,6 +84,7 @@ export default class LocationForecastRepository {
                 precipitation: precipData,
                 temp: entry.data.instant.details.air_temperature,
                 wind: entry.data.instant.details.wind_speed,
+                uv: entry.data.instant.details.ultraviolet_index_clear_sky,
                 details: entry.data.instant.details
             });
         }
