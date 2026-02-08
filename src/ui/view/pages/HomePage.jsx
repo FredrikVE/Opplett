@@ -1,4 +1,3 @@
-// src/ui/view/pages/HomePage.jsx
 import { useState } from "react";
 import LoadingSpinner from "../components/LoadingSpinner.jsx";
 import SearchField from "../components/SearchField.jsx";
@@ -8,7 +7,7 @@ import AlertList from "../components/AlertList.jsx";
 export default function HomePage({ viewModel }) {
     const [openDate, setOpenDate] = useState(null);
 
-    // 1. Definer tabellstrukturen ett sted
+    // Tabellstruktur
     const tableConfig = [
         { id: "date", label: "" },
         { id: "night", label: "Natt" },
@@ -31,21 +30,14 @@ export default function HomePage({ viewModel }) {
         return <p>Feil: {viewModel.error}</p>;
     }
 
+    // Konverterer forecast-objektet til en liste for mapping
     const entries = Object.entries(viewModel.forecast);
-    const firstDate = entries[0]?.[0];
+    const firstDate = entries[0]?.[0]; // Dette vil nå være en ISO-streng (f.eks. "2026-02-08")
 
-    const toggleDate = (date) => {
-        setOpenDate((previousOpenDate) => {
-            if (previousOpenDate === date) { // Hvis datoen vi klikket på allerede er den som er åpen
-                return null;                 // returnerer vi null (lukk kortet)
-            } 
-            else {
-                return date;                // ellers returnerer vi den nye datoen (åpne det nye kortet)
-            }
-        });
+    const toggleDate = (dateISO) => {
+        setOpenDate((prev) => (prev === dateISO ? null : dateISO));
     };
 
-    // Skjul header hvis det første kortet er åpent
     const hideHeader = openDate === firstDate;
 
     return (
@@ -59,7 +51,7 @@ export default function HomePage({ viewModel }) {
                 suggestions={viewModel.suggestions}
                 onSearchChange={viewModel.onSearchChange}
                 onSuggestionSelected={viewModel.onSuggestionSelected}
-                onResetToDeviceLocation={viewModel.onResetToDeviceLocation} // Lagt til her
+                onResetToDeviceLocation={viewModel.onResetToDeviceLocation}
             />
 
             <AlertList alerts={viewModel.alerts} />
@@ -77,17 +69,21 @@ export default function HomePage({ viewModel }) {
                     </thead>
                 )}
 
-                {entries.map(([date, hourly], index) => (
+                {/* Hver 'entry' består av [key, value]
+                    dateISO = "2026-02-08" (ID brukt for oppslag)
+                    dayData = { label: "Søndag 8. feb", hours: [...] } (Data for visning)
+                */}
+                {entries.map(([dateISO, dayData], index) => (
                     <DayForecastCard
-                        key={date}
-                        date={date}
-                        hourly={hourly}
+                        key={dateISO}
+                        date={dayData.label}          // Sender den pene teksten
+                        hourly={dayData.hours}        // Sender listen med timer
                         colCount={colCount}
-                        summary={viewModel.dailySummaryByDate[date]}
-                        sunTimes={viewModel.sunTimesByDate[date]}
-                        open={openDate === date}
+                        summary={viewModel.dailySummaryByDate[dateISO]} // Bruker stabil ISO-nøkkel
+                        sunTimes={viewModel.sunTimesByDate[dateISO]}    // Bruker stabil ISO-nøkkel
+                        open={openDate === dateISO}
                         isFirst={index === 0}
-                        onToggle={() => toggleDate(date)}
+                        onToggle={() => toggleDate(dateISO)}
                     />
                 ))}
             </table>
