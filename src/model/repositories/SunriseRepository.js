@@ -1,5 +1,4 @@
 // src/model/repositories/SunriseRepository.js
-
 export default class SunriseRepository {
 
     // Konstuktør som initialiserer datasource og map for caching
