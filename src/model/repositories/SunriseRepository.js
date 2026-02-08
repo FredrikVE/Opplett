@@ -1,116 +1,161 @@
 // src/model/repositories/SunriseRepository.js
 
 /**
- * Konverterer dato-label til ISO-format (YYYY-MM-DD).
- * Håndterer både "11.02.2026" og "Mandag 9" (vasker ut tekst).
+ * Hjelpefunksjoner flyttet ut for å holde klassen ren.
  */
-function toISODate(dateLabel) {
-    if (!dateLabel) return null;
-
-    // Sjekk om vi har det standard formatet "DD.MM.YYYY"
-    if (dateLabel.includes(".")) {
-        const [dd, mm, yyyy] = dateLabel.split(".");
-        if (dd && mm && yyyy) {
-            return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
+const DateUtils = {
+    /**
+     * Konverterer en datolabel til ISO-format (YYYY-MM-DD).
+     *
+     * Støttede strategier (i denne rekkefølgen):
+     * 1. Eksakt format: "DD.MM.YYYY"
+     * 2. Fallback: trekk ut siste tall (antas å være dag),
+     *    bruk inneværende måned og år
+     */
+    toISODate(label) {
+        if (!label) {
+            return null;
         }
-    }
 
-    // Fallback: Hvis labelen inneholder tekst (f.eks "- feb-Mandag 9"), 
-    // trekk ut tallene og anta inneværende måned/år.
-    const numbers = dateLabel.match(/\d+/g);
-    if (numbers) {
-        const day = numbers[numbers.length - 1].padStart(2, "0");
+        const isoFromDotFormat = this.parseDotSeparatedDate(label);
+        if (isoFromDotFormat) {
+            return isoFromDotFormat;
+        }
+
+        const isoFromTextFallback = this.parseDayFromText(label);
+        if (isoFromTextFallback) {
+            return isoFromTextFallback;
+        }
+
+        return null;
+    },
+
+    /**
+     * Parser eksakt datoformat "DD.MM.YYYY".
+     * Returnerer ISO-dato eller null dersom formatet ikke matcher.
+     */
+    parseDotSeparatedDate(label) {
+        const match = label.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+        if (!match) {
+            return null;
+        }
+
+        const [, day, month, year] = match;
+        return `${year}-${month}-${day}`;
+    },
+
+    /**
+     * Fallback-parser for tekstbaserte labels som f.eks:
+     * "Mandag 9", "fre 12", "– feb Mandag 9"
+     *
+     * Trekker ut siste tallsekvens og antar dette er dagen i måneden.
+     * Bruker inneværende måned og år.
+     */
+    parseDayFromText(label) {
+        const numbersInLabel = label.match(/\d+/g);
+        if (!numbersInLabel || numbersInLabel.length === 0) {
+            return null;
+        }
+
+        const day = numbersInLabel.at(-1).padStart(2, "0");
         const now = new Date();
+
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, "0");
+
         return `${year}-${month}-${day}`;
-    }
+    },
 
-    return null;
-}
+    /**
+     * Formatterer et ISO-tidspunkt til HH:mm i ønsket tidssone.
+     * Returnerer null dersom input ikke er en gyldig dato.
+     */
+    formatTime(isoString, timeZone = "UTC") {
+        if (!isoString) {
+            return null;
+        }
 
-/**
- * Formaterer tidsstempel fra API til HH:mm i riktig tidssone
- */
-function formatHHmm(isoString, timeZone, locale = "nb-NO") {
-    if (!isoString) return null;
+        const date = new Date(isoString);
+        if (Number.isNaN(date.getTime())) {
+            return null;
+        }
 
-    const d = new Date(isoString);
-    if (isNaN(d.getTime())) return null;
+        const formatter = new Intl.DateTimeFormat("nb-NO", {
+            timeZone,
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+        });
 
-    const formatter = new Intl.DateTimeFormat(locale, {
-        timeZone: timeZone ?? "UTC",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-    });
-
-    return formatter.format(d);
-}
+        return formatter.format(date);
+    },
+};
 
 export default class SunriseRepository {
-    // Konstruktør med instansvariabler
+
     constructor(sunriseDataSource) {
         this.datasource = sunriseDataSource;
-        this.cache = new Map(); // Ferdige resultater
-        this.inFlight = new Map(); // Pågående fetches (Promise-cache)
+        this.cache = new Map();
+        this.inFlight = new Map();
     }
 
-    async getSunTimes(lat, lon, dateISO, timeZone) {
-        const key = `${lat},${lon},${dateISO},${timeZone ?? "UTC"}`;
+    async getSunTimes(lat, lon, dateISO, timeZone = "UTC") {
+        const key = `${lat},${lon},${dateISO},${timeZone}`;
 
-        // 1. Ferdig cache
         if (this.cache.has(key)) {
             return this.cache.get(key);
         }
 
-        // 2. Pågående request
         if (this.inFlight.has(key)) {
             return this.inFlight.get(key);
         }
 
-        // 3. Start nytt kall
-        const promise = (async () => {
+        const requestPromise = (async () => {
             try {
                 const result = await this.datasource.fetchSunrise(lat, lon, dateISO);
-                const p = result?.properties ?? {};
+                const properties = result?.properties ?? {};
 
-                const out = {
-                    sunrise: formatHHmm(p.sunrise?.time ?? null, timeZone),
-                    sunset: formatHHmm(p.sunset?.time ?? null, timeZone),
+                const output = {
+                    sunrise: DateUtils.formatTime(properties.sunrise?.time, timeZone),
+                    sunset: DateUtils.formatTime(properties.sunset?.time, timeZone),
                 };
 
-                this.cache.set(key, out);
-                return out;
-            } finally {
-                // Viktig: fjern fra inFlight uansett utfall
+                this.cache.set(key, output);
+                return output;
+            } 
+            
+            finally {
                 this.inFlight.delete(key);
             }
+
         })();
 
-        this.inFlight.set(key, promise);
-        return promise;
+        this.inFlight.set(key, requestPromise);
+        return requestPromise;
     }
 
     async getSunTimesForDateLabels(lat, lon, dateLabels, timeZone) {
+        
         if (!Array.isArray(dateLabels)) {
             return {};
         }
 
-        // Paralleliser alle datoer
-        const tasks = dateLabels.map(async (dateLabel) => {
-            const dateISO = toISODate(dateLabel);
+        const tasks = dateLabels.map(async (label) => {
+            const dateISO = DateUtils.toISODate(label);
+            const fallback = { sunrise: null, sunset: null };
 
             if (!dateISO) {
-                return [dateLabel, { sunrise: null, sunset: null }];
+                return [label, fallback];
             }
 
             try {
-                const sun = await this.getSunTimes(lat, lon, dateISO, timeZone);
-                return [dateLabel, sun];
-            } catch (error) {
-                console.warn("Sunrise-feil for", dateLabel, error);
-                return [dateLabel, { sunrise: null, sunset: null }];
+                const sunTimes = await this.getSunTimes(lat, lon, dateISO, timeZone);
+                return [label, sunTimes];
+            } 
+            
+            catch (error) {
+                console.warn(`Feil ved henting av soltider for "${label}":`, error);
+                return [label, fallback];
             }
         });
 
