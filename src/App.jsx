@@ -7,10 +7,11 @@ import "./ui/style/LoadingSpinner.css";
 import "./ui/style/SolarInfo.css";
 import "./ui/style/SearchFeild.css";
 import "./ui/style/Alerts.css";
-import "./ui/style/Header.css";
 import "./ui/style/ForecastTable.css";
 import "./ui/style/DayForecastCard.css";
 import "./ui/style/HomePage.css";
+import "./ui/style/Header.css";
+import "./ui/style/Footer.css";
 
 //DataSources
 import OpenCageGeocodingDataSource from "./model/datasource/OpenCageGeocodingDataSource.js";
@@ -28,6 +29,8 @@ import SunriseRepository from "./model/repositories/SunriseRepository.js";
 import useHomeScreenViewModel from "./ui/viewmodel/HomeScreenViewModel.js";
 import HomePage from "./ui/view/pages/HomePage.jsx";
 import LoadingSpinner from "./ui/view/components/LoadingSpinner/LoadingSpinner.jsx";
+import Header from "./ui/view/components/Layout/Header.jsx";
+import Footer from "./ui/view/components/Layout/Footer.jsx";
 
 //Initialiserer instanser utenfor komponentens livssyklus for stabilitet og unødvendige re-renders.
 //Dette hindrer doble instanser ved re-renders og fikser teller-problemet i loggen.
@@ -61,6 +64,11 @@ export default function App() {
     }
 
     return (
-        <HomePage viewModel={homeScreenViewModel} />
+        <>
+            <Header/ >
+            <HomePage viewModel={homeScreenViewModel} />
+            <Footer/>
+        </>
+        
     );
 }

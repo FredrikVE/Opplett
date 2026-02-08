@@ -1,34 +1,72 @@
-/*src/style/Header.css*/
-
-/* ================================
-   Page header (title + date)
-================================ */
-.page-header {
-    text-align: center;
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #b2cff5;
+/* src/ui/style/Header.css */
+.main-header {
+    background-color: #ffffff;
+    border-bottom: 1px solid rgba(6, 22, 41, 0.1);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
-/* Hovedoverskrift */
-.page-header h1 {
-    font-size: 26px;
-    line-height: 32px;
-    font-weight: var(--font-weight-bold);
-    letter-spacing: -0.2px;
+.header-content {
+    max-width: 860px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 14px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: #0366d6;
+}
+
+.header-nav h1 {
+    font-size: 1.1rem;
     margin: 0;
+    color: var(--color-text-base);
 }
 
-/* Dato */
-.page-date {
-    margin-top: 6px;
-
-    font-size: 14px;
-    line-height: 18px;
-    font-weight: var(--font-weight-normal);
-
+/* src/ui/style/Footer.css */
+.main-footer {
+    background-color: #ffffff;
+    border-top: 1px solid rgba(6, 22, 41, 0.1);
+    margin-top: 60px;
+    padding: 40px 0 20px;
     color: var(--color-text-subtle);
-    font-variant-numeric: var(--font-variant-numeric);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+}
+
+.footer-content {
+    max-width: 860px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 30px;
+    padding: 0 14px 30px;
+}
+
+.footer-section h4 {
+    color: var(--color-text-base);
+    margin-bottom: 12px;
+}
+
+.footer-section ul {
+    padding: 0;
+}
+
+.footer-section a {
+    color: #0366d6;
+    text-decoration: none;
+}
+
+.footer-bottom {
+    text-align: center;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+    font-size: 0.85rem;
 }

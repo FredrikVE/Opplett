@@ -1,0 +1,104 @@
+/* src/ui/style/Footer.css */
+
+.main-footer {
+  border-top: 1px solid #eee;
+  padding: 40px 0 20px;
+  color: #666;
+  font-size: 14px;
+}
+
+.footer-content,
+.footer-bottom {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 32px;
+  margin-bottom: 32px;
+}
+
+/* Seksjoner */
+.footer-section h4 {
+  color: #333;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.footer-section p {
+  max-width: 340px;
+  line-height: 1.6;
+}
+
+.footer-section p + p {
+  margin-top: 12px; /* bedre leserytme */
+}
+
+/* Metadata / kilder */
+.footer-meta {
+  font-size: 13px;
+  color: #888;
+}
+
+/* Diskrete lenker */
+.footer-section a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  opacity: 0.85;
+}
+
+.footer-section a:hover {
+  opacity: 1;
+}
+
+/* Logoer */
+.attribution-container {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.credit-logo {
+  height: 50px;
+  opacity: 0.5;
+  filter: grayscale(1);
+  transition: opacity 0.2s ease;
+}
+
+.credit-logo:hover {
+  opacity: 0.9;
+  filter: grayscale(0);
+}
+
+/* Footer-bunn */
+.footer-bottom {
+  border-top: 1px solid #f5f5f5;
+  padding-top: 16px;
+  font-size: 11px;
+  color: #aaa;
+  text-align: center;
+}
+
+/* Mobil */
+@media (max-width: 600px) {
+  .footer-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .footer-section p {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .attribution-container {
+    justify-content: center;
+  }
+}

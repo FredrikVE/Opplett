@@ -1,5 +1,39 @@
 /*src/ui/style/HomePage.css*/
 
+/* ================================
+   Page header (title + date)
+================================ */
+.page-header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #b2cff5;
+}
+
+/* Hovedoverskrift */
+.page-header h1 {
+    font-size: 26px;
+    line-height: 32px;
+    font-weight: var(--font-weight-bold);
+    letter-spacing: -0.2px;
+    margin: 0;
+}
+
+/* Dato */
+.page-date {
+    margin-top: 6px;
+
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: var(--font-weight-normal);
+
+    color: var(--color-text-subtle);
+    font-variant-numeric: var(--font-variant-numeric);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+
 /* --- Hovedstruktur --- */
 .home-screen {
   width: 100%;
