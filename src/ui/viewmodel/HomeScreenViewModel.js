@@ -18,18 +18,20 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
     const searchViewModel = useSearchViewModel(geocodingRepository, setLocation);
 
     useEffect(() => {
-        if (initialLat && initialLon) {
-            setLocation(prev => ({
-                ...prev,
-                lat: initialLat,
-                lon: initialLon
+        if (initialLat && initialLon) {         // når vi har start-koordinatene
+            setLocation(initialLocation => ({   // Callback som oppaterer tom locationstate med enhetspossisjon
+                ...initialLocation,             // Kopierer alle eksisterende felter fra forrige state
+                lat: initialLat,                // Oppdaterer lat = null til initLat
+                lon: initialLon                 // Oppdaterer lon = null til initLon
             }));
         }
-    }, [initialLat, initialLon]);
+    }, [initialLat, initialLon]);               //Definerer dependancy array til å lytte etter endringer i initLat og initLon
 
 
     useEffect(() => {
-        if (!location.lat || !location.lon) return;
+        if (!location.lat || !location.lon) {
+            return;
+        }
 
         fetchInitialLocationName(
             setLocation,
@@ -37,6 +39,7 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
             location.lat,
             location.lon
         );
+
     }, [location.lat, location.lon]);
 
 
@@ -67,7 +70,7 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
                     ]);
 
 
-                // Grupper timevarsel per dato
+                //Grupper timevarsel per dato
                 const groupedForecast = {};
 
                 for (const hour of hourlyRaw) {
@@ -83,7 +86,7 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
                     groupedForecast[key].hours.push(hour);
                 }
 
-                // Hent og formater soltider
+                //Hent og formater soltider
                 const isoDates = Object.keys(groupedForecast);
                 const rawSunMap = await sunriseRepository.getSunTimesForDates(location.lat, location.lon, isoDates);
 
@@ -105,6 +108,7 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
                 setAlerts(alertResults?.alerts ?? []);
                 setError(null);
             }
+
             catch (error) {
                 if (!cancelled) {
                     setError(error?.message ?? "Feil ved henting av data");
@@ -121,11 +125,13 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
 
         const timer = setTimeout(loadData, 50);
 
+        //Cleanup-function
         return () => {
             cancelled = true;
             clearTimeout(timer);
         };
     }, [location.lat, location.lon, hoursAhead]);
+
 
     return {
         forecast,
