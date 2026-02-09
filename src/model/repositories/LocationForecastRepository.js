@@ -27,6 +27,7 @@ export default class LocationForecastRepository {
     // Henting av data
     async #getTimeseries(lat, lon, hoursAhead) {
         const key = `${lat},${lon},${hoursAhead}`;
+        
         if (this.cache.has(key)) {
             return this.cache.get(key);
         }
@@ -188,10 +189,16 @@ export default class LocationForecastRepository {
 
         for (const t of targets) {
             const best = this.#getBestHourWith6hPrecipAt(hours, t);
-            if (!best) continue;
+
+            if (!best) {
+                continue;
+            }
 
             // Unngå duplikat hvis oppløsningen blir grovere senere i serien
-            if (used.has(best.timeISO)) continue;
+            if (used.has(best.timeISO)) {
+                continue;
+            }
+
             used.add(best.timeISO);
 
             blocks.push(best.precipitation6h);
@@ -224,49 +231,6 @@ export default class LocationForecastRepository {
             max: Number(max.toFixed(1))
         };
     }
-
-    /*
-    #calculateTotalPrecip(hours) {
-        // VærVarslet-lignende: summer kun 6t-blokkene ved 00/06/12/18 UTC
-        const blockUtcHours = new Set([0, 6, 12, 18]);
-
-        let total = 0;
-        let min = 0;
-        let max = 0;
-
-        const blocks = hours
-            .filter(h => blockUtcHours.has(h.utcHour))
-            .map(h => h.precipitation6h)
-            .filter(Boolean);
-
-        if (blocks.length > 0) {
-            for (const p of blocks) {
-                total += p.amount ?? 0;
-                min += p.min ?? 0;
-                max += p.max ?? 0;
-            }
-
-            return {
-                total: Number(total.toFixed(1)),
-                min: Number(min.toFixed(1)),
-                max: Number(max.toFixed(1))
-            };
-        }
-
-        // Fallback: hvis vi mangler 6t-data, fall tilbake til eksisterende summering
-        for (const h of hours) {
-            total += h.precipitation?.amount ?? 0;
-            min += h.precipitation?.min ?? 0;
-            max += h.precipitation?.max ?? 0;
-        }
-
-        return {
-            total: Number(total.toFixed(1)),
-            min: Number(min.toFixed(1)),
-            max: Number(max.toFixed(1))
-        };
-    }
-    */
 
     #calculateAvgWind(hours) {
         const daytime = hours
