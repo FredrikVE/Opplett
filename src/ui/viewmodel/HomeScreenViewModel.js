@@ -88,16 +88,33 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
 
                 //Hent og formater soltider
                 const isoDates = Object.keys(groupedForecast);
-                const rawSunMap = await sunriseRepository.getSunTimesForDates(location.lat, location.lon, isoDates);
+
+                //Finn dagen før den første datoen for å kunne regne diff på dag 1
+                const firstDate = new Date(isoDates[0]);
+                firstDate.setDate(firstDate.getDate() - 1);
+                const dayBeforeISO = firstDate.toISOString().split('T')[0];
+
+                //Hent soltider for alle dager + gårsdagen (datesToFetch blir nå 11 datoer hvis isoDates er 10)
+                const datesToFetch = [dayBeforeISO, ...isoDates];
+                const rawSunMap = await sunriseRepository.getSunTimesForDates(location.lat, location.lon, datesToFetch);
 
                 const formattedSunMap = {};
-                for (const [date, times] of Object.entries(rawSunMap)) {
-                    formattedSunMap[date] = {
-                        sunrise: formatToLocalTime(times.sunrise, tz),
-                        sunset: formatToLocalTime(times.sunset, tz)
-                    };
-                }
+                isoDates.forEach((date, index) => {
+                    const currentTimes = rawSunMap[date];
+                    const prevDate = (index === 0) ? dayBeforeISO : isoDates[index - 1];
+                    const prevTimes = rawSunMap[prevDate];
 
+                    //Bruk repository-metoden for å få ferdig behandlet logikk
+                    const change = sunriseRepository.getDayLengthChange(currentTimes, prevTimes);
+
+                    formattedSunMap[date] = {
+                        sunrise: formatToLocalTime(currentTimes.sunrise, tz),
+                        sunset: formatToLocalTime(currentTimes.sunset, tz),
+                        dayLengthDiffText: change.text,    // F.eks. "+2 min"
+                        isGettingLonger: change.isLonger   // F.eks. true
+                    };
+                });
+                    
                 if (cancelled) {
                     return;
                 }
