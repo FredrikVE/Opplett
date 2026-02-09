@@ -18,7 +18,7 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
     const searchViewModel = useSearchViewModel(geocodingRepository, setLocation);
 
     useEffect(() => {
-        if (initialLat && initialLon) {         // når vi har start-koordinatene
+        if (initialLat && initialLon) {         // Når vi har start-koordinatene
             setLocation(initialLocation => ({   // Callback som oppaterer tom locationstate med enhetspossisjon
                 ...initialLocation,             // Kopierer alle eksisterende felter fra forrige state
                 lat: initialLat,                // Oppdaterer lat = null til initLat
