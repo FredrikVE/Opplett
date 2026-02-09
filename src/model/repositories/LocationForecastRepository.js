@@ -47,6 +47,7 @@ export default class LocationForecastRepository {
             const timeISO = entry.time;
             const dateISO = this.#getLocalDateKey(timeISO, timeZone);
             const localTime = this.#getLocalHour(timeISO, timeZone);
+            const utcHour = new Date(timeISO).getUTCHours();
 
             const weatherSymbol =
                 entry.data.next_1_hours?.summary?.symbol_code ??
@@ -56,31 +57,38 @@ export default class LocationForecastRepository {
             const next1h = entry.data.next_1_hours?.details;
             const next6h = entry.data.next_6_hours?.details;
 
-            let precipitation = {
-                amount: 0,
-                min: 0,
-                max: 0
-            };
+            const precipitation1h = next1h
+                ? {
+                    amount: next1h.precipitation_amount ?? 0,
+                    min: next1h.precipitation_amount_min ?? next1h.precipitation_amount ?? 0,
+                    max: next1h.precipitation_amount_max ?? next1h.precipitation_amount ?? 0
+                }
+                : null;
 
-            if (next1h) {
-                precipitation.amount = next1h.precipitation_amount ?? 0;
-                precipitation.min = next1h.precipitation_amount_min ?? next1h.precipitation_amount ?? 0;
-                precipitation.max = next1h.precipitation_amount_max ?? next1h.precipitation_amount ?? 0;
-            } 
-            else if (next6h) {
-                precipitation.amount = next6h.precipitation_amount ?? 0;
-                precipitation.min = next6h.precipitation_amount_min ?? 0;
-                precipitation.max = next6h.precipitation_amount_max ?? 0;
-            }
+            const precipitation6h = next6h
+                ? {
+                    amount: next6h.precipitation_amount ?? 0,
+                    min: next6h.precipitation_amount_min ?? 0,
+                    max: next6h.precipitation_amount_max ?? 0
+                }
+                : null;
+
+            // Dette brukes til timevis visning (som før)
+            const precipitation = precipitation1h ?? precipitation6h ?? { amount: 0, min: 0, max: 0 };
 
             hourly.push({
                 timeISO,          // "2026-02-08T12:00:00Z"
                 dateISO,          // lokal dato "YYYY-MM-DD"
                 localTime,        // 0–23
+                utcHour,          // 0–23 (UTC)
 
                 // Vær
                 weatherSymbol,
-                precipitation,
+
+                // Nedbør
+                precipitation,    // "beste" for timekort
+                precipitation1h,  // rå 1t
+                precipitation6h,  // rå 6t
 
                 // Instant
                 temp: entry.data.instant.details.air_temperature,
@@ -149,15 +157,65 @@ export default class LocationForecastRepository {
         };
     }
 
+
+    #getBestHourWith6hPrecipAt(hours, targetHour) {
+        let best = null;
+        let minDiff = Infinity;
+
+        for (const h of hours) {
+            if (!h.precipitation6h) continue;
+
+            const diff = Math.abs(h.localTime - targetHour);
+            if (diff < minDiff) {
+                minDiff = diff;
+                best = h;
+            }
+        }
+
+        return minDiff <= 2 ? best : null;  // 2t slingringsmonn er trygt for timeserie
+    }
+
     #calculateTotalPrecip(hours) {
+        // VærVarslet-lignende: 4 x 6t-perioder per LOKAL dag (00/06/12/18)
+        const targets = [0, 6, 12, 18];
+
         let total = 0;
         let min = 0;
         let max = 0;
 
+        const used = new Set();
+        const blocks = [];
+
+        for (const t of targets) {
+            const best = this.#getBestHourWith6hPrecipAt(hours, t);
+            if (!best) continue;
+
+            // Unngå duplikat hvis oppløsningen blir grovere senere i serien
+            if (used.has(best.timeISO)) continue;
+            used.add(best.timeISO);
+
+            blocks.push(best.precipitation6h);
+        }
+
+        if (blocks.length > 0) {
+            for (const p of blocks) {
+                total += p.amount ?? 0;
+                min += p.min ?? 0;
+                max += p.max ?? 0;
+            }
+
+            return {
+                total: Number(total.toFixed(1)),
+                min: Number(min.toFixed(1)),
+                max: Number(max.toFixed(1))
+            };
+        }
+
+        // Fallback: hvis vi mangler 6t-data, bruk det du allerede hadde (1t/6t "beste")
         for (const h of hours) {
-            total += h.precipitation.amount ?? 0;
-            min += h.precipitation.min ?? 0;
-            max += h.precipitation.max ?? 0;
+            total += h.precipitation?.amount ?? 0;
+            min += h.precipitation?.min ?? 0;
+            max += h.precipitation?.max ?? 0;
         }
 
         return {
@@ -166,6 +224,49 @@ export default class LocationForecastRepository {
             max: Number(max.toFixed(1))
         };
     }
+
+    /*
+    #calculateTotalPrecip(hours) {
+        // VærVarslet-lignende: summer kun 6t-blokkene ved 00/06/12/18 UTC
+        const blockUtcHours = new Set([0, 6, 12, 18]);
+
+        let total = 0;
+        let min = 0;
+        let max = 0;
+
+        const blocks = hours
+            .filter(h => blockUtcHours.has(h.utcHour))
+            .map(h => h.precipitation6h)
+            .filter(Boolean);
+
+        if (blocks.length > 0) {
+            for (const p of blocks) {
+                total += p.amount ?? 0;
+                min += p.min ?? 0;
+                max += p.max ?? 0;
+            }
+
+            return {
+                total: Number(total.toFixed(1)),
+                min: Number(min.toFixed(1)),
+                max: Number(max.toFixed(1))
+            };
+        }
+
+        // Fallback: hvis vi mangler 6t-data, fall tilbake til eksisterende summering
+        for (const h of hours) {
+            total += h.precipitation?.amount ?? 0;
+            min += h.precipitation?.min ?? 0;
+            max += h.precipitation?.max ?? 0;
+        }
+
+        return {
+            total: Number(total.toFixed(1)),
+            min: Number(min.toFixed(1)),
+            max: Number(max.toFixed(1))
+        };
+    }
+    */
 
     #calculateAvgWind(hours) {
         const daytime = hours
@@ -200,16 +301,23 @@ export default class LocationForecastRepository {
 
 
 
-/*
 import LocationForecastDataSource from "../datasource/LocationForecastDataSource.js"
 async function main() {
 
 	const repo = new LocationForecastRepository(new LocationForecastDataSource());
+    
+    const hoursAhead = 120;
 
-	const lat = 68.799759;
-	const lon = 16.541850;
-	const hoursAhead = 120;
-	const timeZone = "Europe/Oslo";
+    //Harstad, Troms
+	//const lat = 68.799759;
+	//const lon = 16.541850;
+	//const timeZone = "Europe/Oslo";
+
+    //Sydney Australia
+    const lat = -33.936559;
+    const lon = 151.255239
+    const timeZone = "Australia/Sydney";
+
 
 	try {
 		const dailySummary = await repo.getDailySummary(lat, lon, hoursAhead, timeZone);
@@ -224,4 +332,3 @@ async function main() {
 }
 
 main();
-*/
