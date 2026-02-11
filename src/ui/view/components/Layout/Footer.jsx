@@ -24,51 +24,69 @@ export default function Footer() {
                             Yr Warning Icons
                         </a>.
                     </p>
-                    </div>
-
+                </div>
 
                 <div className="footer-section">
-                    <h4>Datatjenester levert av</h4>
+                    <div className="footer-subsection">
+                        <h4>Datatjenester levert av</h4>
+                        <div className="attribution-container">
+                            <a
+                                href="https://www.met.no/"
+                                target="_blank"
+                                rel="noreferrer"
+                                title="Meteorologisk institutt"
+                            >
+                                <img
+                                    src="/credit_icons/met/Met_RGB_Horisontal.jpg"
+                                    alt="Meteorologisk institutt"
+                                    className="credit-logo"
+                                />
+                            </a>
 
-                    <div className="attribution-container">
-                        <a
-                            href="https://www.met.no/"
-                            target="_blank"
-                            rel="noreferrer"
-                            title="Meteorologisk institutt"
-                        >
-                            <img
-                                src="/credit_icons/met/Met_RGB_Horisontal.jpg"
-                                alt="Meteorologisk institutt"
-                                className="credit-logo"
-                            />
-                        </a>
+                            <a
+                                href="https://www.yr.no/"
+                                target="_blank"
+                                rel="noreferrer"
+                                title="Yr.no"
+                            >
+                                <img
+                                    src="/credit_icons/yr/YR_blaa_rgb.png"
+                                    alt="Yr"
+                                    className="credit-logo"
+                                />
+                            </a>
 
-                        <a
-                            href="https://www.yr.no/"
-                            target="_blank"
-                            rel="noreferrer"
-                            title="Yr.no"
-                        >
-                            <img
-                                src="/credit_icons/yr/YR_blaa_rgb.png"
-                                alt="Yr"
-                                className="credit-logo"
-                            />
-                        </a>
+                            <a
+                                href="https://opencagedata.com/"
+                                target="_blank"
+                                rel="noreferrer"
+                                title="OpenCage"
+                            >
+                                <img
+                                    src="/credit_icons/open_cage/opencage-logo.svg"
+                                    alt="OpenCage"
+                                    className="credit-logo"
+                                />
+                            </a>
+                        </div>
+                    </div>
 
-                        <a
-                            href="https://opencagedata.com/"
-                            target="_blank"
-                            rel="noreferrer"
-                            title="OpenCage"
-                        >
-                            <img
-                                src="/credit_icons/open_cage/opencage-logo.svg"
-                                alt="OpenCage"
-                                className="credit-logo"
-                            />
-                        </a>
+                    <div className="footer-subsection" style={{ marginTop: '24px' }}>
+                        <h4>Visualiseringsteknologi</h4>
+                        <div className="attribution-container">
+                            <a
+                                href="https://www.highcharts.com/"
+                                target="_blank"
+                                rel="noreferrer"
+                                title="Highcharts"
+                            >
+                                <img
+                                    src="/credit_icons/highcharts/highcharts-logo.png"
+                                    alt="Highcharts"
+                                    className="credit-logo"
+                                />
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
