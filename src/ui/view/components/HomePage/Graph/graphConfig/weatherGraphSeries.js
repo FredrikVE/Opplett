@@ -59,7 +59,7 @@ export function buildForecastLayers(data) {
             name: "Temperatur",
             type: "areaspline",
             data: data.temperature,
-            zIndex: 3,
+            zIndex: 2,
             pointPlacement: "on",
             tooltip: {
                 valueSuffix: "°C"
@@ -71,7 +71,7 @@ export function buildForecastLayers(data) {
             data: data.rain,
             yAxis: 1,
             color: COLORS.rainExpected,
-            zIndex: 2,
+            zIndex: 3,
             pointPlacement: "on",
             tooltip: {
                 valueSuffix: " mm"

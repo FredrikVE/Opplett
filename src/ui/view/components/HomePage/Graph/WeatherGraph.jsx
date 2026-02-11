@@ -34,6 +34,13 @@ export default function WeatherGraph({ hourlyData, getLocalHour, formatLocalDate
                     fontSize: "20px" 
                 }
             },
+
+            tooltip: {
+                shared: true,
+                split: false,
+                followPointer: true 
+            },
+            
             credits: { enabled: false },
 
             xAxis: buildWeatherXAxis(data, dayBands, getLocalHour, formatLocalDate),
