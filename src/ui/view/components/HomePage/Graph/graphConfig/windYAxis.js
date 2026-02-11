@@ -21,16 +21,5 @@ export function buildWindYAxis(maxGust) {
                 }
             }
         },
-        {
-            // INDEX 1: Høyre akse (Usynlig skygge-akse for layout)
-            opposite: true,
-            linkedTo: 0,
-            gridLineWidth: 0,
-            lineColor: COLORS.text,
-            lineWidth: 1.5,
-            tickWidth: 0,
-            offset: 0, // Tvinger aksen helt til kanten av plot-area
-            title: { text: null },
-        }
     ];
 }
