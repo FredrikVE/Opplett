@@ -35,8 +35,6 @@ function buildWeatherSymbolSeries(symbolData) {
         };
     })
 
-    
-
     return {
         name: "Vær",
         type: "scatter",
