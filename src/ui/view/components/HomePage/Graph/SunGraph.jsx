@@ -30,7 +30,7 @@ export default function SunGraph({ sunTimesByDate, formatLocalDate }) {
                 align: 'left',
                 style: { fontWeight: "bold", fontSize: "18px" } 
             },
-            credits: { enabled: false },
+            credits: { enabled: true },     // på den siste, nederste grafen bør denne skrus på
             time: { useUTC: true },
 
             xAxis: buildSunXAxis(formatLocalDate),

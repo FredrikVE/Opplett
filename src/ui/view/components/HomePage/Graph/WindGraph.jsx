@@ -50,7 +50,7 @@ export default function WindGraph({ hourlyData, getLocalHour, formatLocalDate })
                     fontSize: "20px" 
                 }
             },
-            credits: { enabled: true },     // på den siste, nederste grafen bør denne skrus på
+            credits: { enabled: false },
             
             time: { 
                 useUTC: true 
