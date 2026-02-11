@@ -20,17 +20,10 @@ export default function Meteogram({ hourlyData, getLocalHour, formatLocalDateTim
         }
 
         // Domene, graf-datasett (Nå inkludert weatherSymbols)
-        const data = mapHourlyForecastToMeteogram(
-            hourlyData,
-            getLocalHour
-        );
+        const data = mapHourlyForecastToMeteogram(hourlyData, getLocalHour);
 
         // Visuell gruppering (dager / zebra-striper)
-        const dayBands = buildDayBands(
-            data.firstTimestamp,
-            data.lastTimestamp,
-            data.midnights
-        );
+        const dayBands = buildDayBands(data.firstTimestamp, data.lastTimestamp, data.midnights);
 
         // Highcharts-konfigurasjon
         return {
@@ -47,23 +40,15 @@ export default function Meteogram({ hourlyData, getLocalHour, formatLocalDateTim
             title: { text: null },
             credits: { enabled: false },
 
-            // X-akse: timer + dato
-            xAxis: buildXAxis(
-                data,
-                dayBands,
-                getLocalHour,
-                formatLocalDate
-            ),
-
-            // Y-akser: Temperatur, Nedbør og nå Ikon-aksen
+            // Bygger x- og y-akser
+            xAxis: buildXAxis(data, dayBands, getLocalHour, formatLocalDate),
             yAxis: buildYAxis(data.midnights),
-
             plotOptions: buildPlotOptions(),
 
-            // Serien inkluderer nå Vær-ikoner (scatter), Temperatur og Nedbør
+            //bygger serie med værikoner øverst
             series: buildSeries(data),
 
-            // Tooltip: full dato + klokkeslett
+            //Tooltip: full dato + klokkeslett
             tooltip: buildTooltip(formatLocalDateTime),
 
             legend: {
