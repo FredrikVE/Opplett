@@ -21,21 +21,27 @@ export default function WindMeteogram({ hourlyData, getLocalHour, formatLocalDat
             data.wind.every(([, v]) => v === 0) &&
             data.gust.every(([, v]) => v === 0);
 
-        //Samme daginndeling som meteogrammet
+        // Samme daginndeling som meteogrammet
         const dayBands = buildDayBands(data.firstTimestamp, data.lastTimestamp, data.midnights);
+
+        // Felles konfigurasjon for å sikre at grafene flukter vertikalt
+        const commonChartConfig = {
+            height: 450,
+            backgroundColor: 'transparent',
+            spacingTop: 10,
+            spacingBottom: 20,
+            spacingLeft: 0,
+            spacingRight: 0,
+            // Ved å sette faste marginer tvinger vi x-aksen til å starte og slutte på samme sted
+            marginLeft: 50, 
+            marginRight: 50,
+            style: { fontFamily: 'inherit' }
+        };
 
         // --- Ingen vind i perioden ---
         if (noWind) {
             return {
-                chart: {
-                    height: 450,
-                    backgroundColor: 'transparent',
-                    spacingTop: 10,
-                    spacingBottom: 20,
-                    spacingLeft: 0,
-                    spacingRight: 0,
-                    style: { fontFamily: 'inherit' }
-                },
+                chart: commonChartConfig,
                 title: { text: 'Vind (m/s)' },
                 subtitle: {
                     text: 'Ingen målbar vind i perioden 🌬️',
@@ -48,15 +54,7 @@ export default function WindMeteogram({ hourlyData, getLocalHour, formatLocalDat
         const maxGust = Math.max(...data.gust.map(([, v]) => v));
 
         return {
-            chart: {
-                height: 450,
-                backgroundColor: 'transparent',
-                spacingTop: 10,
-                spacingBottom: 20,
-                spacingLeft: 0,
-                spacingRight: 0,
-                style: { fontFamily: 'inherit' }
-            },
+            chart: commonChartConfig,
 
             title: {
                 text: 'Vind (m/s)',
@@ -69,7 +67,7 @@ export default function WindMeteogram({ hourlyData, getLocalHour, formatLocalDat
             credits: { enabled: false },
             time: { useUTC: true },
 
-            //Samme x-akse-kontrakt som meteogrammet med timer, datolabels og zebrabands 
+            // Samme x-akse-kontrakt som meteogrammet
             xAxis: buildWindXAxis({
                 data,
                 dayBands,
@@ -77,23 +75,34 @@ export default function WindMeteogram({ hourlyData, getLocalHour, formatLocalDat
                 formatLocalDate
             }),
 
-            yAxis: {
-                min: 0,
-                softMax: maxGust + 1,
-                tickAmount: 5,
-                lineColor: COLORS.text,
-                lineWidth: 1.5,
-                gridLineWidth: 0,
-                title: { text: null },
-                labels: {
-                    format: '{value} m/s',
-                    style: {
-                        color: COLORS.textMuted,
-                        fontWeight: 'bold',
-                        fontSize: '11px'
+            yAxis: [
+                {
+                    // VENSTRE AKSE: Vindstyrke
+                    min: 0,
+                    softMax: maxGust + 1,
+                    tickAmount: 5,
+                    lineColor: COLORS.text,
+                    lineWidth: 1.5,
+                    gridLineWidth: 0,
+                    title: { text: null },
+                    labels: {
+                        format: '{value} m/s',
+                        style: {
+                            color: COLORS.textMuted,
+                            fontWeight: 'bold',
+                            fontSize: '11px'
+                        }
                     }
+                },
+                {
+                    // HØYRE AKSE: "Skygge-akse" for å matche nedbørsaksen i Meteogrammet
+                    opposite: true,
+                    linkedTo: 0,
+                    gridLineWidth: 0,
+                    lineColor: COLORS.text,
+                    lineWidth: 0,           // gjør den sekundære aksen på HS av vindchart usynlig
                 }
-            },
+            ],
 
             tooltip: {
                 shared: true,
