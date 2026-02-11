@@ -1,5 +1,5 @@
 // src/ui/view/components/HomePage/Graph/graphConfig/yAxis.js
-import { COLORS } from "./constants.js";
+import { COLORS } from "../constants.js";
 
 export function buildWeatherYAxis(midnights) {
     return [

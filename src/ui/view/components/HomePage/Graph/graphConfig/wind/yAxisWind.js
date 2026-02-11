@@ -1,5 +1,5 @@
-// src/ui/view/components/HomePage/Graph/graphConfig/windYAxis.js
-import { COLORS } from "./constants";
+//src/ui/view/components/HomePage/Graph/graphConfig/wind/yAxisWind.js
+import { COLORS } from "../constants";
 
 export function buildWindYAxis(maxGust) {
     return [

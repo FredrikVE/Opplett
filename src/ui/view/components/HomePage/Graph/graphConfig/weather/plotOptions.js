@@ -1,5 +1,5 @@
 //src/ui/view/components/HomePage/Graph/graphConfig/plotOptions.js
-import { HOUR, COLORS } from './constants';
+import { HOUR, COLORS } from '../constants';
 
 export function getTempZones() {
 	return [

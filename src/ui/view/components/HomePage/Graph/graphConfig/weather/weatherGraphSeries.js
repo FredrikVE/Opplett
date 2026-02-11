@@ -1,6 +1,6 @@
 //src/ui/view/components/HomePage/Graph/graphConfig/weatherGraphSeries.js
-import { COLORS } from "./constants.js";
-import { getWeatherIconFileName } from "../../../../../utils/weatherIcons.js";
+import { COLORS } from "../constants.js";
+import { getWeatherIconFileName } from "../../../../../../utils/weatherIcons.js";
 
 function buildWeatherSymbolSeries(symbolData) {
     if (!symbolData || symbolData.length === 0) {

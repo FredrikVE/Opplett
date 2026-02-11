@@ -4,10 +4,12 @@ import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 
 import { mapHourlyForecastToWind } from "./graphUtils/mapHourlyForecastToWind";
-import { buildDayBands } from "./graphUtils/dayBands";
-import { buildWindXAxis } from "./graphConfig/xAxisWind";
-import { buildWindYAxis } from "./graphConfig/yAxiswind";
 import { buildCommonChartConfig } from "./graphConfig/chartConfig";
+
+import { buildDayBands } from "./graphUtils/dayBands";
+import { buildWindXAxis } from "./graphConfig/wind/xAxisWind";
+import { buildWindYAxis } from "./graphConfig/wind/YAxisWind";
+
 
 import { COLORS } from "./graphConfig/constants";
 
@@ -24,7 +26,7 @@ export default function WindMeteogram({ hourlyData, getLocalHour, formatLocalDat
 
         const chart = buildCommonChartConfig();
 
-        // --- Visning ved vindstille ---
+        //Visning ved vindstille
         if (noWind) {
             return {
                 chart,

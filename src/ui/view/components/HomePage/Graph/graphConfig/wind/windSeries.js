@@ -1,4 +1,4 @@
-// src/ui/view/components/HomePage/Graph/graphConfig/windSeries.js
+//src/ui/view/components/HomePage/Graph/graphConfig/wind/windSeries.js
 export function buildWindSeries(data) {
     return [
         {

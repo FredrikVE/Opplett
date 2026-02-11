@@ -1,5 +1,5 @@
-//src/ui/view/components/HomePage/Graph/graphConfig/windXAxis.js
-import { buildWeatherXAxis } from './xAxisWeather';
+//src/ui/view/components/HomePage/Graph/graphConfig/wind/xAxisWind.js
+import { buildWeatherXAxis } from "../weather/xAxisWeather";
 
 export function buildWindXAxis({data, dayBands, getLocalHour, formatLocalDate}) {
 
