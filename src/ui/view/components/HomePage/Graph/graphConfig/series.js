@@ -3,41 +3,50 @@ import { COLORS } from "./constants.js";
 import { getWeatherIconFileName } from "../../../../../utils/weatherIcons.js";
 
 function buildWeatherSymbolSeries(symbolData) {
-    
-	if (!symbolData || symbolData.length === 0) {
+    if (!symbolData || symbolData.length === 0) {
         return { 
-			type: 'scatter', 
-			data: [] 
-		};
+            type: "scatter", 
+            data: [] 
+        };
     }
 
-    const points = symbolData.map(s => {
-        const fileName = getWeatherIconFileName(s.symbolCode);
-        
-        if (!fileName) {
+    const weatherSymbolPoints = symbolData.map((symbol) => {
+
+        //Hent filnavnet basert på symbolkoden
+        const iconFileName = getWeatherIconFileName(symbol.symbolCode);
+
+        //Hvis vi ikke finner et ikon, returnerer vi null (som filtreres bort senere)
+        if (!iconFileName) {
             return null;
         }
 
+        //Definer bilde-stien
+        const iconUrl = `/weather_icons/200/${iconFileName}`;
+
+        //Returner det ferdige Highcharts-punktobjektet
         return {
-            x: s.x, // Tidspunkt på X-aksen
-            y: 0.5, // Plassering på Y-aksen (sentrert i den 20% høye "ikon-sonen" øverst)
+            x: symbol.x,     // Tidspunkt på x-aksen
+            y: 0.5,          // Vertikal plassering (midt i ikon-sonen)
             marker: {
-                // Highcharts støtter 'url(path)' som symbol
-                symbol: `url(/weather_icons/200/${fileName})`,
-                width: 32, 
+                symbol: `url(${iconUrl})`,
+                width: 32,
                 height: 32
             }
         };
-    }).filter(p => p !== null); // Rens ut null-verdier
+    })
+
+    
 
     return {
-        name: 'Vær',
-        type: 'scatter',
-        data: points,
-        yAxis: 2,               // Bruker den dedikerte "ikon-aksen" (øverste 20% av grafen)
-        zIndex: 5,              // Legges foran temperatur- og nedbørslinjer
-        enableMouseTracking: false, // Ikonene reagerer ikke på mus (ingen tooltip)
-        showInLegend: false,    // Ikke vis "Vær" i tegnforklaringen under grafen
+        name: "Vær",
+        type: "scatter",
+        data: weatherSymbolPoints,
+        yAxis: 2,
+        zIndex: 5,
+        enableMouseTracking: false,
+        showInLegend: false,
+        pointPlacement: "on",
+        clip: false, 
         dataLabels: {
             enabled: false
         }
@@ -46,43 +55,40 @@ function buildWeatherSymbolSeries(symbolData) {
 
 export function buildSeries(data) {
     return [
-        // --- LAG 1: Værsymboler (Øverst) ---
-        buildWeatherSymbolSeries(data.weatherSymbols),
 
-        // --- LAG 2: Temperatur (Område/Linje) ---
+        buildWeatherSymbolSeries(data.weatherSymbols),
         {
-            name: 'Temperatur',
-            type: 'areaspline',
+            name: "Temperatur",
+            type: "areaspline",
             data: data.temperature,
             zIndex: 3,
+            pointPlacement: "on",
             tooltip: {
-                valueSuffix: '°C'
+                valueSuffix: "°C"
             }
         },
-
-        // --- LAG 3: Nedbør (Søyler) ---
         {
-            name: 'Nedbør',
-            type: 'column',
+            name: "Nedbør",
+            type: "column",
             data: data.rain,
-            yAxis: 1, // Bruker høyre Y-akse (mm)
+            yAxis: 1,
             color: COLORS.rainExpected,
             zIndex: 2,
+            pointPlacement: "on",
             tooltip: {
-                valueSuffix: ' mm'
+                valueSuffix: " mm"
             }
         },
-
-        // --- LAG 4: Mulig ekstra nedbør (Stablede søyler) ---
         {
-            name: 'Mulig ekstra',
-            type: 'column',
+            name: "Mulig ekstra",
+            type: "column",
             data: data.rainExtra,
-            yAxis: 1, // Bruker høyre Y-akse (mm)
+            yAxis: 1,
             color: COLORS.rainPossible,
             zIndex: 1,
+            pointPlacement: "on",
             tooltip: {
-                valueSuffix: ' mm'
+                valueSuffix: " mm"
             }
         }
     ];

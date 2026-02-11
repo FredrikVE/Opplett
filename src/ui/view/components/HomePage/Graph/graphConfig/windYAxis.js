@@ -1,5 +1,5 @@
-//src/ui/view/components/HomePage/Graph/graphConfig/windYAxis.js
-import { COLORS } from './constants';
+// src/ui/view/components/HomePage/Graph/graphConfig/windYAxis.js
+import { COLORS } from "./constants";
 
 export function buildWindYAxis(maxGust) {
     return [
@@ -13,11 +13,11 @@ export function buildWindYAxis(maxGust) {
             gridLineWidth: 0,
             title: { text: null },
             labels: {
-                format: '{value} m/s',
+                format: "{value} m/s",
                 style: {
                     color: COLORS.textMuted,
-                    fontWeight: 'bold',
-                    fontSize: '11px'
+                    fontWeight: "bold",
+                    fontSize: "11px"
                 }
             }
         },
@@ -26,15 +26,11 @@ export function buildWindYAxis(maxGust) {
             opposite: true,
             linkedTo: 0,
             gridLineWidth: 0,
-            lineWidth: 0,
+            lineColor: COLORS.text,
+            lineWidth: 1.5,
             tickWidth: 0,
-
-            title: { 
-                text: null 
-            },
-            labels: { 
-                enabled: false 
-            }
+            offset: 0, // Tvinger aksen helt til kanten av plot-area
+            title: { text: null },
         }
     ];
 }
