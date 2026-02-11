@@ -149,6 +149,8 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
         };
     }, [location.lat, location.lon, hoursAhead]);
 
+    // Henter SSOT-funksjon of tidssone fra utils-mappa
+    const currentTimeZone = resolveTimezone(location.timezone);
 
     return {
         forecast,
@@ -159,10 +161,10 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
         error,
         location,
 
-        //SSOT-tid eskporteres videre
-        getLocalHour,
-        formatLocalDateTime,
-        formatLocalDate,
+        //SSOT-funksjoner for tid slik at graf blir riktig med tidsone
+        getLocalHour: (ts) => getLocalHour(ts, currentTimeZone),
+        formatLocalDateTime: (ts) => formatLocalDateTime(ts, currentTimeZone),
+        formatLocalDate: (ts) => formatLocalDate(ts, currentTimeZone),
 
         query: searchViewModel.query,
         suggestions: searchViewModel.suggestions,
