@@ -27,7 +27,7 @@ export default function SunGraph({ sunTimesByDate, formatLocalDate }) {
             },
             title: { 
                 text: "Dagslengde", 
-                align: 'left',
+                align: "center",
                 style: { fontWeight: "bold", fontSize: "18px" } 
             },
             credits: { enabled: true },     // på den siste, nederste grafen bør denne skrus på
@@ -47,8 +47,8 @@ export default function SunGraph({ sunTimesByDate, formatLocalDate }) {
                     const totalData = data.find(d => d.x === currentX);
                     
                     return `<b>${formatLocalDate(currentX)}</b><br/>
-                            Total dagslengde: <b>${totalData?.fullDisplay || ''}</b><br/>
-                            Endring: <b>${totalData?.diffText || ''}</b>`;
+                            Total dagslengde: <b>${totalData?.fullDisplay || ""}</b><br/>
+                            Endring: <b>${totalData?.diffText || ""}</b>`;
                 }
             }
         };
@@ -59,7 +59,7 @@ export default function SunGraph({ sunTimesByDate, formatLocalDate }) {
     }
 
     return (
-        <div className="sun-graph-container" style={{ marginTop: '30px' }}>
+        <div className="sun-graph-container" style={{ marginTop: "30px" }}>
             <HighchartsReact highcharts={Highcharts} options={options} />
         </div>
     );
