@@ -20,7 +20,7 @@ function buildWeatherSymbolSeries(symbolData) {
             return null;
         }
 
-        //Definer bilde-stien
+        //Definer bilde-stien for værikoner
         const iconUrl = `/weather_icons/200/${iconFileName}`;
 
         //Returner det ferdige Highcharts-punktobjektet
