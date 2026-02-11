@@ -118,17 +118,16 @@ export default function HomePage({ viewModel }) {
                 ) : (
                     /* TABELL-VISNING */
                     <table className="forecast-overview-table">
-                        {!hideHeader && (
-                            <thead>
-                                <tr className="table-header-row">
-                                    {tableConfig.map((col) => (
-                                        <th key={col.id} className={`col-${col.id}`}>
-                                            {col.label}
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                        )}
+                        {/* Vi rendrer alltid thead, men legger på en klasse hvis den skal være usynlig */}
+                        <thead className={hideHeader ? "visual-hide" : ""}>
+                            <tr className="table-header-row">
+                                {tableConfig.map((col) => (
+                                    <th key={col.id} className={`col-${col.id}`}>
+                                        {col.label}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
 
                         {entries.map(([dateISO, dayData], index) => (
                             <DayForecastCard

@@ -169,3 +169,8 @@
     border-bottom-left-radius: 16px;
     border-bottom-right-radius: 16px;
 }
+/* Forhindrer rar dato-overskrift i første DayForecastCard*/
+/* Skjuler innholdet visuelt, men beholder plassen i tabell-oppsettet */
+.visual-hide {
+    visibility: collapse;
+}
