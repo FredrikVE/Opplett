@@ -41,8 +41,8 @@ export function formatToLocalDateLabel(isoString, tz) {
 
 
 //Kort dato: "man. 12. feb"
-export function formatLocalDate(timestampMs, tz) {
-    return new Date(timestampMs).toLocaleDateString(UI_LOCALE, {
+export function formatLocalDate(zuluTime, tz) {
+    return new Date(zuluTime).toLocaleDateString(UI_LOCALE, {
         weekday: "short",
         day: "numeric",
         month: "short",
@@ -52,9 +52,9 @@ export function formatLocalDate(timestampMs, tz) {
 
 
  //Time (0–23) i lokal tid
-export function getLocalHour(timestampMs, tz) {
+export function getLocalHour(zuluTime, tz) {
     return Number(
-        new Date(timestampMs).toLocaleTimeString(UI_LOCALE, {
+        new Date(zuluTime).toLocaleTimeString(UI_LOCALE, {
             timeZone: tz,
             hour: "numeric",
             hour12: false

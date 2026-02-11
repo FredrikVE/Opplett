@@ -17,6 +17,9 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
     const lastFetchedRef = useRef("");
     const searchViewModel = useSearchViewModel(geocodingRepository, setLocation);
 
+    //SSOT for å lese tidssone på
+    const tz = resolveTimezone(location.timezone);
+
     useEffect(() => {
         if (initialLat && initialLon) {         // Når vi har start-koordinatene
             setLocation(initialLocation => ({   // Callback som oppaterer tom locationstate med enhetspossisjon
@@ -58,10 +61,6 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
 
             try {
                 setLoading(true);
-
-                //SSOT for å lese tidssone på
-                const tz = resolveTimezone(location.timezone);
-
                 const [hourlyRaw, dailySummary, alertResults] =
                     await Promise.all([
                         forecastRepository.getHourlyForecast(location.lat, location.lon, hoursAhead, tz),
@@ -149,9 +148,6 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
         };
     }, [location.lat, location.lon, hoursAhead]);
 
-    // Henter SSOT-funksjon of tidssone fra utils-mappa
-    const currentTimeZone = resolveTimezone(location.timezone);
-
     return {
         forecast,
         dailySummaryByDate,
@@ -162,9 +158,9 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
         location,
 
         //SSOT-funksjoner for tid slik at graf blir riktig med tidsone
-        getLocalHour: (ts) => getLocalHour(ts, currentTimeZone),
-        formatLocalDateTime: (ts) => formatLocalDateTime(ts, currentTimeZone),
-        formatLocalDate: (ts) => formatLocalDate(ts, currentTimeZone),
+        getLocalHour: (zuluTime) => getLocalHour(zuluTime, tz),
+        formatLocalDateTime: (zuluTime) => formatLocalDateTime(zuluTime, tz),
+        formatLocalDate: (zuluTime) => formatLocalDate(zuluTime, tz),
 
         query: searchViewModel.query,
         suggestions: searchViewModel.suggestions,
