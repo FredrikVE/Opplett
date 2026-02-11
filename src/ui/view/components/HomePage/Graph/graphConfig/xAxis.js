@@ -1,5 +1,4 @@
 // src/ui/view/components/HomePage/Graph/graphConfig/xAxis.js
-
 import { COLORS, HOUR } from "./constants.js";
 import { buildZebraBands } from "../graphUtils/dayBands.js";
 
