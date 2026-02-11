@@ -1,5 +1,11 @@
 // src/ui/view/components/HomePage/Graph/graphConfig/chartConfig.js
-import { CHART_LAYOUT } from './constants';
+export const CHART_LAYOUT = {
+    HEIGHT: 500,
+    MARGIN_LEFT: 50,
+    MARGIN_RIGHT: 50,
+    SPACING_TOP: 10,
+    SPACING_BOTTOM: 20
+};
 
 export function buildCommonChartConfig() {
     return {
