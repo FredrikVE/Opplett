@@ -1,5 +1,4 @@
-// src/ui/view/components/HomePage/Graph/graphUtils/mapHourlyForecastToMeteogram.js
-
+//src/ui/view/components/HomePage/Graph/graphUtils/mapHourlyForecastToMeteogram.js
 export function mapHourlyForecastToMeteogram(hourlyData, getLocalHour) {
     if (!hourlyData?.length) {
         return null;

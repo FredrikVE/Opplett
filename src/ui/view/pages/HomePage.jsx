@@ -5,6 +5,7 @@ import DayForecastCard from "../components/HomePage/ForecastTable/DayForecastCar
 import AlertList from "../components/HomePage/AlertCard/AlertList.jsx";
 import WeatherGraph from "../components/HomePage/Graph/WeatherGraph.jsx";
 import WindMeteogram from "../components/HomePage/Graph/WindMeteogram.jsx";
+import SunGraph from "../components/HomePage/Graph/SunGraph.jsx";
 
 export default function HomePage({ viewModel }) {
 
@@ -102,8 +103,14 @@ export default function HomePage({ viewModel }) {
                         />
 
                         <WindMeteogram
-                             hourlyData={allHourlyData}
+                            hourlyData={allHourlyData}
                             getLocalHour={viewModel.getLocalHour}
+                            formatLocalDate={viewModel.formatLocalDate}
+                        />
+
+                        {/* NY GRAF HER */}
+                        <SunGraph 
+                            sunTimesByDate={viewModel.sunTimesByDate} 
                             formatLocalDate={viewModel.formatLocalDate}
                         />
 

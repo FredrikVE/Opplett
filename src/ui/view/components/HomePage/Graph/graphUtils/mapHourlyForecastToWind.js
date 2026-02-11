@@ -1,3 +1,4 @@
+//src/ui/view/components/HomePage/Graph/graphUtils/mapHourlyForecastToWind.js
 export function mapHourlyForecastToWind(hourlyData, getLocalHour) {
     if (!hourlyData?.length) return null;
 
