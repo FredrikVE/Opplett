@@ -22,7 +22,7 @@ export const HOUR = 3600 * 1000;
 
 
 export const CHART_LAYOUT = {
-    HEIGHT: 450,
+    HEIGHT: 500,
     MARGIN_LEFT: 50,
     MARGIN_RIGHT: 50,
     SPACING_TOP: 10,

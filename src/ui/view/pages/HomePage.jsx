@@ -3,7 +3,7 @@ import LoadingSpinner from "../components/LoadingSpinner/LoadingSpinner.jsx";
 import SearchField from "../components/HomePage/SearchFeild/SearchField.jsx";
 import DayForecastCard from "../components/HomePage/ForecastTable/DayForecastCard.jsx";
 import AlertList from "../components/HomePage/AlertCard/AlertList.jsx";
-import Meteogram from "../components/HomePage/Graph/Meteogram.jsx";
+import WeatherGraph from "../components/HomePage/Graph/WeatherGraph.jsx";
 import WindMeteogram from "../components/HomePage/Graph/WindMeteogram.jsx";
 
 export default function HomePage({ viewModel }) {
@@ -95,7 +95,7 @@ export default function HomePage({ viewModel }) {
                     
                     /* GRAF-VISNING */
                     <section className="meteogram-section">
-                        <Meteogram
+                        <WeatherGraph
                             hourlyData={allHourlyData}
                             getLocalHour={viewModel.getLocalHour}
                             formatLocalDate={viewModel.formatLocalDate}

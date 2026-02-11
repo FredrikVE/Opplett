@@ -5,8 +5,8 @@ import HighchartsReact from "highcharts-react-official";
 
 import { mapHourlyForecastToWind } from "./graphUtils/mapHourlyForecastToWind";
 import { buildDayBands } from "./graphUtils/dayBands";
-import { buildWindXAxis } from "./graphConfig/windXAxis";
-import { buildWindYAxis } from "./graphConfig/windYAxis";
+import { buildWindXAxis } from "./graphConfig/xAxisWind";
+import { buildWindYAxis } from "./graphConfig/yAxiswind";
 import { buildCommonChartConfig } from "./graphConfig/chartConfig";
 
 import { COLORS } from "./graphConfig/constants";
@@ -41,6 +41,7 @@ export default function WindMeteogram({ hourlyData, getLocalHour, formatLocalDat
 
         return {
             chart,
+            
             title: {
                 text: "Vind (m/s)",
                 style: { 

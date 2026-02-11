@@ -1,7 +1,7 @@
 // src/ui/view/components/HomePage/Graph/graphConfig/yAxis.js
 import { COLORS } from "./constants.js";
 
-export function buildYAxis(midnights) {
+export function buildWeatherYAxis(midnights) {
     return [
         {
             // --- INDEX 0: TEMPERATUR ---

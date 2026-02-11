@@ -1,4 +1,4 @@
-// src/ui/view/components/HomePage/Graph/Meteogram.jsx
+//src/ui/view/components/HomePage/Graph/WeatherGraph.jsx
 import { useMemo } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
@@ -6,13 +6,13 @@ import HighchartsReact from "highcharts-react-official";
 import { mapHourlyForecastToMeteogram } from "./graphUtils/mapHourlyForecastToMeteogram.js";
 import { buildDayBands } from "./graphUtils/dayBands.js";
 
-import { buildXAxis } from "./graphConfig/xAxis.js";
-import { buildYAxis } from "./graphConfig/yAxis.js";
-import { buildSeries } from "./graphConfig/series.js";
+import { buildWeatherXAxis } from "./graphConfig/xAxisWeather.js";
+import { buildWeatherYAxis } from "./graphConfig/yAxisWeather.js";
+import { buildForecastLayers } from "./graphConfig/weatherGraphSeries.js";
 import { buildPlotOptions } from "./graphConfig/plotOptions.js";
 import { buildCommonChartConfig } from "./graphConfig/chartConfig.js";
 
-export default function Meteogram({ hourlyData, getLocalHour, formatLocalDate }) {
+export default function WeatherGraph({ hourlyData, getLocalHour, formatLocalDate }) {
     
     const options = useMemo(() => {
 
@@ -36,11 +36,11 @@ export default function Meteogram({ hourlyData, getLocalHour, formatLocalDate })
             },
             credits: { enabled: false },
 
-            xAxis: buildXAxis(data, dayBands, getLocalHour, formatLocalDate),
-            yAxis: buildYAxis(data.midnights),
+            xAxis: buildWeatherXAxis(data, dayBands, getLocalHour, formatLocalDate),
+            yAxis: buildWeatherYAxis(data.midnights),
             plotOptions: buildPlotOptions(),
-            series: buildSeries(data),
-
+            series: buildForecastLayers(data),
+            
             legend: {
                 verticalAlign: "top",
                 align: "center",

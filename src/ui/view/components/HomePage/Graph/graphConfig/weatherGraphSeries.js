@@ -1,4 +1,4 @@
-// src/ui/view/components/HomePage/Graph/graphConfig/series.js
+//src/ui/view/components/HomePage/Graph/graphConfig/weatherGraphSeries.js
 import { COLORS } from "./constants.js";
 import { getWeatherIconFileName } from "../../../../../utils/weatherIcons.js";
 
@@ -51,7 +51,7 @@ function buildWeatherSymbolSeries(symbolData) {
     };
 }
 
-export function buildSeries(data) {
+export function buildForecastLayers(data) {
     return [
 
         buildWeatherSymbolSeries(data.weatherSymbols),

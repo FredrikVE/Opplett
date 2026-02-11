@@ -2,7 +2,7 @@
 import { COLORS, HOUR } from "./constants.js";
 import { buildZebraBands } from "../graphUtils/dayBands.js";
 
-export function buildXAxis(data, dayBands, getLocalHour, formatLocalDate) {
+export function buildWeatherXAxis(data, dayBands, getLocalHour, formatLocalDate) {
 	return [
 		{
 			// Primær akse: timer
