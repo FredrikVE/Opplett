@@ -27,9 +27,7 @@ export function buildXAxis(data, dayBands, getLocalHour, formatLocalDate) {
 					}
 
 					const hour = getLocalHour(this.value);
-
-					// Skjul midnatt (0) – dato-aksen under tar over
-					return hour === 0 ? '' : hour;
+					return hour;
 				}
 			}
 		},

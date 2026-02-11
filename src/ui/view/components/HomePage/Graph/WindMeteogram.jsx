@@ -1,15 +1,15 @@
 // src/ui/view/components/HomePage/Graph/WindMeteogram.jsx
-import { useMemo } from 'react';
-import Highcharts from 'highcharts';
-import HighchartsReact from 'highcharts-react-official';
+import { useMemo } from "react";
+import Highcharts from "highcharts";
+import HighchartsReact from "highcharts-react-official";
 
-import { mapHourlyForecastToWind } from './graphUtils/mapHourlyForecastToWind';
-import { buildDayBands } from './graphUtils/dayBands';
-import { buildWindXAxis } from './graphConfig/windXAxis';
-import { buildWindYAxis } from './graphConfig/windYAxis';
-import { buildCommonChartConfig } from './graphConfig/chartConfig';
+import { mapHourlyForecastToWind } from "./graphUtils/mapHourlyForecastToWind";
+import { buildDayBands } from "./graphUtils/dayBands";
+import { buildWindXAxis } from "./graphConfig/windXAxis";
+import { buildWindYAxis } from "./graphConfig/windYAxis";
+import { buildCommonChartConfig } from "./graphConfig/chartConfig";
 
-import { COLORS } from './graphConfig/constants';
+import { COLORS } from "./graphConfig/constants";
 
 export default function WindMeteogram({ hourlyData, getLocalHour, formatLocalDate }) {
     const options = useMemo(() => {
@@ -28,9 +28,9 @@ export default function WindMeteogram({ hourlyData, getLocalHour, formatLocalDat
         if (noWind) {
             return {
                 chart,
-                title: { text: 'Vind (m/s)' },
+                title: { text: "Vind (m/s)" },
                 subtitle: {
-                    text: 'Ingen målbar vind i perioden 🌬️',
+                    text: "Ingen målbar vind i perioden 🌬️",
                     style: { color: COLORS.textMuted }
                 },
                 credits: { enabled: false }
@@ -42,10 +42,10 @@ export default function WindMeteogram({ hourlyData, getLocalHour, formatLocalDat
         return {
             chart,
             title: {
-                text: 'Vind (m/s)',
+                text: "Vind (m/s)",
                 style: { 
-                    fontWeight: 'bold', 
-                    fontSize: '14px' 
+                    fontWeight: "bold", 
+                    fontSize: "14px" 
                 }
             },
             credits: { 
@@ -61,16 +61,16 @@ export default function WindMeteogram({ hourlyData, getLocalHour, formatLocalDat
              
             tooltip: {
                 shared: true,
-                valueSuffix: ' m/s'
+                valueSuffix: " m/s"
             },
 
             legend: {
-                verticalAlign: 'bottom',
-                align: 'center',
+                verticalAlign: "bottom",
+                align: "center",
                 y: 10,
                 itemStyle: { 
-                    fontWeight: 'bold', 
-                    fontSize: '11px' 
+                    fontWeight: "bold", 
+                    fontSize: "11px" 
                 }
             },
 
@@ -83,18 +83,18 @@ export default function WindMeteogram({ hourlyData, getLocalHour, formatLocalDat
 
             series: [
                 {
-                    name: 'Vind',
-                    type: 'spline',
+                    name: "Vind",
+                    type: "spline",
                     data: data.wind,
                     color: COLORS.wind,
                     zIndex: 2
                 },
                 {
-                    name: 'Vindkast',
-                    type: 'spline',
+                    name: "Vindkast",
+                    type: "spline",
                     data: data.gust,
                     color: COLORS.windGust,
-                    dashStyle: 'ShortDot',
+                    dashStyle: "ShortDot",
                     zIndex: 3
                 }
             ]

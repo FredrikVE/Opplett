@@ -9,10 +9,9 @@ import { buildDayBands } from './graphUtils/dayBands.js';
 import { buildXAxis } from './graphConfig/xAxis.js';
 import { buildYAxis } from './graphConfig/yAxis.js';
 import { buildSeries } from './graphConfig/series.js';
-import { buildTooltip } from './graphConfig/tooltip.js';
 import { buildPlotOptions } from './graphConfig/plotOptions.js';
 
-export default function Meteogram({ hourlyData, getLocalHour, formatLocalDateTime, formatLocalDate }) {
+export default function Meteogram({ hourlyData, getLocalHour, formatLocalDate }) {
     
     const options = useMemo(() => {
         if (!hourlyData?.length) {
@@ -49,7 +48,11 @@ export default function Meteogram({ hourlyData, getLocalHour, formatLocalDateTim
             series: buildSeries(data),
 
             //Tooltip: full dato + klokkeslett
-            tooltip: buildTooltip(formatLocalDateTime),
+            //tooltip: buildTooltip(formatLocalDateTime),
+              tooltip: {
+                shared: true,
+                valueSuffix: ' m/s'
+            },
 
             legend: {
                 verticalAlign: 'top',
@@ -62,12 +65,9 @@ export default function Meteogram({ hourlyData, getLocalHour, formatLocalDateTim
                 margin: 10 
             }
         };
-    }, [
-        hourlyData,
-        getLocalHour,
-        formatLocalDateTime,
-        formatLocalDate
-    ]);
+    }, 
+
+    [hourlyData, getLocalHour, formatLocalDate]);
 
     if (!options) {
         return null;

@@ -92,15 +92,12 @@ export default function HomePage({ viewModel }) {
 
             <main className="content-area">
                 {viewMode === "graph" ? (
+                    
                     /* GRAF-VISNING */
                     <section className="meteogram-section">
-                        {/* Her sender vi med timezone fra viewModel.location. 
-                            Dette sikrer at grafen følger SSOT for tidssone satt i SearchViewModel/HomeViewModel.
-                        */}
                         <Meteogram
                             hourlyData={allHourlyData}
                             getLocalHour={viewModel.getLocalHour}
-                            formatLocalDateTime={viewModel.formatLocalDateTime}
                             formatLocalDate={viewModel.formatLocalDate}
                         />
 
