@@ -1,4 +1,4 @@
-// src/ui/view/components/HomePage/Graph/WindMeteogram.jsx
+//src/ui/view/components/HomePage/Graph/WindMeteogram.jsx
 import { useMemo } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
@@ -10,10 +10,9 @@ import { buildDayBands } from "./graphUtils/dayBands";
 import { buildWindXAxis } from "./graphConfig/wind/xAxisWind";
 import { buildWindYAxis } from "./graphConfig/wind/YAxisWind";
 
-
 import { COLORS } from "./graphConfig/constants";
 
-export default function WindMeteogram({ hourlyData, getLocalHour, formatLocalDate }) {
+export default function WindGraph({ hourlyData, getLocalHour, formatLocalDate }) {
     const options = useMemo(() => {
         const data = mapHourlyForecastToWind(hourlyData, getLocalHour);
         

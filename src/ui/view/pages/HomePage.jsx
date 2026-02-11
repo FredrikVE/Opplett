@@ -4,7 +4,7 @@ import SearchField from "../components/HomePage/SearchFeild/SearchField.jsx";
 import DayForecastCard from "../components/HomePage/ForecastTable/DayForecastCard.jsx";
 import AlertList from "../components/HomePage/AlertCard/AlertList.jsx";
 import WeatherGraph from "../components/HomePage/Graph/WeatherGraph.jsx";
-import WindMeteogram from "../components/HomePage/Graph/WindMeteogram.jsx";
+import WindGraph from "../components/HomePage/Graph/WindGraph.jsx";
 import SunGraph from "../components/HomePage/Graph/SunGraph.jsx";
 
 export default function HomePage({ viewModel }) {
@@ -102,7 +102,7 @@ export default function HomePage({ viewModel }) {
                             formatLocalDate={viewModel.formatLocalDate}
                         />
 
-                        <WindMeteogram
+                        <WindGraph
                             hourlyData={allHourlyData}
                             getLocalHour={viewModel.getLocalHour}
                             formatLocalDate={viewModel.formatLocalDate}
