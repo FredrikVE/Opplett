@@ -45,12 +45,11 @@ export default function WindMeteogram({ hourlyData, getLocalHour, formatLocalDat
                 text: "Vind (m/s)",
                 style: { 
                     fontWeight: "bold", 
-                    fontSize: "14px" 
+                    fontSize: "20px" 
                 }
             },
-            credits: { 
-                enabled: false 
-            },
+            credits: { enabled: true },     // på den siste, nederste grafen bør denne skrus på
+            
             time: { 
                 useUTC: true 
             },
@@ -68,9 +67,10 @@ export default function WindMeteogram({ hourlyData, getLocalHour, formatLocalDat
                 verticalAlign: "bottom",
                 align: "center",
                 y: 10,
+
                 itemStyle: { 
                     fontWeight: "bold", 
-                    fontSize: "11px" 
+                    fontSize: "14px" 
                 }
             },
 
