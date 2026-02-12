@@ -1,114 +1,106 @@
 /*src/ui/style/HomePage.css*/
 
 /* ================================
-   Page header (title + date)
+	 Page header (title + date)
 ================================ */
-.page-header {
-    text-align: center;
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #b2cff5;
-}
 
 /* Hovedoverskrift */
 .page-header h1 {
-    font-size: 26px;
-    line-height: 32px;
-    font-weight: var(--font-weight-bold);
-    letter-spacing: -0.2px;
-    margin: 0;
+	text-align: center;
+	font-size: 30px;
+	font-weight: var(--font-weight-bold);
+	letter-spacing: 1.5px;
+	margin: 2rem;
 }
 
 /* Dato */
 .page-date {
-    margin-top: 6px;
-
-    font-size: 14px;
-    line-height: 18px;
-    font-weight: var(--font-weight-normal);
-
-    color: var(--color-text-subtle);
-    font-variant-numeric: var(--font-variant-numeric);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+		margin-top: 6px;
+		font-size: 14px;
+		line-height: 18px;
+		font-weight: var(--font-weight-normal);
+		color: var(--color-text-subtle);
+		font-variant-numeric: var(--font-variant-numeric);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
 }
 
 
 /* --- Hovedstruktur --- */
 .home-screen {
-  width: 100%;
-  max-width: 860px;
-  margin: 0 auto;
-  padding: 18px 14px 42px;
+	width: 100%;
+	max-width: 860px;
+	margin: 0 auto;
+	padding: 18px 14px 42px;
 }
 
 .page-header {
-  margin-bottom: 8px;
-  padding-bottom: 10px;
+	margin-bottom: 8px;
+	padding-bottom: 10px;
 }
 
 /* --- Modus-velger (Tabell/Graf) --- */
 .view-mode-selector {
-  display: flex;
-  justify-content: center; /* Senterer bryteren for et moderne utseende */
-  margin: 20px 0;
+	display: flex;
+	justify-content: center; /* Senterer bryteren for et moderne utseende */
+	margin: 20px 0;
 }
 
 .toggle-container {
-  background: #f0f2f5;
-  padding: 4px;
-  border-radius: 12px;
-  display: flex;
-  border: 1px solid #e1e4e8;
+	background: #f0f2f5;
+	padding: 4px;
+	border-radius: 12px;
+	display: flex;
+	border: 1px solid #e1e4e8;
 }
 
 .toggle-container button {
-  border: none;
-  background: transparent;
-  padding: 8px 24px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  color: #586069;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+	border: none;
+	background: transparent;
+	padding: 8px 24px;
+	border-radius: 10px;
+	cursor: pointer;
+	font-size: 14px;
+	font-weight: 600;
+	color: #586069;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .toggle-container button.active {
-  background: #ffffff;
-  color: #0366d6;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	background: #ffffff;
+	color: #0366d6;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* --- Graf-seksjonen --- */
 .meteogram-section {
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 15px;
-  margin-bottom: 24px;
-  border: 1px solid rgba(6, 22, 41, 0.08);
-  box-shadow: 0 10px 28px rgba(6, 22, 41, 0.08);
+	background: #ffffff;
+	border-radius: 18px;
+	padding: 15px;
+	margin-bottom: 24px;
+	border: 1px solid rgba(6, 22, 41, 0.08);
+	box-shadow: 0 10px 28px rgba(6, 22, 41, 0.08);
 }
 
 .meteogram-container {
-  width: 100%;
-  overflow: hidden; /* Sørger for at Highcharts ikke "stikker ut" */
+	width: 100%;
+	overflow: hidden; /* Sørger for at Highcharts ikke "stikker ut" */
 }
 
 /* --- Tabell-layout (Løsningen på "det stygge") --- */
 .forecast-overview-table {
-  width: 100%;
-  border-spacing: 0;
-  border-collapse: collapse;
-  table-layout: fixed; /* KRITISK: Låser kolonnebreddene slik at header flukter med rader */
+	width: 100%;
+	border-spacing: 0;
+	border-collapse: collapse;
+	table-layout: fixed; /* KRITISK: Låser kolonnebreddene slik at header flukter med rader */
 }
 
 .table-header-row th {
-  padding: 12px 8px;
-  text-align: center;
-  font-size: 0.85rem;
-  color: #666;
-  font-weight: 500;
+	padding: 12px 8px;
+	text-align: center;
+	font-size: 0.85rem;
+	color: #666;
+	font-weight: 500;
 }
 
 /* Definisjon av kolonnebredder som matcher DayForecastCard */
@@ -121,10 +113,10 @@
 
 /* Feilmeldinger */
 .error-msg {
-  background: #fff5f5;
-  color: #c53030;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #feb2b2;
-  margin: 20px 0;
+	background: #fff5f5;
+	color: #c53030;
+	padding: 12px;
+	border-radius: 8px;
+	border: 1px solid #feb2b2;
+	margin: 20px 0;
 }

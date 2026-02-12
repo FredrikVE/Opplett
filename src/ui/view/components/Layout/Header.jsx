@@ -7,13 +7,9 @@ export default function Header() {
     return (
         <header className="main-header">
             <div className="header-content">
-                <div className="logo">
-                    <span className="logo-text">VærVarselet</span>
-                </div>
-
-
+                
                 {/* Hamburger-knapp */}
-                <button
+                <button 
                     className="hamburger"
                     onClick={() => setMenuOpen(!menuOpen)}
                     aria-label="Åpne meny"

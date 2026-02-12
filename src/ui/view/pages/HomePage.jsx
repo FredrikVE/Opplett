@@ -60,7 +60,7 @@ export default function HomePage({ viewModel }) {
     return (
         <div className="home-screen">
             <header className="page-header">
-                <h1>Værmelding: {viewModel.location.name || "Min posisjon"}</h1>
+                <h1>{viewModel.location.name || "Min posisjon"}</h1>
             </header>
 
             <SearchField
