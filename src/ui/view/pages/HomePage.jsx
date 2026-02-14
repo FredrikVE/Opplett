@@ -8,6 +8,7 @@ import AlertList from "../components/HomePage/AlertCard/AlertList.jsx";
 import WeatherGraph from "../components/HomePage/Graph/WeatherGraph.jsx";
 import WindGraph from "../components/HomePage/Graph/WindGraph.jsx";
 import SunGraph from "../components/HomePage/Graph/SunGraph.jsx";
+import UVGraph from "../components/HomePage/Graph/UVGraph.jsx";
 
 export default function HomePage({ viewModel }) {
 
@@ -110,6 +111,12 @@ export default function HomePage({ viewModel }) {
                         />
 
                         <WindGraph
+                            hourlyData={allHourlyData}
+                            getLocalHour={viewModel.getLocalHour}
+                            formatLocalDate={viewModel.formatLocalDate}
+                        />
+
+                         <UVGraph
                             hourlyData={allHourlyData}
                             getLocalHour={viewModel.getLocalHour}
                             formatLocalDate={viewModel.formatLocalDate}
