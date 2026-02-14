@@ -34,12 +34,22 @@ import LoadingSpinner from "./ui/view/components/LoadingSpinner/LoadingSpinner.j
 import Header from "./ui/view/components/Layout/Header.jsx";
 import Footer from "./ui/view/components/Layout/Footer.jsx";
 
+//Importerer klasse for vasking og forenkling av stedsnavn fra OpenCage
+import LocationNameFormatter from "./geolocation/LocationNameFormatter.js";
+
+//Instansierer LocationFormatter of penere formatering av stedsnavn
+const locationNameFormatter = new LocationNameFormatter();
+
+const formatLocation = (locationData) => {
+	return locationNameFormatter.format(locationData);
+}
+
 //Initialiserer instanser utenfor komponentens livssyklus for stabilitet og unødvendige re-renders.
 //Dette hindrer doble instanser ved re-renders og fikser teller-problemet i loggen.
 const locationRepo = new LocationForecastRepository(new LocationForecastDataSource());
 const sunriseRepo = new SunriseRepository(new SunriseDataSource());
 const alertsRepo = new MetAlertsRepository(new MetAlertsDataSource());
-const geoRepo = new OpenCageGeocodingRepository(new OpenCageGeocodingDataSource());
+const geoRepo = new OpenCageGeocodingRepository(new OpenCageGeocodingDataSource(), formatLocation);
 
 export default function App() {
 	const hoursAhead = 120;
