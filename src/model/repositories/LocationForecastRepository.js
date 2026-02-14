@@ -55,7 +55,8 @@ export default class LocationForecastRepository {
             precip: now.precipitation.amount,
             wind: now.wind,
             gust: now.details.wind_speed_of_gust ?? now.wind,
-            windDir: now.details.wind_from_direction ?? 0
+            windDir: now.details.wind_from_direction ?? 0,
+            uv: now.uv
         };
     }
 

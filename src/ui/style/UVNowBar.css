@@ -1,0 +1,58 @@
+/*src/ui/style/UVNowBar.css*/
+.uv-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 1rem;
+    font-size: 1.0rem;
+}
+
+.uv-label {
+    font-weight: 500;
+    color: #555;
+}
+
+.uv-value {
+    font-weight: 700;
+    color: #222;
+}
+
+.uv-text-hint {
+    font-weight: 400;
+    color: #666;
+}
+
+.uv-gradient-bar {
+    position: relative;
+    height: 0.7rem;
+    width: 100%;
+}
+
+.uv-gradient-track {
+    width: 100%;
+    height: 100%;
+    border-radius: 0.8rem;
+    /* Internasjonal UV-fargeskala */
+
+    background: linear-gradient(
+        to right, 
+        #3ea72d 0%,    /* 0-2: Lav */
+        #fff300 25%,   /* 3-5: Moderat */
+        #f18b00 50%,   /* 6-7: Høy */
+        #e53210 75%,   /* 8-10: Svært høy */
+        #b567a4 100%   /* 11+: Ekstrem */
+    );
+}
+
+.uv-indicator {
+    position: absolute;
+    top: 50%;
+    width: 1rem;
+    height: 1rem;
+    background: white;
+    border: 2px solid #222;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    transition: left 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}

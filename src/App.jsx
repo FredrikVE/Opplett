@@ -13,6 +13,7 @@ import "./ui/style/HomePage.css";
 import "./ui/style/Header.css";
 import "./ui/style/Footer.css";
 import "./ui/style/NowCard.css"
+import "./ui/style/UVNowBar.css";
 
 //DataSources
 import OpenCageGeocodingDataSource from "./model/datasource/OpenCageGeocodingDataSource.js";
@@ -41,35 +42,35 @@ const alertsRepo = new MetAlertsRepository(new MetAlertsDataSource());
 const geoRepo = new OpenCageGeocodingRepository(new OpenCageGeocodingDataSource());
 
 export default function App() {
-    const hoursAhead = 120;
+	const hoursAhead = 120;
 
-    //Henter koordinater fra enheten (starter som null)
-    const { loading, error, coords } = useGeolocation();
+	//Henter koordinater fra enheten (starter som null)
+	const { loading, error, coords } = useGeolocation();
 
-    //Initialiser ViewModel med dependancy injection av repositories
-    const homeScreenViewModel = useHomeScreenViewModel(locationRepo, sunriseRepo, alertsRepo, geoRepo, coords?.lat,  coords?.lon, hoursAhead);
+	//Initialiser ViewModel med dependancy injection av repositories
+	const homeScreenViewModel = useHomeScreenViewModel(locationRepo, sunriseRepo, alertsRepo, geoRepo, coords?.lat,  coords?.lon, hoursAhead);
 
-    if (loading) {
-        return (
-            <LoadingSpinner />
-        );
-    }
+	if (loading) {
+		return (
+			<LoadingSpinner />
+		);
+	}
 
-    if (error) {
-        return (
-            <div className="error-screen">
-                <h2>Posisjon ikke tilgjengelig</h2>
-                <button onClick={() => window.location.reload()}>Prøv GPS på nytt</button>
-        </div>
-        );
-    }
+	if (error) {
+		return (
+			<div className="error-screen">
+				<h2>Posisjon ikke tilgjengelig</h2>
+				<button onClick={() => window.location.reload()}>Prøv GPS på nytt</button>
+		</div>
+		);
+	}
 
-    return (
-        <>
-            <Header/ >
-            <HomePage viewModel={homeScreenViewModel} />
-            <Footer/>
-        </>
-        
-    );
+	return (
+		<>
+			<Header/ >
+			<HomePage viewModel={homeScreenViewModel} />
+			<Footer/>
+		</>
+		
+	);
 }
