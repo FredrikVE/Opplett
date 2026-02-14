@@ -40,6 +40,9 @@ export default function Footer() {
                                     src="/credit_icons/met/Met_RGB_Horisontal.jpg"
                                     alt="Meteorologisk institutt"
                                     className="credit-logo"
+                                    width="88"
+                                    height="40"
+                                    loading="lazy"
                                 />
                             </a>
 
@@ -53,6 +56,9 @@ export default function Footer() {
                                     src="/credit_icons/yr/YR_blaa_rgb.png"
                                     alt="Yr"
                                     className="credit-logo"
+                                    width="40"
+                                    height="40"
+                                    loading="lazy"
                                 />
                             </a>
 
@@ -66,6 +72,9 @@ export default function Footer() {
                                     src="/credit_icons/open_cage/opencage-logo.svg"
                                     alt="OpenCage"
                                     className="credit-logo"
+                                    width="120" 
+                                    height="24"
+                                    loading="lazy"
                                 />
                             </a>
                         </div>
@@ -84,6 +93,9 @@ export default function Footer() {
                                     src="/credit_icons/highcharts/highcharts-logo.png"
                                     alt="Highcharts"
                                     className="credit-logo"
+                                    width="133"
+                                    height="28"
+                                    loading="lazy"
                                 />
                             </a>
                         </div>

@@ -38,7 +38,7 @@
   margin-top: 12px;
 }
 
-/* Subseksjoner (erstatter inline style i JSX) */
+/* Subseksjoner */
 .footer-subsection + .footer-subsection {
   margin-top: 24px;
 }
@@ -64,14 +64,17 @@
 /* Logoer */
 .attribution-container {
   display: flex;
-  gap: 16px;
+  gap: 20px;
   align-items: center;
   flex-wrap: wrap;
 }
 
 .credit-logo {
   display: block;
-  height: 50px;
+  max-height: 40px; 
+  width: auto;      /* Bevarer bildeforholdet fra HTML-attributtene */
+  height: auto;     /* Sikrer at bildet ikke strekkes */
+  
   opacity: 0.55;
   filter: grayscale(1);
   transition: opacity 0.2s ease, filter 0.2s ease;
@@ -82,8 +85,9 @@
   filter: grayscale(0);
 }
 
+/* Justering for Highcharts som er ekstra bred */
 .credit-logo[alt="Highcharts"] {
-  height: 35px;
+  max-height: 30px;
 }
 
 /* Footer-bunn */
