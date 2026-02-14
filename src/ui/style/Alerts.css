@@ -84,7 +84,7 @@
 
 
 /* ======================================================
-   Chevron
+   Chevron (top)
    ====================================================== */
 .chevron {
     transition: transform 0.25s ease;
@@ -93,6 +93,23 @@
 }
 
 .chevron.open {
+    transform: rotate(180deg);
+}
+
+/* ======================================================
+   Chevron (bunn)
+   ====================================================== */
+
+.alert-bottom-toggle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem 0;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.alert-bottom-toggle .chevron {
     transform: rotate(180deg);
 }
 

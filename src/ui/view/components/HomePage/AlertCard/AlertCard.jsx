@@ -102,6 +102,16 @@ export default function AlertCard({ alert, isOpen, onToggle }) {
                         <div><span className="legend red" /> Rødt - ekstremt mye snø</div>
                     </div>
 
+                     {/* Bottom toggle */}
+                    <div
+                        className="alert-bottom-toggle"
+                        onClick={onToggle}
+                        role="button"
+                        aria-label="Lukk varsel"
+                    >
+                        <ChevronIcon isOpen />
+                    </div>
+
                 </div>
             )}
         </div>
