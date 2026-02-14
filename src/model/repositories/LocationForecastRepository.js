@@ -39,6 +39,26 @@ export default class LocationForecastRepository {
         return ts;
     }
 
+    async getCurrentWeather(lat, lon, timeZone) {
+        //Henter kun den aller første timen
+        const hourly = await this.getHourlyForecast(lat, lon, 1, timeZone);
+        const now = hourly[0];
+
+        if (!now) {
+            return null;
+        }
+
+        return {
+            weatherSymbol: now.weatherSymbol,
+            temp: now.temp,
+            feelsLike: now.details.apparent_temperature ?? now.temp,
+            precip: now.precipitation.amount,
+            wind: now.wind,
+            gust: now.details.wind_speed_of_gust ?? now.wind,
+            windDir: now.details.wind_from_direction ?? 0
+        };
+    }
+
     // Timevarsel for vær
     async getHourlyForecast(lat, lon, hoursAhead, timeZone) {
         const timeseries = await this.#getTimeseries(lat, lon, hoursAhead);

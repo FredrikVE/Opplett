@@ -12,6 +12,7 @@ import "./ui/style/DayForecastCard.css";
 import "./ui/style/HomePage.css";
 import "./ui/style/Header.css";
 import "./ui/style/Footer.css";
+import "./ui/style/NowCard.css"
 
 //DataSources
 import OpenCageGeocodingDataSource from "./model/datasource/OpenCageGeocodingDataSource.js";

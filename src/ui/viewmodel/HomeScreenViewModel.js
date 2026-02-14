@@ -10,6 +10,7 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
     const [forecast, setForecast] = useState({});
     const [sunTimesByDate, setSunTimesByDate] = useState({});
     const [dailySummaryByDate, setDailySummaryByDate] = useState({});
+    const [currentWeather, setCurrentWeather] = useState(null); // Ny state
     const [alerts, setAlerts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -61,10 +62,11 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
 
             try {
                 setLoading(true);
-                const [hourlyRaw, dailySummary, alertResults] =
+                const [hourlyRaw, dailySummary, current, alertResults] =
                     await Promise.all([
                         forecastRepository.getHourlyForecast(location.lat, location.lon, hoursAhead, tz),
                         forecastRepository.getDailySummary(location.lat, location.lon, hoursAhead, tz),
+                        forecastRepository.getCurrentWeather(location.lat, location.lon, tz), // Nytt kall
                         metAlertsRepository.findAlerts(location.lat, location.lon)
                     ]);
 
@@ -93,7 +95,7 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
                 firstDate.setDate(firstDate.getDate() - 1);
                 const dayBeforeISO = firstDate.toISOString().split('T')[0];
 
-                //Hent soltider for alle dager + gårsdagen (datesToFetch blir nå 11 datoer hvis isoDates er 10)
+                //Hent soltider for alle dager + gårsdagen
                 const datesToFetch = [dayBeforeISO, ...isoDates];
                 const rawSunMap = await sunriseRepository.getSunTimesForDates(location.lat, location.lon, datesToFetch);
 
@@ -103,14 +105,13 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
                     const prevDate = (index === 0) ? dayBeforeISO : isoDates[index - 1];
                     const prevTimes = rawSunMap[prevDate];
 
-                    //Bruk repository-metoden for å få ferdig behandlet logikk
                     const change = sunriseRepository.getDayLengthChange(currentTimes, prevTimes);
 
                     formattedSunMap[date] = {
                         sunrise: formatToLocalTime(currentTimes.sunrise, tz),
                         sunset: formatToLocalTime(currentTimes.sunset, tz),
-                        dayLengthDiffText: change.text,    // F.eks. "+2 min"
-                        isGettingLonger: change.isLonger   // F.eks. true
+                        dayLengthDiffText: change.text,
+                        isGettingLonger: change.isLonger
                     };
                 });
                     
@@ -121,6 +122,7 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
                 setForecast(groupedForecast);
                 setDailySummaryByDate(dailySummary);
                 setSunTimesByDate(formattedSunMap);
+                setCurrentWeather(current);
                 setAlerts(alertResults?.alerts ?? []);
                 setError(null);
             }
@@ -150,6 +152,7 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
 
     return {
         forecast,
+        currentWeather,
         dailySummaryByDate,
         sunTimesByDate,
         alerts,

@@ -1,7 +1,9 @@
+// src/ui/view/pages/HomePage.jsx
 import { useState } from "react";
 import LoadingSpinner from "../components/LoadingSpinner/LoadingSpinner.jsx";
 import SearchField from "../components/HomePage/SearchFeild/SearchField.jsx";
 import DayForecastCard from "../components/HomePage/ForecastTable/DayForecastCard.jsx";
+import NowCard from "../components/HomePage/ForecastTable/NowCard.jsx"; // NY IMPORT
 import AlertList from "../components/HomePage/AlertCard/AlertList.jsx";
 import WeatherGraph from "../components/HomePage/Graph/WeatherGraph.jsx";
 import WindGraph from "../components/HomePage/Graph/WindGraph.jsx";
@@ -73,6 +75,11 @@ export default function HomePage({ viewModel }) {
 
             <AlertList alerts={viewModel.alerts} />
 
+            {/* NYHET: Været nå-kortet vises bare i tabellmodus og hvis data finnes */}
+            {viewMode === "table" && viewModel.currentWeather && (
+                <NowCard current={viewModel.currentWeather} />
+            )}
+
             {/* Bryter mellom Tabell og Graf */}
             <div className="view-mode-selector">
                 <div className="toggle-container">
@@ -108,7 +115,6 @@ export default function HomePage({ viewModel }) {
                             formatLocalDate={viewModel.formatLocalDate}
                         />
 
-                        {/* NY GRAF HER */}
                         <SunGraph 
                             sunTimesByDate={viewModel.sunTimesByDate} 
                             formatLocalDate={viewModel.formatLocalDate}
@@ -118,7 +124,6 @@ export default function HomePage({ viewModel }) {
                 ) : (
                     /* TABELL-VISNING */
                     <table className="forecast-overview-table">
-                        {/* Vi rendrer alltid thead, men legger på en klasse hvis den skal være usynlig */}
                         <thead className={hideHeader ? "visual-hide" : ""}>
                             <tr className="table-header-row">
                                 {tableConfig.map((col) => (
