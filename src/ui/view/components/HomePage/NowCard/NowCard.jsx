@@ -2,8 +2,8 @@
 import { getWeatherIconFileName } from "../../../../utils/weatherIcons.js";
 import UVNowBar from "./UVNowBar.jsx";
 
-
 export default function NowCard({ current }) {
+
     if (!current) {
         return null;
     }
@@ -16,13 +16,12 @@ export default function NowCard({ current }) {
                 <span className="now-text">Været nå</span>
             </div>
 
+            {/* Hovedinnhold i en flex-rad */}
             <div className="now-card-content">
-                {/* Værsymbol */}
                 <div className="now-main-icon">
                     <img src={`/weather_icons/200/${iconFile}`} alt="Værsymbol" />
                 </div>
 
-                {/* Temperatur */}
                 <div className="now-temp-section">
                     <div className="temp-main">
                         <span className={`temp-value ${current.temp < 0 ? 'is-cold' : 'is-warm'}`}>
@@ -45,17 +44,21 @@ export default function NowCard({ current }) {
                     <span className="info-value">{Math.round(current.wind)}</span>
                     <span className="info-sub">({Math.round(current.gust)})</span>
                     <span className="info-unit">m/s</span>
+
+                    {/*Vindpil */}
                     <span className="wind-arrow" style={{ transform: `rotate(${current.windDir}deg)` }}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                             <path d="M12 19V5M12 5L5 12M12 5L19 12" />
                         </svg>
                     </span>
                 </div>
-
-                {/* UV-now-bar */}
-                <UVNowBar uvValue={current.uv} />
-
             </div>
+            
+            {/* UV-now-bar */}
+            <div>
+                <UVNowBar uvValue={current.uv} />
+            </div>
+            
         </div>
     );
 }
