@@ -1,18 +1,21 @@
-//src/ui/view/components/HomePage/Graph/WindMeteogram.jsx
+// src/ui/view/components/HomePage/Graph/WindMeteogram.jsx
 import { useMemo } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 
 import { mapHourlyForecastToWind } from "./graphUtils/mapHourlyForecastToWind";
 import { buildCommonChartConfig } from "./graphConfig/chartConfig";
-
 import { buildDayBands } from "./graphUtils/dayBands";
+
 import { buildWindXAxis } from "./graphConfig/wind/xAxisWind";
-import { buildWindYAxis } from "./graphConfig/wind/YAxisWind";
+import { buildWindYAxis } from "./graphConfig/wind/yAxisWind";
+import { buildWindPlotOptions } from "./graphConfig/wind/plotOptionsWind";
+import { buildWindSeries } from "./graphConfig/wind/windSeries";
 
 import { COLORS } from "./graphConfig/constants";
 
 export default function WindGraph({ hourlyData, getLocalHour, formatLocalDate }) {
+    
     const options = useMemo(() => {
         const data = mapHourlyForecastToWind(hourlyData, getLocalHour);
         
@@ -23,12 +26,9 @@ export default function WindGraph({ hourlyData, getLocalHour, formatLocalDate })
         const noWind = data.wind.every(([, v]) => v === 0) && data.gust.every(([, v]) => v === 0);
         const dayBands = buildDayBands(data.firstTimestamp, data.lastTimestamp, data.midnights);
 
-        const chart = buildCommonChartConfig();
-
-        //Visning ved vindstille
         if (noWind) {
             return {
-                chart,
+                chart: buildCommonChartConfig(),
                 title: { text: "Vind (m/s)" },
                 subtitle: {
                     text: "Ingen målbar vind i perioden 🌬️",
@@ -38,27 +38,20 @@ export default function WindGraph({ hourlyData, getLocalHour, formatLocalDate })
             };
         }
 
-        const maxGust = Math.max(...data.gust.map(([, v]) => v));
-
         return {
-            chart,
-            
+            chart: buildCommonChartConfig(),
             title: {
                 text: "Vind (m/s)",
-                style: { 
-                    fontWeight: "bold", 
-                    fontSize: "20px" 
-                }
+                style: { fontWeight: "bold", fontSize: "20px" }
             },
             credits: { enabled: false },
-            
-            time: { 
-                useUTC: true 
-            },
+            time: { useUTC: true },
 
-            // Bygger x- og y-akser fra utmodulariserte metoder
             xAxis: buildWindXAxis({ data, dayBands, getLocalHour, formatLocalDate }),
-            yAxis: buildWindYAxis(maxGust),
+            yAxis: buildWindYAxis(Math.max(...data.gust.map(([, v]) => v))),
+            
+            plotOptions: buildWindPlotOptions(),
+            series: buildWindSeries(data),
              
             tooltip: {
                 shared: true,
@@ -69,37 +62,8 @@ export default function WindGraph({ hourlyData, getLocalHour, formatLocalDate })
                 verticalAlign: "bottom",
                 align: "center",
                 y: 10,
-
-                itemStyle: { 
-                    fontWeight: "bold", 
-                    fontSize: "14px" 
-                }
-            },
-
-            plotOptions: {
-                spline: {
-                    lineWidth: 2.5,
-                    marker: { radius: 2 }
-                }
-            },
-
-            series: [
-                {
-                    name: "Vind",
-                    type: "spline",
-                    data: data.wind,
-                    color: COLORS.wind,
-                    zIndex: 2
-                },
-                {
-                    name: "Vindkast",
-                    type: "spline",
-                    data: data.gust,
-                    color: COLORS.windGust,
-                    dashStyle: "ShortDot",
-                    zIndex: 3
-                }
-            ]
+                itemStyle: { fontWeight: "bold", fontSize: "14px" }
+            }
         };
     }, [hourlyData, getLocalHour, formatLocalDate]);
 

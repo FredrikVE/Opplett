@@ -27,7 +27,7 @@ export function getTempZones() {
 	];
 }
 
-export function buildPlotOptions() {
+export function buildWeatherPlotOptions() {
 	return {
 		areaspline: {
 			marker: { enabled: false },

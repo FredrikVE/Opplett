@@ -1,20 +1,23 @@
 //src/ui/view/components/HomePage/Graph/graphConfig/wind/windSeries.js
+import { COLORS } from "../constants";
+
 export function buildWindSeries(data) {
     return [
         {
-            name: 'Vind',
-            type: 'spline',
+            name: "Vind",
+            type: "areaspline",
             data: data.wind,
-            color: '#6a0dad',
+            color: COLORS.wind,
             zIndex: 2
         },
         {
-            name: 'Vindkast',
-            type: 'spline',
+            name: "Vindkast",
+            type: "spline",
             data: data.gust,
-            color: '#9c27b0',
-            dashStyle: 'ShortDot',
-            zIndex: 3
+            color: COLORS.windGust,
+            dashStyle: "ShortDot",
+            zIndex: 3,
+            opacity: 0.8
         }
     ];
 }

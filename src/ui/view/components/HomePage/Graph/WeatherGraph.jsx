@@ -10,7 +10,7 @@ import { buildCommonChartConfig } from "./graphConfig/chartConfig.js";
 import { buildWeatherXAxis } from "./graphConfig/weather/xAxisWeather.js";
 import { buildWeatherYAxis } from "./graphConfig/weather/yAxisWeather.js";
 import { buildForecastLayers } from "./graphConfig/weather/weatherGraphSeries.js";
-import { buildPlotOptions } from "./graphConfig/weather/plotOptions.js";
+import { buildWeatherPlotOptions } from "./graphConfig/weather/plotWeatherOptions.js";
 
 export default function WeatherGraph({ hourlyData, getLocalHour, formatLocalDate }) {
     
@@ -45,7 +45,7 @@ export default function WeatherGraph({ hourlyData, getLocalHour, formatLocalDate
 
             xAxis: buildWeatherXAxis(data, dayBands, getLocalHour, formatLocalDate),
             yAxis: buildWeatherYAxis(data.midnights),
-            plotOptions: buildPlotOptions(),
+            plotOptions: buildWeatherPlotOptions(),
             series: buildForecastLayers(data),
             
             legend: {
