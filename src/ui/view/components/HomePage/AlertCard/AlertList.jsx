@@ -1,23 +1,23 @@
-// src/ui/view/components/HomePage/AlertCard/AlertList.jsx
-import AlertItem from "./AlertItem.jsx";
+//src/ui/view/components/HomePage/AlertCard/AlertList.jsx
+import { useState } from "react";
+import AlertCard from "./AlertCard.jsx";
 
 export default function AlertList({ alerts }) {
+    // Viktig: Vi holder styr på ID-en til det varselet som er åpent
+    const [openAlertId, setOpenAlertId] = useState(null);
 
-    // Returnerer null hvis det ikke er noen alerts
-    if (!alerts || alerts.length === 0) {
-        return null;
-    }
+    if (!alerts || alerts.length === 0) return null;
 
     return (
-        <section className="alerts-section">
-            <h2>Farevarsler</h2>
-
-            {alerts.map(alert => (
-                <AlertItem
-                    key={alert.interval[0]}
+        <div className="alerts-list-container">
+            {alerts.map((alert) => (
+                <AlertCard
+                    key={alert.id} // Bruk den unike ID-en fra MET
                     alert={alert}
+                    isOpen={openAlertId === alert.id}
+                    onToggle={() => setOpenAlertId(prev => prev === alert.id ? null : alert.id)}
                 />
             ))}
-        </section>
+        </div>
     );
 }

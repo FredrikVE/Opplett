@@ -1,9 +1,7 @@
-/*src/style/Alert.css*/
-/* ================================
-   Alerts (Yr-style)
-   ================================ */
+/*src/ui/style/Alerts.css*/
 .alerts-section {
-    margin: 16px 0 24px 0;
+    margin-top: 1rem; 
+    margin-bottom: 1rem;
 }
 
 .alerts-section h2 {
@@ -11,13 +9,24 @@
     margin-bottom: 8px;
 }
 
+/* =====================================
+   Card Base
+   ===================================== */
+
 .alert-card {
     background: #fff8cc;
     border-radius: 12px;
-    padding: 16px;
+    padding: 1rem;
     margin-bottom: 12px;
 }
 
+.alert-card.open {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* =====================================
+   Risk Levels
+   ===================================== */
 .alert-yellow {
     background-color: #fff6cc;
     border-left: 6px solid #f2c200;
@@ -33,15 +42,23 @@
     border-left: 6px solid #d93025;
 }
 
+
+/* =====================================
+   Header
+   ===================================== */
+
 .alert-header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 8px;
+}
+
+.alert-header.clickable {
+    cursor: pointer;
 }
 
 .alert-icon {
-    font-size: 20px;
+    width: 64px;
+    height: 64px;
 }
 
 .alert-level {
@@ -49,6 +66,10 @@
     color: var(--color-text-subtle);
 }
 
+
+/* =====================================
+   Text
+   ===================================== */
 .alert-description {
     margin-bottom: 8px;
 }
@@ -57,4 +78,142 @@
     font-style: italic;
     margin-top: 8px;
     color: var(--color-text-subtle);
+}
+
+/* =====================================
+   Expand / Collapse
+   ===================================== */
+.alert-details {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;   
+}
+
+.alert-details.expanded {
+    max-height: 600px;
+    opacity: 1;
+    margin-top: 12px;
+}
+
+/* =====================================
+   Bottom Chevron
+   ===================================== */
+
+.alert-bottom-toggle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+
+/* =====================================
+   Chevron Animation
+   ===================================== */
+.chevron {
+    transition: transform 0.25s ease;
+}
+
+.chevron.is-flipped {
+    transform: rotate(180deg);
+}
+
+
+
+
+/* Containeren i NowCard */
+.now-card-alerts {
+    margin: 12px 0 0 0;
+}
+
+.alert-card {
+    background: #fff8cc;
+    border-radius: 8px;
+    padding: 8px 12px; /* Gjør den "tynn" */
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent; /* Holder layout stabil ved hover */
+    position: relative;
+    overflow: hidden;
+}
+
+/* Hover effekt: Border som i bilde 2 */
+.alert-card:hover {
+    border: 1px solid #d4a017; /* En mørkere gul/gull farge */
+}
+
+.alert-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.alert-icon {
+    width: 32px; /* Mindre ikon for tynnere profil */
+    height: 32px;
+}
+
+.alert-header-text {
+    flex: 1; /* Dytter alt annet (chevron) til høyre */
+    display: flex;
+    flex-direction: column;
+}
+
+.alert-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.alert-title-row strong {
+    font-size: 15px;
+    color: #1a1a1a;
+}
+
+/* Badgen "Hav og kyst" */
+.alert-badge {
+    background-color: #dbeafe;
+    color: #1e40af;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.alert-level {
+    font-size: 12px;
+    color: #4b5563;
+}
+
+/* Chevron posisjonering */
+.chevron {
+    color: #1a1a1a;
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+/* Spesifikk farge-koding for nivåer */
+.alert-yellow {
+    background-color: #fefce8;
+    border-left: 4px solid #facc15;
+}
+
+.alert-yellow:hover {
+    border-color: #facc15;
+}
+
+/* Detaljer-seksjon */
+.alert-details {
+    max-height: 0;
+    overflow: hidden;
+}
+
+
+
+.alert-content-inner {
+    padding-top: 12px;
+    padding-bottom: 4px;
+    font-size: 14px;
+    line-height: 1.5;
 }
