@@ -4,16 +4,18 @@
   border-top: 1px solid rgba(6, 22, 41, 0.1);
   margin-top: 60px;
   padding: 40px 0 20px;
-
   color: var(--color-text-subtle, #666);
   font-size: 14px;
+  
+  /* CLS-fix: Hindrer foten i å starte helt øverst ved treg innlasting */
+  min-height: 250px; 
+  display: block;
 }
 
 .footer-content {
   max-width: 860px;
   margin: 0 auto;
   padding: 0 14px 30px;
-
   display: grid;
   grid-template-columns: 1.4fr 1fr;
   gap: 32px;
@@ -61,19 +63,25 @@
   opacity: 1;
 }
 
-/* Logoer */
+/* Logoer - Optimalisert for CLS */
 .attribution-container {
   display: flex;
   gap: 20px;
   align-items: center;
   flex-wrap: wrap;
+  /* Reserverer plass til logoraden */
+  min-height: 40px; 
 }
 
 .credit-logo {
   display: block;
+  /* Lar HTML-attributtene width/height styre plassen */
   max-height: 40px; 
-  width: auto;      /* Bevarer bildeforholdet fra HTML-attributtene */
-  height: auto;     /* Sikrer at bildet ikke strekkes */
+  width: auto;      
+  height: auto;     
+  
+  /* CLS-magi: Bruker nettleserens evne til å regne ut plass på forhånd */
+  aspect-ratio: attr(width px) / attr(height px);
   
   opacity: 0.55;
   filter: grayscale(1);
@@ -87,7 +95,7 @@
 
 /* Justering for Highcharts som er ekstra bred */
 .credit-logo[alt="Highcharts"] {
-  max-height: 30px;
+  max-height: 24px; /* Justert litt ned for å matche Lighthouse-dimensjonene */
 }
 
 /* Footer-bunn */
@@ -95,7 +103,6 @@
   max-width: 860px;
   margin: 0 auto;
   padding: 16px 14px 0;
-
   border-top: 1px solid rgba(6, 22, 41, 0.06);
   font-size: 11px;
   color: var(--color-text-faint, #aaa);

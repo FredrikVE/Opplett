@@ -52,7 +52,8 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, open,
         const iconFile = getWeatherIconFileName(symbolCode);
         return (
             <img
-                src={`/weather_icons/200/${iconFile}`}
+                //src={`/weather_icons/200/${iconFile}`}
+                src={`/weather_icons/100/${iconFile}`}
                 alt={LABELS_NO[periodKey]}
                 width={28}
                 height={28}

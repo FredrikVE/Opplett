@@ -285,13 +285,14 @@ export default class LocationForecastRepository {
 }
 
 
-
+/*
 import LocationForecastDataSource from "../datasource/LocationForecastDataSource.js"
 async function main() {
 
 	const repo = new LocationForecastRepository(new LocationForecastDataSource());
     
-    const hoursAhead = 120;
+    //const hoursAhead = 120;
+    const hoursAhead = 36;
 
     //Harstad, Troms
 	//const lat = 68.799759;
@@ -309,6 +310,7 @@ async function main() {
 
 		console.log("Daily summary mottatt!");
 		console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+        console.log(`HouersAhed: ${hoursAhead}`)
 		console.log(JSON.stringify(dailySummary, null, 2));
 	}
 	catch (error) {
@@ -317,3 +319,4 @@ async function main() {
 }
 
 main();
+*/
