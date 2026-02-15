@@ -6,7 +6,9 @@ export default function AlertList({ alerts }) {
     // Viktig: Vi holder styr på ID-en til det varselet som er åpent
     const [openAlertId, setOpenAlertId] = useState(null);
 
-    if (!alerts || alerts.length === 0) return null;
+    if (!alerts || alerts.length === 0) {
+        return null;
+    }
 
     return (
         <div className="alerts-list-container">

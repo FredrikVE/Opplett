@@ -29,6 +29,7 @@ export default function AlertCard({ alert, isOpen, onToggle }) {
 
     const mapImage = alert.resources?.find(r => r.mimeType === "image/png");
 
+    // denne MÅ flyttes ut.. ikke SSOT på tid... som skal være i ViewModel
     const formatDateTime = (iso) =>
         new Date(iso).toLocaleString("no-NO", {
             weekday: "long",

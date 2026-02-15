@@ -47,7 +47,9 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, open,
 
     const renderIcon = (periodKey) => {
         const symbolCode = summary?.[periodKey];
-        if (!symbolCode) return null;
+        if (!symbolCode) {
+            return null;
+        }
         
         const iconFile = getWeatherIconFileName(symbolCode);
         return (
@@ -63,7 +65,6 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, open,
     };
 
     // --- LOGIKK FOR LUKKET TILSTAND ---
-    
     let alertIcon = null;
     if (!open && hasAlerts) {
         alertIcon = (
@@ -120,12 +121,16 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, open,
                 <tr className="day-card-body-row">
                     <td id={panelId} className="day-card-body-cell" colSpan={colCount}>
                         <div className="day-card-body-inner">
-                            {hasAlerts && (
-                                <div style={{ marginBottom: '16px' }}>
-                                    <AlertList alerts={dayAlerts} />
-                                </div>
+                            
+                            {/* Alertlist */}
+                            {hasAlerts && (                    
+                                <AlertList alerts={dayAlerts} />
                             )}
+
+                            {/*ForecastTable */}
                             <ForecastTable forecast={hourly} />
+
+                            {/*SunTimes */}
                             <SolarInformation sunTimes={sunTimes} />
                         </div>
                     </td>
@@ -154,10 +159,13 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, open,
                 aria-controls={panelId}
             >
                 <td className="day-card-cell-surface day-card-date-cell">
+
+                    {/* Dette er dritt.. man skal aldri bruke inline styling! */}                    
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <h2 className="day-card-date">{date}</h2>
                         {alertIcon}
                     </div>
+
                 </td>
 
                 {periodCells}
