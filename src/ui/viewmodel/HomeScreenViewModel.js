@@ -1,32 +1,17 @@
 // src/ui/viewmodels/useHomeScreenViewModel.js
 import { useEffect, useState, useRef } from "react";
 import { fetchInitialLocationName } from "../utils/fetchInitialLocationName.js";
-import { 
-    resolveTimezone, 
-    formatToLocalTime, 
-    formatToLocalDateLabel, 
-    formatLocalDate, 
-    formatLocalDateTime, 
-    getLocalHour 
-} from "../utils/timeFormatters.js";
+import { resolveTimezone, formatToLocalTime, formatToLocalDateLabel, formatLocalDate, formatLocalDateTime, getLocalHour } from "../utils/timeFormatters.js";
 import useSearchViewModel from "./SearchViewModel.js";
 
-export default function useHomeScreenViewModel(
-    forecastRepository, 
-    sunriseRepository, 
-    metAlertsRepository, 
-    geocodingRepository, 
-    initialLat, 
-    initialLon, 
-    hoursAhead
-) {
+export default function useHomeScreenViewModel(forecastRepository, sunriseRepository, metAlertsRepository, geocodingRepository, initialLat, initialLon, hoursAhead) {
     const [location, setLocation] = useState({ lat: null, lon: null, name: null, timezone: null });
     const [forecast, setForecast] = useState({});
     const [sunTimesByDate, setSunTimesByDate] = useState({});
     const [dailySummaryByDate, setDailySummaryByDate] = useState({});
     const [currentWeather, setCurrentWeather] = useState(null);
     const [alerts, setAlerts] = useState([]);
-    const [alertsByDate, setAlertsByDate] = useState({}); // NY STATE for tabelloppslag
+    const [alertsByDate, setAlertsByDate] = useState({}); //Ny state til Alerts inne i DailyForecastCard
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -121,11 +106,16 @@ export default function useHomeScreenViewModel(
                         };
                     });
 
-                    if (cancelled) return;
+                    if (cancelled) {
+                        return;
+                    }
+
                     setSunTimesByDate(formattedSunMap);
                 }
 
-                if (cancelled) return;
+                if (cancelled) {
+                    return;
+                }
 
                 // Oppdater alle states
                 setForecast(groupedForecast);
@@ -135,14 +125,18 @@ export default function useHomeScreenViewModel(
                 // Her settes de nye alert-dataene fra repository
                 setAlerts(alertResults?.alerts ?? []);
                 setAlertsByDate(alertResults?.alertsByDate ?? {});
-                
                 setError(null);
-            } catch (err) {
+
+            } 
+
+            catch (error) {
                 if (!cancelled) {
-                    setError(err?.message ?? "Feil ved henting av data");
+                    setError(error?.message ?? "Feil ved henting av data");
                     lastFetchedRef.current = "";
                 }
-            } finally {
+            } 
+
+            finally {
                 if (!cancelled) {
                     setLoading(false);
                 }
