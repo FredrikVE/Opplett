@@ -67,7 +67,7 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
 			try {
 				setLoading(true);
 				
-				//Fase 1 av datahenting, hent kritisk data. La Solarinfo hente etterpå.
+				//Fase 1 av datahenting, henter NÅ-data først.
 				const [hourlyRaw, current, alertResults] = await Promise.all([
 					forecastRepository.getHourlyForecast(location.lat, location.lon, 24, tz),
 					forecastRepository.getCurrentWeather(location.lat, location.lon, tz),
@@ -96,7 +96,7 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
 				setAlertsByDate(alertResults?.alertsByDate ?? {});
 				setLoading(false); 
 
-				//Fase 2 av datahenting. Hente Timeforcast med solarinfo hente i bakgrunnen.
+				//Fase 2 av datahenting. Henter time "for time data" og "summary-data" etterpå.
 				const [fullHourlyRaw, fullDailySummary] = await Promise.all([
 					forecastRepository.getHourlyForecast(location.lat, location.lon, hoursAhead, tz),
 					forecastRepository.getDailySummary(location.lat, location.lon, hoursAhead, tz)
@@ -123,38 +123,10 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
 				setForecast(fullGrouped);
 				setDailySummaryByDate(fullDailySummary);
 
+				//Henter soltider
 				const isoDates = Object.keys(fullGrouped);
-				if (isoDates.length > 0) {
-
-					const firstDate = new Date(isoDates[0]);
-					firstDate.setDate(firstDate.getDate() - 1);
-					const dayBeforeISO = firstDate.toISOString().split('T')[0];
-
-					const datesToFetch = [dayBeforeISO, ...isoDates];
-
-					//Henter soltider.
-					const rawSunMap = await sunriseRepository.getSunTimesForDates(location.lat, location.lon, datesToFetch);
-
-					const formattedSunMap = {};
-					isoDates.forEach((date, index) => {
-						const currentTimes = rawSunMap[date];
-						const prevDate = (index === 0) ? dayBeforeISO : isoDates[index - 1];
-						const prevTimes = rawSunMap[prevDate];
-						const change = sunriseRepository.getDayLengthChange(currentTimes, prevTimes);
-
-						formattedSunMap[date] = {
-							sunrise: formatToLocalTime(currentTimes.sunrise, tz),
-							sunset: formatToLocalTime(currentTimes.sunset, tz),
-							dayLengthDiffText: change.text,
-							isGettingLonger: change.isLonger
-						};
-					});
-
-					if (!cancelled) {
-						setSunTimesByDate(formattedSunMap);
-					}
-				}
-
+				const solarReport = await sunriseRepository.getFullSolarReport(location.lat, location.lon, isoDates, tz, formatToLocalTime);
+				setSunTimesByDate(solarReport);
 			} 
 			
 			catch (error) {
