@@ -70,8 +70,8 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, open,
             <img 
                 src={`/alert_symbols/128/${getAlertIconFileName(dayAlerts[0])}`} 
                 alt="Farevarsel" 
-                width="24" 
-                height="24"
+                width="48" 
+                height="48"
             />
         );
     }
