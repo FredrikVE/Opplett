@@ -4,44 +4,60 @@ import AlertList from "../components/HomePage/AlertCard/AlertList.jsx";
 import LoadingSpinner from "../components/LoadingSpinner/LoadingSpinner.jsx";
 import Navigation from "../../../navigation/Navigation.jsx";
 import ChevronIcon from "../components/Common/Buttons/ChevronIcon.jsx";
+import { COUNTIES } from "../../utils/counties.js";
 
 export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCREENS }) {
-	
-	//State for å styre om vi viser alle eller bare en begrenset liste
+    
+    // State for å styre om vi viser alle eller bare en begrenset liste
     const [showAllOngoing, setShowAllOngoing] = useState(false);
     const [showAllUpcoming, setShowAllUpcoming] = useState(false);
 
     const LIMIT = 4;
 
-    //Rendringsfunksjon for "Vis alle"-knappen
+    // --- HJELPEFUNKSJONER FOR RENDERING ---
+
+    // Gjenbrukbar funksjon for select-filtrene for å få ikonet korrekt plassert uten CSS-bakgrunnsbilde
+    const renderSelectFilter = (value, onChange, options, defaultLabel) => {
+        return (
+            <div className="alert-select-wrapper">
+                <select 
+                    className="alert-select-filter"
+                    value={value} 
+                    onChange={onChange}
+                >
+                    <option value="">{defaultLabel}</option>
+                    {options.map((opt) => (
+                        <option key={opt.id || opt.value} value={opt.id || opt.value}>
+                            {opt.name || opt.label}
+                        </option>
+                    ))}
+                </select>
+                <div className="select-chevron-overlay">
+                    <ChevronIcon isOpen={false} size={14} />
+                </div>
+            </div>
+        );
+    };
+
     const renderExpandButton = (count, isExpanded, setExpanded) => {
-        if (count <= LIMIT) {
-            return null;
-        }
+        if (count <= LIMIT) return null;
 
         let buttonText = `Vis alle (${count})`;
         if (isExpanded) {
             buttonText = "Vis færre";
         }
 
-        const handleToggleClick = () => {
-            setExpanded(!isExpanded);
-        };
-
         return (
-            <button className="expand-alerts-btn" onClick={handleToggleClick}>
+            <button className="expand-alerts-btn" onClick={() => setExpanded(!isExpanded)}>
                 <span>{buttonText}</span>
                 <ChevronIcon isOpen={isExpanded} size={16} />
             </button>
         );
     };
 
-    //Rendringsfunksjon for Pågående varsler
     const renderOngoingSection = () => {
         const totalCount = viewModel.ongoingAlerts.length;
-        if (totalCount === 0) {
-            return null;
-        }
+        if (totalCount === 0) return null;
         
         let alertsToShow = viewModel.ongoingAlerts;
         if (showAllOngoing === false) {
@@ -60,12 +76,9 @@ export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCR
         );
     };
 
-    // 3. Rendringsfunksjon for Kommende varsler
     const renderUpcomingSection = () => {
         const totalCount = viewModel.upcomingAlerts.length;
-        if (totalCount === 0) {
-            return null;
-        }
+        if (totalCount === 0) return null;
 
         let alertsToShow = viewModel.upcomingAlerts;
         if (showAllUpcoming === false) {
@@ -84,54 +97,33 @@ export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCR
         );
     };
 
-    // 4. Rendringsfunksjon for tom liste (infomelding)
     const renderEmptyMessage = () => {
         const hasOngoing = viewModel.ongoingAlerts.length > 0;
         const hasUpcoming = viewModel.upcomingAlerts.length > 0;
-        
-        if (hasOngoing || hasUpcoming) {
-            return null;
-        }
+        if (hasOngoing || hasUpcoming) return null;
 
-        let domainText = "land";
-        if (viewModel.activeDomain === "marine") {
-            domainText = "hav og kyst";
-        }
-
+        const domainText = viewModel.activeDomain === "marine" ? "hav og kyst" : "land";
         return (
             <div className="no-alerts-message">
-                Ingen aktive farevarsler for {domainText}.
+                Ingen aktive farevarsler for {domainText} med valgte filtre.
             </div>
         );
     };
 
-    //Håndter laste-tilstand først
+    // --- HOVED RENDER ---
+
     if (viewModel.loading) {
         return <LoadingSpinner />;
     }
 
-    //Regn ut knappe-klasser for domene-velgeren
-    let landClass = "";
-    if (viewModel.activeDomain === "land") {
-        landClass = "active";
-    }
-
-    let marineClass = "";
-    if (viewModel.activeDomain === "marine") {
-        marineClass = "active";
-    }
+    let landClass = viewModel.activeDomain === "land" ? "active" : "";
+    let marineClass = viewModel.activeDomain === "marine" ? "active" : "";
 
     return (
         <div className="alert-page">
             <header className="alert-page-header">
                 <h1>Farevarsler i Norge</h1>
             </header>
-
-            <Navigation 
-                activeScreen={activeScreen} 
-                onChangeScreen={onChangeScreen} 
-                SCREENS={SCREENS} 
-            />
 
             <div className="domain-selector">
                 <div className="domain-toggle-wrapper">
@@ -148,6 +140,46 @@ export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCR
                         Hav og kyst ({viewModel.counts.marine})
                     </button>
                 </div>
+            </div>
+
+            <Navigation 
+                activeScreen={activeScreen} 
+                onChangeScreen={onChangeScreen} 
+                SCREENS={SCREENS} 
+            />
+
+            <div className="filter-row">
+                {renderSelectFilter(
+                    viewModel.selectedCounty,
+                    (e) => viewModel.setSelectedCounty(e.target.value),
+                    COUNTIES,
+                    "Alle fylker"
+                )}
+
+                {renderSelectFilter(
+                    viewModel.selectedLevel,
+                    (e) => viewModel.setSelectedLevel(e.target.value),
+                    [
+                        { value: "Yellow", label: "Gult nivå" },
+                        { value: "Orange", label: "Oransje nivå" },
+                        { value: "Red", label: "Rødt nivå" }
+                    ],
+                    "Alle farenivåer"
+                )}
+
+                {renderSelectFilter(
+                    viewModel.selectedType,
+                    (e) => viewModel.setSelectedType(e.target.value),
+                    [
+                        { value: "snow", label: "Snø" },
+                        { value: "wind", label: "Vind" },
+                        { value: "gale", label: "Kuling" },
+                        { value: "rain", label: "Regn" },
+                        { value: "forestFire", label: "Skogbrann" },
+                        { value: "avalanche", label: "Snøskred" }
+                    ],
+                    "Alle faretyper"
+                )}
             </div>
 
             <main className="alert-content">
