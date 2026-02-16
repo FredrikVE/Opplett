@@ -1,10 +1,11 @@
 import { useState } from "react";
+import Navigation from "../../../navigation/Navigation.jsx";
 import LoadingSpinner from "../components/LoadingSpinner/LoadingSpinner.jsx";
 import SearchField from "../components/HomePage/SearchFeild/SearchField.jsx";
 import DayForecastCard from "../components/HomePage/ForecastTable/DayForecastCard.jsx";
 import NowCard from "../components/HomePage/NowCard/NowCard.jsx";
 
-export default function HomePage({ viewModel }) {
+export default function HomePage({ viewModel, activeScreen, onChangeScreen, SCREENS }) {
 
 	const [openDate, setOpenDate] = useState(null);
 
@@ -53,6 +54,12 @@ export default function HomePage({ viewModel }) {
 				onSearchChange={viewModel.onSearchChange}
 				onSuggestionSelected={viewModel.onSuggestionSelected}
 				onResetToDeviceLocation={viewModel.onResetToDeviceLocation}
+			/>
+
+			<Navigation
+				activeScreen={activeScreen}
+				onChangeScreen={onChangeScreen}
+				SCREENS={SCREENS}
 			/>
 
 			{viewModel.currentWeather && (

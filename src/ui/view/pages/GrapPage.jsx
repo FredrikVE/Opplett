@@ -1,11 +1,12 @@
 //src/ui/view/pages/GraphPage.jsx
+import Navigation from "../../../navigation/Navigation.jsx";
 import WeatherGraph from "../components/HomePage/Graph/WeatherGraph.jsx";
 import WindGraph from "../components/HomePage/Graph/WindGraph.jsx";
 import SunGraph from "../components/HomePage/Graph/SunGraph.jsx";
 import UVGraph from "../components/HomePage/Graph/UVGraph.jsx";
 import SearchField from "../components/HomePage/SearchFeild/SearchField.jsx";
 
-export default function GraphPage({ viewModel }) {
+export default function GraphPage({ viewModel, activeScreen, onChangeScreen, SCREENS }) {
 
 	if (viewModel.loading) {
 		return <p>Laster graf...</p>;
@@ -19,6 +20,11 @@ export default function GraphPage({ viewModel }) {
 
 	return (
 		<div className="graph-screen">
+
+			<header className="graph-header">
+				<h1>{viewModel.location?.name || "Min posisjon"}</h1>
+			</header>
+			
 			<SearchField
 				query={viewModel.query}
 				suggestions={viewModel.suggestions}
@@ -27,9 +33,11 @@ export default function GraphPage({ viewModel }) {
 				onResetToDeviceLocation={viewModel.onResetToDeviceLocation}
 			/>
 
-			<header className="graph-header">
-				<h1>{viewModel.location?.name || "Min posisjon"}</h1>
-			</header>
+			<Navigation
+				activeScreen={activeScreen}
+				onChangeScreen={onChangeScreen}
+				SCREENS={SCREENS}
+			/>
 
 			<section className="graph-meteogram-section">
 
