@@ -3,7 +3,7 @@ import { getWeatherIconFileName } from "../../../../utils/weatherIcons.js";
 import { getAlertIconFileName } from "../../../../utils/getAlertIconFileName.js";
 import ForecastTable from "./ForecastTable.jsx";
 import SolarInformation from "./SolarInformation.jsx";
-import AlertList from "../AlertCard/AlertList.jsx";
+import AlertList from "../../Common/AlertCard/AlertList.jsx";
 import ChevronIcon from "../../Common/Buttons/ChevronIcon.jsx";
 
 const ORDER = ["symbolNight", "symbolMorning", "symbolAfternoon", "symbolEvening"];

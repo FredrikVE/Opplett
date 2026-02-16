@@ -1,7 +1,7 @@
 //src/ui/view/components/HomePage/AlertCard/AlertCard.jsx
 import { getAlertIconFileName } from "../../../../utils/getAlertIconFileName.js";
 import { getRiskLevelText } from "../../../../utils/getRiskLevelText.js";
-import ChevronIcon from "../../Common/Buttons/ChevronIcon.jsx";
+import ChevronIcon from "../Buttons/ChevronIcon.jsx";
 
 export default function AlertCard({ alert, isOpen, onToggle, formatLocalDateTime }) {
 

@@ -1,6 +1,6 @@
 //src/ui/view/components/AlertPage/AlertSection.jsx
 import { useState } from "react";
-import AlertList from "../HomePage/AlertCard/AlertList.jsx";
+import AlertList from "../Common/AlertCard/AlertList.jsx";
 import ChevronIcon from "../Common/Buttons/ChevronIcon.jsx";
 
 export default function AlertSection({ title, alerts, formatLocalDateTime, limit = 4 }) {
