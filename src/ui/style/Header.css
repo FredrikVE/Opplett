@@ -17,19 +17,28 @@
 	justify-content: flex-end;
 }
 
-/* Hamburger */
-.hamburger {
+/* Felles knapp-basics */
+.hamburger,
+.drawer-close,
+.drawer-content button {
 	appearance: none;
 	background: none;
 	border: 1px solid transparent;
-	border-radius: 12px;
-
-	font-size: 1.8rem;
-	line-height: 1;
-
-	padding: 8px 10px;
 	cursor: pointer;
 	color: inherit;
+}
+
+.hamburger:focus-visible,
+.drawer-close:focus-visible,
+.drawer-content button:focus-visible {
+	outline-offset: 2px;
+}
+
+/* Hamburger */
+.hamburger {
+	border-radius: 12px;
+	padding: 8px 10px;
+	line-height: 1;
 }
 
 .hamburger:hover {
@@ -38,13 +47,11 @@
 
 .hamburger:focus-visible {
 	outline: 2px solid rgba(3, 102, 214, 0.6);
-	outline-offset: 2px;
 }
 
 .hamburger-icon {
 	display: block;
 }
-
 
 /* Drawer layer */
 .drawer-layer {
@@ -68,7 +75,9 @@
 	position: absolute;
 	top: 0;
 	right: 0;
-	height: 100vh;
+	z-index: 1;
+
+	height: 100dvh;
 	width: min(360px, 86vw);
 
 	background: var(--color-surface, #fff);
@@ -113,12 +122,8 @@
 }
 
 .drawer-close {
-	appearance: none;
-	background: none;
-	border: 1px solid transparent;
 	border-radius: 10px;
 	padding: 6px 8px;
-	cursor: pointer;
 	font-size: 1.1rem;
 }
 
@@ -128,7 +133,6 @@
 
 .drawer-close:focus-visible {
 	outline: 2px solid rgba(3, 102, 214, 0.6);
-	outline-offset: 2px;
 }
 
 .drawer-content {
@@ -141,29 +145,24 @@
 .drawer-content button {
 	width: 100%;
 	padding: 12px 12px;
-
-	background: none;
 	border: none;
 	border-radius: 12px;
-
 	text-align: left;
-	cursor: pointer;
-	color: inherit;
 	font-size: 1rem;
 }
-
-body:has(.drawer-layer) {
-	overflow: hidden;
-}
-
 
 .drawer-content button:hover {
 	background: rgba(6, 22, 41, 0.06);
 }
 
+/* Hvis du vil ha svakere outline på menypunktene enn på ikon-knappene */
 .drawer-content button:focus-visible {
 	outline: 2px solid rgba(3, 102, 214, 0.5);
-	outline-offset: 2px;
+}
+
+/* Scroll-lock når drawer er åpen */
+body:has(.drawer-layer) {
+	overflow: hidden;
 }
 
 /* Respekter redusert animasjon */
