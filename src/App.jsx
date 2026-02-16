@@ -1,4 +1,5 @@
 //src/App.jsx
+import { useState } from "react";
 import { useGeolocation } from "./geolocation/useGeolocation.js";
 
 //Stilark
@@ -14,6 +15,10 @@ import "./ui/style/Header.css";
 import "./ui/style/Footer.css";
 import "./ui/style/NowCard.css"
 import "./ui/style/UVNowBar.css";
+
+//Navigation
+import Navigation from "./navigation/Navigation.jsx";
+import { NAV_SCREENS } from "./navigation/navGraph.js";
 
 //DataSources
 import OpenCageGeocodingDataSource from "./model/datasource/OpenCageGeocodingDataSource.js";
@@ -56,6 +61,8 @@ const geoRepo = new OpenCageGeocodingRepository(new OpenCageGeocodingDataSource(
 export default function App() {
 	const hoursAhead = 120;
 
+	const [activeScreen, setActiveScreen] = useState(NAV_SCREENS.TABLE);
+
 	//Henter koordinater fra enheten (starter som null)
 	const { loading, error, coords } = useGeolocation();
 
@@ -79,10 +86,23 @@ export default function App() {
 
 	return (
 		<>
-			<Header/ >
-			<HomePage viewModel={homeScreenViewModel} />
-			<Footer/>
+			<Header />
+
+			<Navigation
+				activeScreen={activeScreen}
+				onChangeScreen={setActiveScreen}
+				SCREENS={NAV_SCREENS}
+			/>
+
+			<HomePage
+				viewModel={homeScreenViewModel}
+				activeScreen={activeScreen}
+				SCREENS={NAV_SCREENS}
+			/>
+
+			<Footer />
 		</>
+
 		
 	);
 }
