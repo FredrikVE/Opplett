@@ -57,18 +57,28 @@ export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCR
 
     return (
         <div className="alert-page">
+
+            {/*Overskrift for siden */}
             <header className="alert-page-header">
                 <h1>Farevarsler i Norge</h1>
             </header>
 
+            {/*Navigasjonsbar for navigasjonskanpper */}
+            <Navigation activeScreen={activeScreen} onChangeScreen={onChangeScreen} SCREENS={SCREENS} />
+
+            {/* Hav/Land kanpper */}
             <div className="domain-selector">
                 <div className="domain-toggle-wrapper">
+
+                    {/*Land-knapp */}
                     <button 
                         className={landButtonClass} 
                         onClick={() => viewModel.setActiveDomain("land")}
                     >
                         Land ({viewModel.counts.land})
                     </button>
+
+                    {/* Hav-knapp */}
                     <button 
                         className={marineButtonClass} 
                         onClick={() => viewModel.setActiveDomain("marine")}
@@ -78,12 +88,11 @@ export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCR
                 </div>
             </div>
 
-            <Navigation activeScreen={activeScreen} onChangeScreen={onChangeScreen} SCREENS={SCREENS} />
-
+            {/* Rad med filterknapper */}
             <div className="filter-row">
                 <FilterSelect
                     value={viewModel.selectedCounty}
-                    onChange={(e) => viewModel.setSelectedCounty(e.target.value)}
+                    onChange={(event) => viewModel.setSelectedCounty(event.target.value)}
                     options={countiesWithCounts}
                     defaultLabel="Alle fylker"
                     totalCount={totalDomainCount}
@@ -91,7 +100,7 @@ export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCR
 
                 <FilterSelect
                     value={viewModel.selectedLevel}
-                    onChange={(e) => viewModel.setSelectedLevel(e.target.value)}
+                    onChange={(event) => viewModel.setSelectedLevel(event.target.value)}
                     options={[
                         { value: "Yellow", label: "Gult nivå" },
                         { value: "Orange", label: "Oransje nivå" },
@@ -102,7 +111,7 @@ export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCR
 
                 <FilterSelect
                     value={viewModel.selectedType}
-                    onChange={(e) => viewModel.setSelectedType(e.target.value)}
+                    onChange={(event) => viewModel.setSelectedType(event.target.value)}
                     options={[
                         { value: "snow", label: "Snø" },
                         { value: "wind", label: "Vind" },
