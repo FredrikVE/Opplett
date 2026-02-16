@@ -1,0 +1,89 @@
+/* src/ui/style/AlertPage.css */
+
+.alert-page {
+    width: 100%;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 18px 14px 42px;
+}
+
+/* Gjenbruker din etablerte header-stil */
+.alert-page-header {
+    margin-bottom: 8px;
+    padding-bottom: 10px;
+    text-align: center;
+}
+
+.alert-page-header h1 {
+    font-size: 30px;
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 1.5px;
+    margin: 2rem;
+    color: var(--color-text-base);
+}
+
+/* Container for listene */
+.alert-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem; /* Avstand mellom seksjonene "Pågår" og "Ventes" */
+    margin-top: 24px;
+}
+
+/* Seksjonstitler (Pågår / Ventes) */
+.alert-content section h2 {
+    font-size: 22px;
+    font-weight: var(--font-weight-bold);
+    margin-bottom: 16px;
+    color: var(--color-text-base);
+    padding-left: 4px;
+}
+
+/* Tom tilstand hvis det ikke er noen varsler */
+.no-alerts-message {
+    background: var(--card-bg);
+    padding: 40px;
+    border-radius: 18px;
+    text-align: center;
+    color: var(--color-text-subtle);
+    border: 1px solid rgba(6, 22, 41, 0.08);
+}
+
+/* --- Spesifikke overskrivninger for AlertCard når de ligger på AlertPage --- */
+
+/* Gjør kortene litt mer prominente på denne siden */
+.alert-page .alert-card {
+    border: 1px solid rgba(6, 22, 41, 0.1);
+    box-shadow: 0 4px 12px rgba(6, 22, 41, 0.05);
+    margin-bottom: 16px; /* Litt mer luft mellom hvert varsel i lista */
+}
+
+/* Hover-effekt som matcher din stil */
+.alert-page .alert-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(6, 22, 41, 0.12);
+    border-color: rgba(6, 22, 41, 0.15);
+}
+
+/* Tilpasning av header-tekst i lista */
+.alert-page .alert-header-text strong {
+    font-size: 18px; /* Litt større tekst på denne siden */
+    color: #000;
+}
+
+/* Responsivitet for mobil */
+@media (max-width: 600px) {
+    .alert-page {
+        padding: 10px;
+    }
+
+    .alert-page-header h1 {
+        font-size: 24px;
+        margin: 1rem 0;
+    }
+
+    .alert-icon {
+        width: 60px; /* Skalerer ned ikonene på små skjermer */
+        height: 60px;
+    }
+}

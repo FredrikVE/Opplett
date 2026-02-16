@@ -9,7 +9,7 @@ import SearchField from "../components/HomePage/SearchFeild/SearchField.jsx";
 export default function GraphPage({ viewModel, activeScreen, onChangeScreen, SCREENS }) {
 
 	if (viewModel.loading) {
-		return <p>Laster graf...</p>;
+		return <LoadingSpinner />;
 	}
 
 	if (viewModel.error) {
