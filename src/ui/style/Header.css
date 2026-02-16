@@ -2,7 +2,7 @@
 
 .main-header {
 	background: transparent;
-	position: sticky;
+	/*position: sticky;*/
 	top: 0;
 	z-index: 1000;
 }

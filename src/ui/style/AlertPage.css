@@ -21,6 +21,19 @@
     color: var(--color-text-base);
 }
 
+/* Spacer som skal matche SearchField i HomePage */
+.search-placeholder {
+    /* Matcher .search marginer */
+    margin: 16px 0 20px 0;
+    
+    /* Matcher den totale høyden til .search-input (padding + line-height + border) */
+    /* 16px + 24px + 16px + 2px + 2px = 60px */
+    height: 60px;
+    
+    /* Valgfritt: Gjør den usynlig, men bevarer plassen */
+    visibility: hidden;
+}
+
 /* --- DOMENE VELGER --- */
 .domain-selector {
     display: flex;

@@ -63,6 +63,9 @@ export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCR
                 <h1>Farevarsler i Norge</h1>
             </header>
 
+            {/* Tomt felt som matcher SearchField i høyde og marginer */}
+            <div className="search-placeholder"></div>
+
             {/*Navigasjonsbar for navigasjonskanpper */}
             <Navigation activeScreen={activeScreen} onChangeScreen={onChangeScreen} SCREENS={SCREENS} />
 
