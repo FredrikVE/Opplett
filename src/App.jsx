@@ -34,7 +34,9 @@ import SunriseRepository from "./model/repositories/SunriseRepository.js";
 
 //ViewModel og View
 import useHomeScreenViewModel from "./ui/viewmodel/HomeScreenViewModel.js";
+
 import HomePage from "./ui/view/pages/HomePage.jsx";
+import GraphPage from "./ui/view/pages/GrapPage.jsx";
 import LoadingSpinner from "./ui/view/components/LoadingSpinner/LoadingSpinner.jsx";
 
 //Header og footer
@@ -94,11 +96,13 @@ export default function App() {
 				SCREENS={NAV_SCREENS}
 			/>
 
-			<HomePage
-				viewModel={homeScreenViewModel}
-				activeScreen={activeScreen}
-				SCREENS={NAV_SCREENS}
-			/>
+			{activeScreen === NAV_SCREENS.TABLE && (
+				<HomePage viewModel={homeScreenViewModel} />
+			)}
+
+			{activeScreen === NAV_SCREENS.GRAPH && (
+				<GraphPage viewModel={homeScreenViewModel} />
+			)}
 
 			<Footer />
 		</>
