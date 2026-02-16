@@ -1,4 +1,5 @@
 //src/App.jsx
+import { useState } from "react";
 import { useGeolocation } from "./geolocation/useGeolocation.js";
 
 //Stilark
@@ -10,10 +11,15 @@ import "./ui/style/Alerts.css";
 import "./ui/style/ForecastTable.css";
 import "./ui/style/DayForecastCard.css";
 import "./ui/style/HomePage.css";
+import "./ui/style/GraphPage.css";
 import "./ui/style/Header.css";
 import "./ui/style/Footer.css";
+import "./ui/style/NavButton.css"
 import "./ui/style/NowCard.css"
 import "./ui/style/UVNowBar.css";
+
+//Navigation
+import { NAV_SCREENS } from "./navigation/navGraph.js";
 
 //DataSources
 import OpenCageGeocodingDataSource from "./model/datasource/OpenCageGeocodingDataSource.js";
@@ -29,7 +35,10 @@ import SunriseRepository from "./model/repositories/SunriseRepository.js";
 
 //ViewModel og View
 import useHomeScreenViewModel from "./ui/viewmodel/HomeScreenViewModel.js";
+import useGraphScreenViewModel from "./ui/viewmodel/GraphScreenViewModel.js";
+
 import HomePage from "./ui/view/pages/HomePage.jsx";
+import GraphPage from "./ui/view/pages/GrapPage.jsx";
 import LoadingSpinner from "./ui/view/components/LoadingSpinner/LoadingSpinner.jsx";
 
 //Header og footer
@@ -56,11 +65,14 @@ const geoRepo = new OpenCageGeocodingRepository(new OpenCageGeocodingDataSource(
 export default function App() {
 	const hoursAhead = 120;
 
+	const [activeScreen, setActiveScreen] = useState(NAV_SCREENS.TABLE);
+
 	//Henter koordinater fra enheten (starter som null)
 	const { loading, error, coords } = useGeolocation();
 
 	//Initialiser ViewModel med dependancy injection av repositories
 	const homeScreenViewModel = useHomeScreenViewModel(locationRepo, sunriseRepo, alertsRepo, geoRepo, coords?.lat,  coords?.lon, hoursAhead);
+	const graphScreenViewModel = useGraphScreenViewModel(homeScreenViewModel);
 
 	if (loading) {
 		return (
@@ -79,10 +91,27 @@ export default function App() {
 
 	return (
 		<>
-			<Header/ >
-			<HomePage viewModel={homeScreenViewModel} />
-			<Footer/>
+			<Header />
+
+			{activeScreen === NAV_SCREENS.TABLE && (
+				<HomePage
+					viewModel={homeScreenViewModel}
+					activeScreen={activeScreen}
+					onChangeScreen={setActiveScreen}
+					SCREENS={NAV_SCREENS}
+				/>
+			)}
+
+			{activeScreen === NAV_SCREENS.GRAPH && (
+				<GraphPage 
+					viewModel={graphScreenViewModel}
+					activeScreen={activeScreen}
+					onChangeScreen={setActiveScreen}
+					SCREENS={NAV_SCREENS}
+				/>
+			)}
+
+			<Footer />
 		</>
-		
 	);
 }

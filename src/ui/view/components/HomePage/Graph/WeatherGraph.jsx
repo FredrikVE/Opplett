@@ -62,6 +62,6 @@ export default function WeatherGraph({ hourlyData, getLocalHour, formatLocalDate
     }
 
     return( 
-    <HighchartsReact highcharts={Highcharts} options={options} />
+        <HighchartsReact highcharts={Highcharts} options={options} />
     );
 }

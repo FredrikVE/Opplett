@@ -1,0 +1,69 @@
+/* src/ui/style/NavButton.css */
+.nav-container {
+	display: flex;
+	justify-content: center;
+	margin: 20px 0;
+}
+
+.nav-toggle {
+	background: #f0f2f5;
+	padding: 4px;
+	border-radius: 12px;
+	display: flex;
+	border: 1px solid #e1e4e8;
+}
+
+.nav-toggle button {
+	border: none;
+	background: transparent;
+	padding: 8px 24px;
+	border-radius: 10px;
+	cursor: pointer;
+	font-size: 14px;
+	font-weight: 600;
+	color: #586069;
+	transition: all 0.2s ease;
+}
+
+.nav-toggle button.active {
+	background: #ffffff;
+	color: #0366d6;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+
+/* --- Modus-velger (Tabell/Graf) --- */
+.view-mode-selector {
+	display: flex;
+	justify-content: center; /* Senterer bryteren for et moderne utseende */
+	margin: 20px 0;
+}
+
+
+.toggle-container {
+	background: #f0f2f5;
+	padding: 4px;
+	border-radius: 12px;
+	display: flex;
+	border: 1px solid #e1e4e8;
+}
+
+
+.toggle-container button {
+	border: none;
+	background: transparent;
+	padding: 8px 24px;
+	border-radius: 10px;
+	cursor: pointer;
+	font-size: 14px;
+	font-weight: 600;
+	color: #586069;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+.toggle-container button.active {
+	background: #ffffff;
+	color: #0366d6;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
