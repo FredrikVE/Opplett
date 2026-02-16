@@ -67,8 +67,6 @@ export default function UVGraph({ hourlyData, getLocalHour, formatLocalDate }) {
     }
 
     return (
-        <div className="uv-graph-container" style={{ marginBottom: "20px" }}>
-            <HighchartsReact highcharts={Highcharts} options={options} />
-        </div>
+        <HighchartsReact highcharts={Highcharts} options={options} />
     );
 }

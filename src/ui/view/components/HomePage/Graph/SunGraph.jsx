@@ -59,8 +59,6 @@ export default function SunGraph({ sunTimesByDate, formatLocalDate }) {
     }
 
     return (
-        <div className="sun-graph-container" style={{ marginTop: "30px" }}>
-            <HighchartsReact highcharts={Highcharts} options={options} />
-        </div>
+        <HighchartsReact highcharts={Highcharts} options={options} />
     );
 }

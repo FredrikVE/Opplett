@@ -71,5 +71,7 @@ export default function WindGraph({ hourlyData, getLocalHour, formatLocalDate })
         return null;
     }
 
-    return <HighchartsReact highcharts={Highcharts} options={options} />;
+    return(
+        <HighchartsReact highcharts={Highcharts} options={options} />
+    );
 }
