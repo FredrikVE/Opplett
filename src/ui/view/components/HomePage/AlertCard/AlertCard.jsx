@@ -11,17 +11,28 @@ export default function AlertCard({ alert, isOpen, onToggle, formatLocalDateTime
 
     const mapImage = alert.resources?.find(r => r.mimeType === "image/png");
 
+    // Bestem tekst for domene-taggen
+    const domainTagText = alert.geographicDomain === "marine" ? "Hav og kyst" : "Land";
    
     return (
-        <div
-            className={`alert-card alert-${alert.riskMatrixColor?.toLowerCase()}`}
-        >
+        <div className={`alert-card alert-${alert.riskMatrixColor?.toLowerCase()}`}>
+            
             {/* HEADER */}
             <div className="alert-header" onClick={onToggle}>
                 <img src={iconPath} alt="" className="alert-icon" />
 
                 <div className="alert-header-text">
-                    <strong>Pågår: {alert.eventAwarenessName}</strong>
+                    {/* Stedsnavn/Område øverst som hos Yr */}
+                    <span className="alert-area-name">{alert.area}</span>
+                    
+                    {/* Eventnavn og Domene-tag på samme linje */}
+                    <div className="alert-title-row">
+                        <strong>{alert.eventAwarenessName}</strong>
+                        <span className={`domain-tag tag-${alert.geographicDomain}`}>
+                            {domainTagText}
+                        </span>
+                    </div>
+
                     <div className="alert-level">{levelText}</div>
                 </div>
 
@@ -35,13 +46,12 @@ export default function AlertCard({ alert, isOpen, onToggle, formatLocalDateTime
             {/* CONTENT */}
             {isOpen && (
                 <div className="alert-body">
-
                     <h3>{alert.eventAwarenessName}</h3>
                     <p>{alert.description}</p>
 
                     {alert.consequences && (
                         <>
-                            <h4>Lokalt vanskelige kjøreforhold</h4>
+                            <h4>Konsekvenser</h4>
                             <p>{alert.consequences}</p>
                         </>
                     )}
@@ -52,9 +62,6 @@ export default function AlertCard({ alert, isOpen, onToggle, formatLocalDateTime
                             <p>{alert.instruction}</p>
                         </>
                     )}
-
-                    <h4>Område</h4>
-                    <p>{alert.area}</p>
 
                     {mapImage && (
                         <img
@@ -67,33 +74,22 @@ export default function AlertCard({ alert, isOpen, onToggle, formatLocalDateTime
                     <h4>Tidsperiode</h4>
                     <ul className="alert-time">
                         <li>
-                            {alert.interval?.[0] && formatLocalDateTime(alert.interval[0])} – faren pågår
+                            Fra: {alert.interval?.[0] && formatLocalDateTime(alert.interval[0])}
                         </li>
                         <li>
-                            {alert.interval?.[1] && formatLocalDateTime(alert.interval[1])} – faren minker
+                            Til: {alert.interval?.[1] && formatLocalDateTime(alert.interval[1])}
                         </li>
                     </ul>
 
-                    <div className="alert-legend">
-                        <div><span className="legend yellow" /> Gult - snø</div>
-                        <div><span className="legend orange" /> Oransje - svært mye snø</div>
-                        <div><span className="legend red" /> Rødt - ekstremt mye snø</div>
-                    </div>
-
-                     {/* Bottom toggle */}
+                    {/* Bottom toggle */}
                     <div
                         className="alert-bottom-toggle"
                         onClick={onToggle}
                         role="button"
-                        aria-label="Lukk varsel"
                     >
-                        <ChevronIcon
-                            isOpen={true} 
-                            className=""
-                            size={20}
-                        />
+                        <span style={{fontSize: '14px', marginRight: '8px'}}>Lukk</span>
+                        <ChevronIcon isOpen={true} size={18} />
                     </div>
-
                 </div>
             )}
         </div>
