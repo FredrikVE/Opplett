@@ -34,7 +34,7 @@ const ChevronIcon = ({ className = "" }) => (
     </svg>
 );
 
-export default function DayForecastCard({ date, hourly, summary, sunTimes, open, onToggle, colCount, dayAlerts }) {
+export default function DayForecastCard({ date, hourly, summary, sunTimes, open, onToggle, colCount, dayAlerts, formatLocalDateTime }) {
     const panelId = useId();
     const hasAlerts = dayAlerts.length > 0;
 
@@ -124,7 +124,7 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, open,
                             
                             {/* Alertlist */}
                             {hasAlerts && (                    
-                                <AlertList alerts={dayAlerts} />
+                                <AlertList alerts={dayAlerts} formatLocalDateTime={formatLocalDateTime} />
                             )}
 
                             {/*ForecastTable */}

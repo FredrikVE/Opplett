@@ -69,7 +69,9 @@ export default function useHomeScreenViewModel(forecastRepository, sunriseReposi
 				
 				//Fase 1 av datahenting, henter NÅ-data først.
 				const [hourlyRaw, current, alertResults] = await Promise.all([
-					forecastRepository.getHourlyForecast(location.lat, location.lon, 24, tz),
+
+					//Henter DAGESN Forecast først...
+					forecastRepository.getHourlyForecast(location.lat, location.lon, 24, tz),	//Hardkodet houresAhed!! CODE SMELL!!!
 					forecastRepository.getCurrentWeather(location.lat, location.lon, tz),
 					metAlertsRepository.findAlerts(location.lat, location.lon)
 				]);

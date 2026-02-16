@@ -2,7 +2,7 @@
 import { useState } from "react";
 import AlertCard from "./AlertCard.jsx";
 
-export default function AlertList({ alerts }) {
+export default function AlertList({ alerts, formatLocalDateTime }) {
     // Viktig: Vi holder styr på ID-en til det varselet som er åpent
     const [openAlertId, setOpenAlertId] = useState(null);
 
@@ -18,6 +18,7 @@ export default function AlertList({ alerts }) {
                     alert={alert}
                     isOpen={openAlertId === alert.id}
                     onToggle={() => setOpenAlertId(prev => prev === alert.id ? null : alert.id)}
+                    formatLocalDateTime={formatLocalDateTime}
                 />
             ))}
         </div>

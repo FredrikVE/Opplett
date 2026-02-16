@@ -21,7 +21,7 @@ const ChevronIcon = ({ isOpen }) => (
     </svg>
 );
 
-export default function AlertCard({ alert, isOpen, onToggle }) {
+export default function AlertCard({ alert, isOpen, onToggle, formatLocalDateTime }) {
 
     const iconFileName = getAlertIconFileName(alert);
     const levelText = getRiskLevelText(alert.riskMatrixColor);
@@ -29,16 +29,7 @@ export default function AlertCard({ alert, isOpen, onToggle }) {
 
     const mapImage = alert.resources?.find(r => r.mimeType === "image/png");
 
-    // denne MÅ flyttes ut.. ikke SSOT på tid... som skal være i ViewModel
-    const formatDateTime = (iso) =>
-        new Date(iso).toLocaleString("no-NO", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-            hour: "2-digit",
-            minute: "2-digit"
-        });
-
+   
     return (
         <div
             className={`alert-card alert-${alert.riskMatrixColor?.toLowerCase()}`}
@@ -90,10 +81,10 @@ export default function AlertCard({ alert, isOpen, onToggle }) {
                     <h4>Tidsperiode</h4>
                     <ul className="alert-time">
                         <li>
-                            {formatDateTime(alert.interval[0])} – faren pågår
+                            {alert.interval?.[0] && formatLocalDateTime(alert.interval[0])} – faren pågår
                         </li>
                         <li>
-                            {formatDateTime(alert.interval[1])} – faren minker
+                            {alert.interval?.[1] && formatLocalDateTime(alert.interval[1])} – faren minker
                         </li>
                     </ul>
 

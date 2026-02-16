@@ -8,7 +8,6 @@ import WeatherGraph from "../components/HomePage/Graph/WeatherGraph.jsx";
 import WindGraph from "../components/HomePage/Graph/WindGraph.jsx";
 import SunGraph from "../components/HomePage/Graph/SunGraph.jsx";
 import UVGraph from "../components/HomePage/Graph/UVGraph.jsx";
-import AlertList from "../components/HomePage/AlertCard/AlertList.jsx";
 
 export default function HomePage({ viewModel }) {
 
@@ -149,7 +148,8 @@ export default function HomePage({ viewModel }) {
                                 open={openDate === dateISO}
                                 isFirst={index === 0}
                                 onToggle={() => toggleDate(dateISO)}
-                                dayAlerts={viewModel.alertsByDate[dateISO] || []} 
+                                dayAlerts={viewModel.alertsByDate[dateISO] || []}
+                                formatLocalDateTime={viewModel.formatLocalDateTime}
                             />
                         ))}
                     </table>
