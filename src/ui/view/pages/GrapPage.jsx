@@ -1,4 +1,4 @@
-//src/ui/view/pages/GrapPage.jsx
+//src/ui/view/pages/GraphPage.jsx
 import WeatherGraph from "../components/HomePage/Graph/WeatherGraph.jsx";
 import WindGraph from "../components/HomePage/Graph/WindGraph.jsx";
 import SunGraph from "../components/HomePage/Graph/SunGraph.jsx";
@@ -6,39 +6,42 @@ import UVGraph from "../components/HomePage/Graph/UVGraph.jsx";
 
 export default function GraphPage({ viewModel }) {
 
-	const entries = Object.entries(viewModel.forecast);
+    if (viewModel.loading) {
+        return <p>Laster graf...</p>;
+    }
 
-	// Neste 48 timer
-	const allHourlyData = entries
-		.flatMap(([, dayData]) => dayData.hours)
-		.slice(0, 48);
+    if (viewModel.error) {
+        return <p>Feil: {viewModel.error}</p>;
+    }
 
-	return (
-		<section className="meteogram-section">
+    const allHourlyData = viewModel.hourlyData.slice(0, 48);
 
-			<WeatherGraph
-				hourlyData={allHourlyData}
-				getLocalHour={viewModel.getLocalHour}
-				formatLocalDate={viewModel.formatLocalDate}
-			/>
+    return (
+        <section className="meteogram-section">
 
-			<WindGraph
-				hourlyData={allHourlyData}
-				getLocalHour={viewModel.getLocalHour}
-				formatLocalDate={viewModel.formatLocalDate}
-			/>
+            <WeatherGraph
+                hourlyData={allHourlyData}
+                getLocalHour={viewModel.getLocalHour}
+                formatLocalDate={viewModel.formatLocalDate}
+            />
 
-			<UVGraph
-				hourlyData={allHourlyData}
-				getLocalHour={viewModel.getLocalHour}
-				formatLocalDate={viewModel.formatLocalDate}
-			/>
+            <WindGraph
+                hourlyData={allHourlyData}
+                getLocalHour={viewModel.getLocalHour}
+                formatLocalDate={viewModel.formatLocalDate}
+            />
 
-			<SunGraph
-				sunTimesByDate={viewModel.sunTimesByDate}
-				formatLocalDate={viewModel.formatLocalDate}
-			/>
+            <UVGraph
+                hourlyData={allHourlyData}
+                getLocalHour={viewModel.getLocalHour}
+                formatLocalDate={viewModel.formatLocalDate}
+            />
 
-		</section>
-	);
+            <SunGraph
+                sunTimesByDate={viewModel.sunTimesByDate}
+                formatLocalDate={viewModel.formatLocalDate}
+            />
+
+        </section>
+    );
 }

@@ -34,6 +34,7 @@ import SunriseRepository from "./model/repositories/SunriseRepository.js";
 
 //ViewModel og View
 import useHomeScreenViewModel from "./ui/viewmodel/HomeScreenViewModel.js";
+import useGraphScreenViewModel from "./ui/viewmodel/GraphScreenViewModel.js";
 
 import HomePage from "./ui/view/pages/HomePage.jsx";
 import GraphPage from "./ui/view/pages/GrapPage.jsx";
@@ -70,6 +71,7 @@ export default function App() {
 
 	//Initialiser ViewModel med dependancy injection av repositories
 	const homeScreenViewModel = useHomeScreenViewModel(locationRepo, sunriseRepo, alertsRepo, geoRepo, coords?.lat,  coords?.lon, hoursAhead);
+	const graphScreenViewModel = useGraphScreenViewModel(homeScreenViewModel);
 
 	if (loading) {
 		return (
@@ -101,7 +103,7 @@ export default function App() {
 			)}
 
 			{activeScreen === NAV_SCREENS.GRAPH && (
-				<GraphPage viewModel={homeScreenViewModel} />
+				<GraphPage viewModel={graphScreenViewModel} />
 			)}
 
 			<Footer />
