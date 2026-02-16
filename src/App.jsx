@@ -31,8 +31,10 @@ import SunriseRepository from "./model/repositories/SunriseRepository.js";
 import useHomeScreenViewModel from "./ui/viewmodel/HomeScreenViewModel.js";
 import HomePage from "./ui/view/pages/HomePage.jsx";
 import LoadingSpinner from "./ui/view/components/LoadingSpinner/LoadingSpinner.jsx";
-import Header from "./ui/view/components/Layout/Header.jsx";
-import Footer from "./ui/view/components/Layout/Footer.jsx";
+
+//Header og footer
+import Header from "./ui/view/components/Common/Layout/Header.jsx"
+import Footer from "./ui/view/components/Common/Layout/Footer.jsx";
 
 //Importerer klasse for vasking og forenkling av stedsnavn fra OpenCage
 import LocationNameFormatter from "./geolocation/LocationNameFormatter.js";

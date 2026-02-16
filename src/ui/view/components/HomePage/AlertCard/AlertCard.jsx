@@ -1,25 +1,7 @@
 //src/ui/view/components/HomePage/AlertCard/AlertCard.jsx
 import { getAlertIconFileName } from "../../../../utils/getAlertIconFileName.js";
 import { getRiskLevelText } from "../../../../utils/getRiskLevelText.js";
-
-const ChevronIcon = ({ isOpen }) => (
-    <svg
-        className={`chevron ${isOpen ? "open" : ""}`}
-        width="20"
-        height="20"
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-hidden="true"
-    >
-        <path
-            d="M6 9l6 6 6-6"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        />
-    </svg>
-);
+import ChevronIcon from "../../Common/Buttons/ChevronIcon.jsx";
 
 export default function AlertCard({ alert, isOpen, onToggle, formatLocalDateTime }) {
 
@@ -43,7 +25,11 @@ export default function AlertCard({ alert, isOpen, onToggle, formatLocalDateTime
                     <div className="alert-level">{levelText}</div>
                 </div>
 
-                <ChevronIcon isOpen={isOpen} />
+                <ChevronIcon 
+                    isOpen={isOpen} 
+                    className=""
+                    size={20}
+                />
             </div>
 
             {/* CONTENT */}
@@ -101,7 +87,11 @@ export default function AlertCard({ alert, isOpen, onToggle, formatLocalDateTime
                         role="button"
                         aria-label="Lukk varsel"
                     >
-                        <ChevronIcon isOpen />
+                        <ChevronIcon
+                            isOpen={true} 
+                            className=""
+                            size={20}
+                        />
                     </div>
 
                 </div>

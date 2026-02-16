@@ -145,7 +145,7 @@ export default function HomePage({ viewModel }) {
                                 colCount={colCount}
                                 summary={viewModel.dailySummaryByDate[dateISO]}
                                 sunTimes={viewModel.sunTimesByDate[dateISO]}
-                                open={openDate === dateISO}
+                                isOpen={openDate === dateISO}
                                 isFirst={index === 0}
                                 onToggle={() => toggleDate(dateISO)}
                                 dayAlerts={viewModel.alertsByDate[dateISO] || []}

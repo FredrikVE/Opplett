@@ -1,10 +1,11 @@
 // src/ui/view/components/HomePage/ForecastTable/DayForecastCard.jsx
 import { useId } from "react";
+import { getWeatherIconFileName } from "../../../../utils/weatherIcons.js";
+import { getAlertIconFileName } from "../../../../utils/getAlertIconFileName.js";
 import ForecastTable from "./ForecastTable.jsx";
 import SolarInformation from "./SolarInformation.jsx";
 import AlertList from "../AlertCard/AlertList.jsx";
-import { getWeatherIconFileName } from "../../../../utils/weatherIcons.js";
-import { getAlertIconFileName } from "../../../../utils/getAlertIconFileName.js";
+import ChevronIcon from "../../Common/Buttons/ChevronIcon.jsx";
 
 const ORDER = ["symbolNight", "symbolMorning", "symbolAfternoon", "symbolEvening"];
 
@@ -15,26 +16,7 @@ const LABELS_NO = {
     symbolEvening: "Kveld",
 };
 
-const ChevronIcon = ({ className = "" }) => (
-    <svg
-        className={`chevron ${className}`}
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-hidden="true"
-    >
-        <path
-            d="M6 9l6 6 6-6"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        />
-    </svg>
-);
-
-export default function DayForecastCard({ date, hourly, summary, sunTimes, open, onToggle, colCount, dayAlerts, formatLocalDateTime }) {
+export default function DayForecastCard({ date, hourly, summary, sunTimes, isOpen, onToggle, colCount, dayAlerts, formatLocalDateTime }) {
     const panelId = useId();
     const hasAlerts = dayAlerts.length > 0;
 
@@ -66,7 +48,7 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, open,
 
     // --- LOGIKK FOR LUKKET TILSTAND ---
     let alertIcon = null;
-    if (!open && hasAlerts) {
+    if (!isOpen && hasAlerts) {
         alertIcon = (
             <img 
                 src={`/alert_symbols/128/${getAlertIconFileName(dayAlerts[0])}`} 
@@ -78,7 +60,7 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, open,
     }
 
     let periodCells = <td colSpan={ORDER.length} aria-hidden="true" />;
-    if (!open) {
+    if (!isOpen) {
         periodCells = ORDER.map((key) => (
             <td key={key} className="day-card-cell-surface day-card-period-cell">
                 <div className="icon-wrapper"> 
@@ -89,7 +71,7 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, open,
     }
 
     let temperatureDisplay = null;
-    if (!open && summary) {
+    if (!isOpen && summary) {
         temperatureDisplay = (
             <div className="temp-container">
                 <span className={`temp-max ${summary.maxTemp < 0 ? 'is-cold' : 'is-warm'}`}>
@@ -104,18 +86,18 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, open,
     }
 
     let precipitationDisplay = null;
-    if (!open && summary?.totalPrecip > 0) {
+    if (!isOpen && summary?.totalPrecip > 0) {
         precipitationDisplay = `${summary.totalPrecip.toFixed(1)} mm`;
     }
 
     let windDisplay = null;
-    if (!open && summary) {
+    if (!isOpen && summary) {
         windDisplay = `${Math.round(summary.avgWind)} m/s`;
     }
 
     // --- LOGIKK FOR EKSPANDERT TILSTAND ---
     let expandedRows = null;
-    if (open) {
+    if (isOpen) {
         expandedRows = (
             <>
                 <tr className="day-card-body-row">
@@ -139,7 +121,11 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, open,
                 <tr className="day-card-toggle-row clickable-row" onClick={onToggle}>
                     <td className="day-card-toggle-cell" colSpan={colCount}>
                         <div className="day-card-bottom-chevron">
-                            <ChevronIcon />
+                            <ChevronIcon 
+                                isOpen={isOpen}
+                                className="" 
+                                size={20}
+                            />
                         </div>
                     </td>
                 </tr>
@@ -148,14 +134,14 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, open,
     }
 
     return (
-        <tbody className={`day-card-group ${open ? "is-open" : ""}`}>
+        <tbody className={`day-card-group ${isOpen ? "is-open" : ""}`}>
             <tr 
                 className="day-card-summary-row clickable-row"
                 onClick={onToggle}
                 onKeyDown={handleKeyDown}
                 tabIndex="0"
                 role="button"
-                aria-expanded={open}
+                aria-expanded={isOpen}
                 aria-controls={panelId}
             >
                 <td className="day-card-cell-surface day-card-date-cell">
@@ -184,7 +170,11 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, open,
 
                 <td className="day-card-cell-surface day-card-toggle-col">
                     <div className="day-card-disclosure">
-                        <ChevronIcon className={open ? "is-flipped" : ""} />
+                        <ChevronIcon 
+                            isOpen={isOpen}
+                            className="" 
+                            size={20}
+                            />
                     </div>
                 </td>
             </tr>
