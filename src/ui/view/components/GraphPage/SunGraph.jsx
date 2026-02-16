@@ -13,7 +13,9 @@ import { buildCommonChartConfig } from "./graphConfig/chartConfig.js";
 export default function SunGraph({ sunTimesByDate, formatLocalDate }) {
     const options = useMemo(() => {
         const data = mapSunData(sunTimesByDate);
-        if (!data?.length) return null;
+        if (!data?.length) {
+            return null;
+        }
 
         // Finn laveste verdi for å sette en smart start-skala
         const minVal = Math.min(...data.map(d => d.prevY));

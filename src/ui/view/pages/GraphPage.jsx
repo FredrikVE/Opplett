@@ -5,6 +5,7 @@ import WindGraph from "../components/GraphPage/WindGraph.jsx";
 import SunGraph from "../components/GraphPage/SunGraph.jsx";
 import UVGraph from "../components/GraphPage/UVGraph.jsx";
 import SearchField from "../components/HomePage/SearchFeild/SearchField.jsx";
+import LoadingSpinner from "../components/Common/LoadingSpinner/LoadingSpinner.jsx"
 
 export default function GraphPage({ viewModel, activeScreen, onChangeScreen, SCREENS }) {
 
