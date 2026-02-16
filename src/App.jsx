@@ -19,7 +19,6 @@ import "./ui/style/NowCard.css"
 import "./ui/style/UVNowBar.css";
 
 //Navigation
-//import Navigation from "./navigation/Navigation.jsx";
 import { NAV_SCREENS } from "./navigation/navGraph.js";
 
 //DataSources
@@ -93,13 +92,6 @@ export default function App() {
 	return (
 		<>
 			<Header />
-			{/** 
-			<Navigation
-				activeScreen={activeScreen}
-				onChangeScreen={setActiveScreen}
-				SCREENS={NAV_SCREENS}
-			/>
-			*/}
 
 			{activeScreen === NAV_SCREENS.TABLE && (
 				<HomePage
