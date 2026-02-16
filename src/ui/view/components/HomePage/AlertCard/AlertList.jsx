@@ -1,26 +1,46 @@
-//src/ui/view/components/HomePage/AlertCard/AlertList.jsx
+// src/ui/view/components/HomePage/AlertCard/AlertList.jsx
 import { useState } from "react";
 import AlertCard from "./AlertCard.jsx";
 
 export default function AlertList({ alerts, formatLocalDateTime }) {
-    // Viktig: Vi holder styr på ID-en til det varselet som er åpent
+
+    //State som holder styr på hvilken alert som er åpen og ikke
     const [openAlertId, setOpenAlertId] = useState(null);
 
+    //Hvis ingen alerts, render vi ingenting
     if (!alerts || alerts.length === 0) {
         return null;
     }
 
+    //Funksjon for å toggle et alertCard
+    const handleToggle = (clickedAlertId) => {
+
+        const isSameAlert = openAlertId === clickedAlertId;
+
+        if (isSameAlert) {
+            setOpenAlertId(null);       //Lukker hvis samme er klikket på.
+        } 
+        else {
+            setOpenAlertId(clickedAlertId);  //Åpner ny hvis ny er klikket på.
+        }
+    }
+
     return (
         <div className="alerts-list-container">
-            {alerts.map((alert) => (
-                <AlertCard
-                    key={alert.id} // Bruk den unike ID-en fra MET
-                    alert={alert}
-                    isOpen={openAlertId === alert.id}
-                    onToggle={() => setOpenAlertId(prev => prev === alert.id ? null : alert.id)}
-                    formatLocalDateTime={formatLocalDateTime}
-                />
-            ))}
+            {alerts.map((alert) => {
+
+                const isThisAlertOpen = openAlertId === alert.id;
+
+                return (
+                    <AlertCard
+                        key={alert.id}
+                        alert={alert}
+                        isOpen={isThisAlertOpen}
+                        onToggle={() => handleToggle(alert.id)}
+                        formatLocalDateTime={formatLocalDateTime}
+                    />
+                );
+            })}
         </div>
     );
 }
