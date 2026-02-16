@@ -174,3 +174,26 @@
 .visual-hide {
     visibility: collapse;
 }
+
+/* --- HEADER (Dato og Farevarsel) --- */
+
+.day-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px; /* Litt mer luft enn 8px ser ofte bedre ut med store ikoner */
+}
+
+/* Styring av fareikonet i lukket tilstand */
+.day-card-header img {
+    width: 44px;  /* Justert ned fra 48px for å matche teksthøyde bedre */
+    height: 44px;
+    object-fit: contain;
+    flex-shrink: 0; /* Hindrer ikonet i å bli klemt */
+}
+
+.day-card-date { 
+    margin: 0; 
+    font-size: 1rem;
+    font-weight: 600;
+    white-space: nowrap; /* Hindrer dato i å brekke på flere linjer */
+}

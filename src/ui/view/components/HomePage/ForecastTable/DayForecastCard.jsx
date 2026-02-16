@@ -1,4 +1,4 @@
-// src/ui/view/components/HomePage/ForecastTable/DayForecastCard.jsx
+//src/ui/view/components/HomePage/ForecastTable/DayForecastCard.jsx
 import { useId } from "react";
 import { getWeatherIconFileName } from "../../../../utils/weatherIcons.js";
 import { getAlertIconFileName } from "../../../../utils/getAlertIconFileName.js";
@@ -36,11 +36,9 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, isOpe
         const iconFile = getWeatherIconFileName(symbolCode);
         return (
             <img
-                //src={`/weather_icons/200/${iconFile}`}
                 src={`/weather_icons/100/${iconFile}`}
                 alt={LABELS_NO[periodKey]}
-                width={28}
-                height={28}
+                className="day-card-period-icon"
                 loading="lazy"
             />
         );
@@ -53,14 +51,14 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, isOpe
             <img 
                 src={`/alert_symbols/128/${getAlertIconFileName(dayAlerts[0])}`} 
                 alt="Farevarsel" 
-                width="48" 
-                height="48"
+                className="day-card-alert-badge"
             />
         );
     }
 
     let periodCells = <td colSpan={ORDER.length} aria-hidden="true" />;
     if (!isOpen) {
+
         periodCells = ORDER.map((key) => (
             <td key={key} className="day-card-cell-surface day-card-period-cell">
                 <div className="icon-wrapper"> 
@@ -106,12 +104,15 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, isOpe
                             
                             {/* Alertlist */}
                             {hasAlerts && (                    
-                                <AlertList alerts={dayAlerts} formatLocalDateTime={formatLocalDateTime} />
-                            )}
+                                <AlertList 
+                                    alerts={dayAlerts} 
+                                    formatLocalDateTime={formatLocalDateTime} />
+                                )
+                            }
 
                             {/*ForecastTable */}
                             <ForecastTable forecast={hourly} />
-
+                            
                             {/*SunTimes */}
                             <SolarInformation sunTimes={sunTimes} />
                         </div>
@@ -145,13 +146,10 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, isOpe
                 aria-controls={panelId}
             >
                 <td className="day-card-cell-surface day-card-date-cell">
-
-                    {/* Dette er dritt.. man skal aldri bruke inline styling! */}                    
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div className="day-card-header">
                         <h2 className="day-card-date">{date}</h2>
                         {alertIcon}
                     </div>
-
                 </td>
 
                 {periodCells}
@@ -178,7 +176,6 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, isOpe
                     </div>
                 </td>
             </tr>
-
             {expandedRows}
         </tbody>
     );
