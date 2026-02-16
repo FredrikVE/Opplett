@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Navigation from "../../../navigation/Navigation.jsx";
-import LoadingSpinner from "../components/LoadingSpinner/LoadingSpinner.jsx";
+import LoadingSpinner from "../components/Common/LoadingSpinner/LoadingSpinner.jsx";
 import SearchField from "../components/HomePage/SearchFeild/SearchField.jsx";
 import DayForecastCard from "../components/HomePage/ForecastTable/DayForecastCard.jsx";
 import NowCard from "../components/HomePage/NowCard/NowCard.jsx";

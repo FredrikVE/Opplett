@@ -47,7 +47,7 @@ import AlertPage from "./ui/view/pages/AlertPage.jsx";
 //Header og footer
 import Header from "./ui/view/components/Common/Layout/Header.jsx"
 import Footer from "./ui/view/components/Common/Layout/Footer.jsx";
-import LoadingSpinner from "./ui/view/components/LoadingSpinner/LoadingSpinner.jsx";
+import LoadingSpinner from "./ui/view/components/Common/LoadingSpinner/LoadingSpinner.jsx";
 
 //Importerer klasse for vasking og forenkling av stedsnavn fra OpenCage
 import LocationNameFormatter from "./geolocation/LocationNameFormatter.js";
