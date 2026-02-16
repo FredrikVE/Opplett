@@ -1,4 +1,3 @@
-// src/ui/view/pages/AlertPage.jsx
 import { useState } from "react";
 import AlertList from "../components/HomePage/AlertCard/AlertList.jsx";
 import LoadingSpinner from "../components/LoadingSpinner/LoadingSpinner.jsx";
@@ -7,28 +6,25 @@ import ChevronIcon from "../components/Common/Buttons/ChevronIcon.jsx";
 import { COUNTIES } from "../../utils/counties.js";
 
 export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCREENS }) {
-    
-    // State for å styre om vi viser alle eller bare en begrenset liste
     const [showAllOngoing, setShowAllOngoing] = useState(false);
     const [showAllUpcoming, setShowAllUpcoming] = useState(false);
-
     const LIMIT = 4;
 
     // --- HJELPEFUNKSJONER FOR RENDERING ---
 
-    // Gjenbrukbar funksjon for select-filtrene for å få ikonet korrekt plassert uten CSS-bakgrunnsbilde
-    const renderSelectFilter = (value, onChange, options, defaultLabel) => {
+    const renderSelectFilter = (value, onChange, options, defaultLabel, totalCount) => {
+        let finalLabel = defaultLabel;
+        if (totalCount !== undefined) {
+            finalLabel = `${defaultLabel} (${totalCount})`;
+        }
+
         return (
             <div className="alert-select-wrapper">
-                <select 
-                    className="alert-select-filter"
-                    value={value} 
-                    onChange={onChange}
-                >
-                    <option value="">{defaultLabel}</option>
+                <select className="alert-select-filter" value={value} onChange={onChange}>
+                    <option value="">{finalLabel}</option>
                     {options.map((opt) => (
                         <option key={opt.id || opt.value} value={opt.id || opt.value}>
-                            {opt.name || opt.label}
+                            {opt.displayName || opt.name || opt.label}
                         </option>
                     ))}
                 </select>
@@ -36,22 +32,6 @@ export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCR
                     <ChevronIcon isOpen={false} size={14} />
                 </div>
             </div>
-        );
-    };
-
-    const renderExpandButton = (count, isExpanded, setExpanded) => {
-        if (count <= LIMIT) return null;
-
-        let buttonText = `Vis alle (${count})`;
-        if (isExpanded) {
-            buttonText = "Vis færre";
-        }
-
-        return (
-            <button className="expand-alerts-btn" onClick={() => setExpanded(!isExpanded)}>
-                <span>{buttonText}</span>
-                <ChevronIcon isOpen={isExpanded} size={16} />
-            </button>
         );
     };
 
@@ -67,10 +47,7 @@ export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCR
         return (
             <section className="alerts-section">
                 <h2>Pågår</h2>
-                <AlertList 
-                    alerts={alertsToShow} 
-                    formatLocalDateTime={viewModel.formatLocalDateTime}
-                />
+                <AlertList alerts={alertsToShow} formatLocalDateTime={viewModel.formatLocalDateTime} />
                 {renderExpandButton(totalCount, showAllOngoing, setShowAllOngoing)}
             </section>
         );
@@ -88,20 +65,27 @@ export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCR
         return (
             <section className="alerts-section">
                 <h2>Ventes</h2>
-                <AlertList 
-                    alerts={alertsToShow} 
-                    formatLocalDateTime={viewModel.formatLocalDateTime}
-                />
+                <AlertList alerts={alertsToShow} formatLocalDateTime={viewModel.formatLocalDateTime} />
                 {renderExpandButton(totalCount, showAllUpcoming, setShowAllUpcoming)}
             </section>
         );
     };
 
-    const renderEmptyMessage = () => {
-        const hasOngoing = viewModel.ongoingAlerts.length > 0;
-        const hasUpcoming = viewModel.upcomingAlerts.length > 0;
-        if (hasOngoing || hasUpcoming) return null;
+    const renderExpandButton = (count, isExpanded, setExpanded) => {
+        if (count <= LIMIT) return null;
+        let buttonText = `Vis alle (${count})`;
+        if (isExpanded) buttonText = "Vis færre";
 
+        return (
+            <button className="expand-alerts-btn" onClick={() => setExpanded(!isExpanded)}>
+                <span>{buttonText}</span>
+                <ChevronIcon isOpen={isExpanded} size={16} />
+            </button>
+        );
+    };
+
+    const renderEmptyMessage = () => {
+        if (viewModel.ongoingAlerts.length > 0 || viewModel.upcomingAlerts.length > 0) return null;
         const domainText = viewModel.activeDomain === "marine" ? "hav og kyst" : "land";
         return (
             <div className="no-alerts-message">
@@ -110,14 +94,14 @@ export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCR
         );
     };
 
-    // --- HOVED RENDER ---
+    // --- LOGIKK FOR FYLKES-TALL ---
+    const countiesWithCounts = COUNTIES.map(county => {
+        const count = viewModel.getCountForCounty(county.id);
+        return { ...county, displayName: `${county.name} (${count})` };
+    });
+    const totalDomainCount = viewModel.getCountForCounty("");
 
-    if (viewModel.loading) {
-        return <LoadingSpinner />;
-    }
-
-    let landClass = viewModel.activeDomain === "land" ? "active" : "";
-    let marineClass = viewModel.activeDomain === "marine" ? "active" : "";
+    if (viewModel.loading) return <LoadingSpinner />;
 
     return (
         <div className="alert-page">
@@ -128,13 +112,13 @@ export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCR
             <div className="domain-selector">
                 <div className="domain-toggle-wrapper">
                     <button 
-                        className={landClass}
+                        className={viewModel.activeDomain === "land" ? "active" : ""} 
                         onClick={() => viewModel.setActiveDomain("land")}
                     >
                         Land ({viewModel.counts.land})
                     </button>
                     <button 
-                        className={marineClass}
+                        className={viewModel.activeDomain === "marine" ? "active" : ""} 
                         onClick={() => viewModel.setActiveDomain("marine")}
                     >
                         Hav og kyst ({viewModel.counts.marine})
@@ -142,18 +126,15 @@ export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCR
                 </div>
             </div>
 
-            <Navigation 
-                activeScreen={activeScreen} 
-                onChangeScreen={onChangeScreen} 
-                SCREENS={SCREENS} 
-            />
+            <Navigation activeScreen={activeScreen} onChangeScreen={onChangeScreen} SCREENS={SCREENS} />
 
             <div className="filter-row">
                 {renderSelectFilter(
                     viewModel.selectedCounty,
                     (e) => viewModel.setSelectedCounty(e.target.value),
-                    COUNTIES,
-                    "Alle fylker"
+                    countiesWithCounts,
+                    "Alle fylker",
+                    totalDomainCount
                 )}
 
                 {renderSelectFilter(

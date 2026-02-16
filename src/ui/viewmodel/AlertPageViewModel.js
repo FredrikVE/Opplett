@@ -1,10 +1,11 @@
-// src/ui/viewmodel/useAlertPageViewModel.js
+//src/ui/viewmodel/AlertPageViewModel.js
 import { useState, useEffect } from "react";
 import { formatLocalDateTime } from "../utils/timeFormatters.js";
 
 export default function useAlertPageViewModel(alertsRepository) {
     const [alerts, setAlerts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [activeDomain, setActiveDomain] = useState("land");
     
     // Filter-states
@@ -12,41 +13,57 @@ export default function useAlertPageViewModel(alertsRepository) {
     const [selectedLevel, setSelectedLevel] = useState("");
     const [selectedType, setSelectedType] = useState("");
 
+    const defaultTz = "Europe/Oslo";
+
     useEffect(() => {
         async function load() {
             try {
                 setLoading(true);
-                // Vi henter alle varsler for fylket (eller hele landet hvis empty)
                 const result = await alertsRepository.getAllAlerts(selectedCounty);
                 setAlerts(result.alerts);
-            } finally {
+            } 
+
+            catch (error) {
+                console.error(error);
+                setError("Kunne ikke hente varsler");
+            }
+
+            finally {
                 setLoading(false);
             }
         }
         load();
     }, [alertsRepository, selectedCounty]);
 
-    // Filtreringslogikk for alle dropdowns + domene
+    //Hjelpefunksjon for å telle varsler per fylke innenfor valgt domene
+    const getCountForCounty = (countyId) => {
+
+        if (!countyId) {
+            return alerts.filter(a => a.geographicDomain === activeDomain).length;
+        }
+
+        return alerts.filter(a => 
+            a.geographicDomain === activeDomain && 
+            a.county?.includes(countyId)
+        ).length;
+    };
+
+    //Filtreringslogikk for listevisning
     const filteredAlerts = alerts.filter(alert => {
         const matchesDomain = alert.geographicDomain === activeDomain;
-        
-        // Sjekk farenivå (Yellow, Orange, Red)
         const matchesLevel = !selectedLevel || alert.riskMatrixColor === selectedLevel;
-        
-        // Sjekk faretype (event)
         const matchesType = !selectedType || alert.event === selectedType;
-
         return matchesDomain && matchesLevel && matchesType;
     });
 
-    // Tellere for knappene (basert på nåværende filtre, men uavhengig av domene)
-    const countLand = alerts.filter(a => a.geographicDomain === "land").length;
-    const countMarine = alerts.filter(a => a.geographicDomain === "marine").length;
+    const ongoingAlerts = filteredAlerts.filter(a => new Date(a.interval?.[0]) <= new Date());
+    const upcomingAlerts = filteredAlerts.filter(a => new Date(a.interval?.[0]) > new Date());
 
     return {
-        ongoingAlerts: filteredAlerts.filter(a => new Date(a.interval?.[0]) <= new Date()),
-        upcomingAlerts: filteredAlerts.filter(a => new Date(a.interval?.[0]) > new Date()),
+        ongoingAlerts,
+        upcomingAlerts,
         loading,
+        error,
         activeDomain,
         setActiveDomain,
         selectedCounty,
@@ -55,7 +72,13 @@ export default function useAlertPageViewModel(alertsRepository) {
         setSelectedLevel,
         selectedType,
         setSelectedType,
-        counts: { land: countLand, marine: countMarine },
-        formatLocalDateTime: (zuluTime) => formatLocalDateTime(zuluTime, "Europe/Oslo")
+        getCountForCounty,
+
+        counts: {
+            land: alerts.filter(a => a.geographicDomain === "land").length,
+            marine: alerts.filter(a => a.geographicDomain === "marine").length
+        },
+        
+        formatLocalDateTime: (zuluTime) => formatLocalDateTime(zuluTime, defaultTz)
     };
 }
