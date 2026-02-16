@@ -43,7 +43,6 @@ import HomePage from "./ui/view/pages/HomePage.jsx";
 import GraphPage from "./ui/view/pages/GraphPage.jsx";
 import AlertPage from "./ui/view/pages/AlertPage.jsx";
 
-
 //Header og footer
 import Header from "./ui/view/components/Common/Layout/Header.jsx"
 import Footer from "./ui/view/components/Common/Layout/Footer.jsx";
