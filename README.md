@@ -28,70 +28,111 @@ Hver page består av flere "componenter" som du finner i mappa `src/ui/view/comp
 
 Hver og en av disse initieres i `App.jsx`, som er programmets `main`.
 
+## Bruk av Highcharts
+
+Applikasjonen bruker **Highcharts** (via `highcharts` og `highcharts-react-official`) for å visualisere værdata i grafvisningen. Highcharts brukes til å generere dynamiske og interaktive grafer for blant annet temperatur, vind, UV-indeks og solforhold. Grafkonfigurasjonene er strukturert og organisert i egne konfigurasjons- og hjelpefiler for å holde View-komponentene rene og fokusert på presentasjon.
+
+
+## Installere Highcharts
+
+Highcharts og React-wrapperen installeres med:
+
+```bash
+npm install highcharts highcharts-react-official
+```
+
+Dette legger til:
+
+- `highcharts` – selve grafbiblioteket
+- `highcharts-react-official` – offisiell React-wrapper
+
+Etter installasjon kan Highcharts importeres i komponentene der grafene konfigureres og renderes.
+
+
 ## Arkitektur-tegning
 ![Arkitekturdiagram](images/Arkitektur.png)
 
-## Mermaidkode for arkitektur-tegning
+## Filstruktur
 
-```javaScript
----
-config:
-  theme: forest
-  layout: fixed
----
-flowchart TB
- subgraph Main["Main"]
-        App["App.jsx"]
-  end
- subgraph Pages["Pages / Views"]
-        HomeScreen["HomeScreen.jsx"]
-  end
- subgraph Components["UI Components"]
-        SearchField["SearchField.jsx"]
-        SolarInformation["SolarInformation.jsx"]
-        ForecastTable["ForecastTable.jsx"]
-        AlertList["AlertList.jsx"]
-  end
- subgraph ViewModels["ViewModels"]
-        HomeScreenViewModel["HomeScreenViewModel.js"]
-        SearchViewModel["SearchViewModel.js"]
-  end
- subgraph Repositories["Repositories"]
-        LocationForecastRepository["LocationForecastRepository.js"]
-        SunriseRepository["SunriseRepository.js"]
-        MetAlertsRepository["MetAlertsRepository.js"]
-        OpenCageGeocodingRepository["OpenCageGeocodingRepository.js"]
-  end
- subgraph DataSources["DataSources"]
-        DataSource["DataSource.js"]
-        LocationForecastDataSource["LocationForecastDataSource.js"]
-        SunriseDataSource["SunriseDataSource.js"]
-        MetAlertsDataSource["MetAlertsDataSource.js"]
-        OpenCageGeocodingDataSource["OpenCageGeocodingDataSource.js"]
-  end
- subgraph ExternalAPIs["External APIs"]
-        MET_API["api.met.no"]
-        OpenCageAPI["OpenCage API"]
-  end
-    App --> HomeScreen
-    HomeScreen --> HomeScreenViewModel & SearchField & SolarInformation & ForecastTable & AlertList
-    HomeScreenViewModel --> SearchViewModel & LocationForecastRepository & SunriseRepository & MetAlertsRepository & OpenCageGeocodingRepository
-    SearchViewModel --> OpenCageGeocodingRepository
-    LocationForecastRepository --> LocationForecastDataSource
-    SunriseRepository --> SunriseDataSource
-    MetAlertsRepository --> MetAlertsDataSource
-    OpenCageGeocodingRepository --> OpenCageGeocodingDataSource
-    LocationForecastDataSource --> DataSource
-    SunriseDataSource --> DataSource
-    MetAlertsDataSource --> DataSource
-    DataSource --> MET_API
-    OpenCageGeocodingDataSource --> OpenCageAPI
+```bash
+TestMVVMReact
+│
+├── package.json
+├── vite.config.js
+├── README.md
+│
+├── public
+│   ├── alert_symbols
+│   │   └── 128
+│   ├── credit_icons
+│   │   ├── highcharts
+│   │   ├── met
+│   │   ├── open_cage
+│   │   └── yr
+│   ├── sun_rise
+│   └── weather_icons
+│       ├── 100
+│       └── 200
+│
+├── src
+│   ├── App.jsx
+│   ├── main.jsx
+│   │
+│   ├── geolocation
+│   │   ├── LocationNameFormatter.js
+│   │   └── useGeolocation.js
+│   │
+│   ├── navigation
+│   │   ├── Navigation.jsx
+│   │   └── navGraph.js
+│   │
+│   ├── model
+│   │   ├── datasource
+│   │   │   ├── DataSource.js
+│   │   │   ├── LocationForecastDataSource.js
+│   │   │   ├── MetAlertsDataSource.js
+│   │   │   ├── OpenCageGeocodingDataSource.js
+│   │   │   └── SunriseDataSource.js
+│   │   │
+│   │   └── repositories
+│   │       ├── LocationForecastRepository.js
+│   │       ├── MetAlertsRepository.js
+│   │       ├── OpenCageGeocodingRepository.js
+│   │       └── SunriseRepository.js
+│   │
+│   └── ui
+│       ├── style
+│       │   ├── App.css
+│       │   ├── HomePage.css
+│       │   ├── GraphPage.css
+│       │   └── ...
+│       │
+│       ├── utils
+│       │   ├── counties.js
+│       │   ├── timeFormatters.js
+│       │   ├── weatherIcons.js
+│       │   └── getAlertIconFileName.js
+│       │
+│       ├── view
+│       │   ├── pages
+│       │   │   ├── HomePage.jsx
+│       │   │   ├── GraphPage.jsx
+│       │   │   └── AlertPage.jsx
+│       │   │
+│       │   └── components
+│       │       ├── HomePage
+│       │       ├── GraphPage
+│       │       ├── AlertPage
+│       │       └── Common
+│       │
+│       └── viewmodel
+│           ├── HomeScreenViewModel.js
+│           ├── GraphScreenViewModel.js
+│           ├── AlertPageViewModel.js
+│           └── SearchViewModel.js
+│
+└── test
+    ├── model
+    └── ui
 
-    style Main stroke:#000000,fill:#E1BEE7
-    style Pages stroke:#000000,fill:#FFF9C4
-    style Components stroke:#000000,fill:#BBDEFB
-    style ViewModels stroke:#000000,fill:#FFCDD2
-    style Repositories stroke:#000000,fill:#DCEDC8
-    style DataSources stroke:#000000,fill:#FFE082
-    style ExternalAPIs stroke:#000000,fill:#FFAB91
 ```
