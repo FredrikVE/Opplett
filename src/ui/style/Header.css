@@ -1,104 +1,173 @@
 /* src/ui/style/Header.css */
+
 .main-header {
-  background: var(--color-surface, #fff);
-  border-bottom: 1px solid rgba(6, 22, 41, 0.1);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
+	background: transparent;
+	/*position: sticky;*/
+	top: 0;
+	z-index: 1000;
 }
 
 .header-content {
-  max-width: 860px;
-  margin: 0 auto;
-  padding: 1rem 14px;
+	max-width: 860px;
+	margin: 0 auto;
+	padding: 1rem 14px;
 
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  /* Viktig: gjør at dropdownen kan posisjoneres relativt til innholdsbredde */
-  position: relative;
+	display: flex;
+	align-items: flex-start;
+	justify-content: flex-end;
 }
 
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 800;
-  font-size: 1.2rem;
-  color: #0366d6;
+/* Felles knapp-basics */
+.hamburger,
+.drawer-close,
+.drawer-content button {
+	appearance: none;
+	background: none;
+	border: 1px solid transparent;
+	cursor: pointer;
+	color: inherit;
 }
 
-.header-nav h1 {
-  font-size: 1.1rem;
-  margin: 0;
-  color: var(--color-text-base);
+.hamburger:focus-visible,
+.drawer-close:focus-visible,
+.drawer-content button:focus-visible {
+	outline-offset: 2px;
 }
 
 /* Hamburger */
 .hamburger {
-  appearance: none;
-  background: none;
-  border: 1px solid transparent;
-  border-radius: 12px;
-
-  font-size: 1.8rem;
-  line-height: 1;
-
-  padding: 8px 10px;
-  cursor: pointer;
-  color: inherit;
+	border-radius: 12px;
+	padding: 8px 10px;
+	line-height: 1;
 }
 
 .hamburger:hover {
-  background: rgba(6, 22, 41, 0.04);
+	background: rgba(6, 22, 41, 0.04);
 }
 
 .hamburger:focus-visible {
-  outline: 2px solid rgba(3, 102, 214, 0.6);
-  outline-offset: 2px;
+	outline: 2px solid rgba(3, 102, 214, 0.6);
 }
 
-/* Dropdown */
-.mobile-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-
-  min-width: 180px;
-
-  background: var(--color-surface, #fff);
-  border: 1px solid rgba(6, 22, 41, 0.12);
-  border-radius: 12px;
-
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
-  padding: 6px;
-
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-
-  z-index: 1100;
+.hamburger-icon {
+	display: block;
 }
 
-.mobile-menu button {
-  width: 100%;
-  padding: 10px 12px;
-
-  background: none;
-  border: none;
-  border-radius: 10px;
-
-  text-align: left;
-  cursor: pointer;
-  color: inherit;
+/* Drawer layer */
+.drawer-layer {
+	position: fixed;
+	inset: 0;
+	z-index: 2000;
 }
 
-.mobile-menu button:hover {
-  background: rgba(6, 22, 41, 0.06);
+/* Backdrop */
+.drawer-backdrop {
+	position: absolute;
+	inset: 0;
+	border: 0;
+	padding: 0;
+	background: rgba(6, 22, 41, 0.35);
+	cursor: pointer;
 }
 
-.mobile-menu button:focus-visible {
-  outline: 2px solid rgba(3, 102, 214, 0.5);
-  outline-offset: 2px;
+/* Drawer panel (fra høyre) */
+.drawer {
+	position: absolute;
+	top: 0;
+	right: 0;
+	z-index: 1;
+
+	height: 100dvh;
+	width: min(360px, 86vw);
+
+	background: var(--color-surface, #fff);
+	border-left: 1px solid rgba(6, 22, 41, 0.12);
+
+	box-shadow: -10px 0 28px rgba(0, 0, 0, 0.12);
+	border-top-left-radius: 16px;
+	border-bottom-left-radius: 16px;
+
+	display: flex;
+	flex-direction: column;
+
+	transform: translateX(0);
+	animation: drawer-in 180ms ease-out;
+	outline: none;
+}
+
+@keyframes drawer-in {
+	from {
+		transform: translateX(12px);
+		opacity: 0.6;
+	}
+	to {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+.drawer-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+
+	padding: 14px 14px 10px;
+	border-bottom: 1px solid rgba(6, 22, 41, 0.08);
+}
+
+.drawer-title {
+	font-weight: 800;
+	font-size: 1.05rem;
+	color: var(--color-text-base);
+}
+
+.drawer-close {
+	border-radius: 10px;
+	padding: 6px 8px;
+	font-size: 1.1rem;
+}
+
+.drawer-close:hover {
+	background: rgba(6, 22, 41, 0.06);
+}
+
+.drawer-close:focus-visible {
+	outline: 2px solid rgba(3, 102, 214, 0.6);
+}
+
+.drawer-content {
+	padding: 10px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.drawer-content button {
+	width: 100%;
+	padding: 12px 12px;
+	border: none;
+	border-radius: 12px;
+	text-align: left;
+	font-size: 1rem;
+}
+
+.drawer-content button:hover {
+	background: rgba(6, 22, 41, 0.06);
+}
+
+/* Hvis du vil ha svakere outline på menypunktene enn på ikon-knappene */
+.drawer-content button:focus-visible {
+	outline: 2px solid rgba(3, 102, 214, 0.5);
+}
+
+/* Scroll-lock når drawer er åpen */
+body:has(.drawer-layer) {
+	overflow: hidden;
+}
+
+/* Respekter redusert animasjon */
+@media (prefers-reduced-motion: reduce) {
+	.drawer {
+		animation: none;
+	}
 }

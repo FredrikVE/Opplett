@@ -7,11 +7,12 @@ import "./ui/style/App.css";
 import "./ui/style/LoadingSpinner.css";
 import "./ui/style/SolarInfo.css";
 import "./ui/style/SearchFeild.css";
-import "./ui/style/Alerts.css";
+import "./ui/style/AlertCard.css";
 import "./ui/style/ForecastTable.css";
 import "./ui/style/DayForecastCard.css";
 import "./ui/style/HomePage.css";
 import "./ui/style/GraphPage.css";
+import "./ui/style/AlertPage.css";
 import "./ui/style/Header.css";
 import "./ui/style/Footer.css";
 import "./ui/style/NavButton.css"
@@ -36,14 +37,16 @@ import SunriseRepository from "./model/repositories/SunriseRepository.js";
 //ViewModel og View
 import useHomeScreenViewModel from "./ui/viewmodel/HomeScreenViewModel.js";
 import useGraphScreenViewModel from "./ui/viewmodel/GraphScreenViewModel.js";
+import useAlertPageViewModel from "./ui/viewmodel/AlertPageViewModel.js";
 
 import HomePage from "./ui/view/pages/HomePage.jsx";
-import GraphPage from "./ui/view/pages/GrapPage.jsx";
-import LoadingSpinner from "./ui/view/components/LoadingSpinner/LoadingSpinner.jsx";
+import GraphPage from "./ui/view/pages/GraphPage.jsx";
+import AlertPage from "./ui/view/pages/AlertPage.jsx";
 
 //Header og footer
 import Header from "./ui/view/components/Common/Layout/Header.jsx"
 import Footer from "./ui/view/components/Common/Layout/Footer.jsx";
+import LoadingSpinner from "./ui/view/components/Common/LoadingSpinner/LoadingSpinner.jsx";
 
 //Importerer klasse for vasking og forenkling av stedsnavn fra OpenCage
 import LocationNameFormatter from "./geolocation/LocationNameFormatter.js";
@@ -73,6 +76,7 @@ export default function App() {
 	//Initialiser ViewModel med dependancy injection av repositories
 	const homeScreenViewModel = useHomeScreenViewModel(locationRepo, sunriseRepo, alertsRepo, geoRepo, coords?.lat,  coords?.lon, hoursAhead);
 	const graphScreenViewModel = useGraphScreenViewModel(homeScreenViewModel);
+	const alertPageViewModel = useAlertPageViewModel(alertsRepo);
 
 	if (loading) {
 		return (
@@ -92,6 +96,15 @@ export default function App() {
 	return (
 		<>
 			<Header />
+
+			{activeScreen === NAV_SCREENS.ALERTS && (
+				<AlertPage 
+					viewModel={alertPageViewModel}
+					activeScreen={activeScreen}
+					onChangeScreen={setActiveScreen}
+					SCREENS={NAV_SCREENS}
+				/>
+			)}
 
 			{activeScreen === NAV_SCREENS.TABLE && (
 				<HomePage

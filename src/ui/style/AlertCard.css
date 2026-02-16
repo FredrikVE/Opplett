@@ -1,0 +1,287 @@
+/* ======================================================
+   Alerts Section
+   ====================================================== */
+.alerts-section {
+    margin: 1rem 0;
+}
+
+.alerts-section h2 {
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+
+
+/* ======================================================
+   Card Base
+   ====================================================== */
+.alert-card {
+    border-radius: 10px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    border: 2px solid transparent;
+}
+
+/* Shadow når åpen */
+.alert-card.open {
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+
+/* ======================================================
+   Risk Levels (MET-style)
+   ====================================================== */
+.alert-yellow {
+    background-color: #fef9db;
+    border-color: #f2c200;
+}
+
+.alert-orange {
+    background-color: #fff1e0;
+    border-color: #f28c00;
+}
+
+.alert-red {
+    background-color: #fdeaea;
+    border-color: #d93025;
+}
+
+
+/* ======================================================
+   Header
+   ====================================================== */
+.alert-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    cursor: pointer;
+}
+
+.alert-icon {
+    width: 100px;
+    height: 100px;
+    flex-shrink: 0;
+}
+
+.alert-header-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.alert-header-text strong {
+    font-size: 16px;
+    color: #1a1a1a;
+}
+
+.alert-level {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 2px;
+}
+
+
+/* ======================================================
+   Chevron (top)
+   ====================================================== */
+.chevron {
+    transition: transform 0.25s ease;
+    flex-shrink: 0;
+    color: #1a1a1a;
+}
+
+.chevron.open {
+    transform: rotate(180deg);
+}
+
+/* ======================================================
+   Chevron (bunn)
+   ====================================================== */
+
+.alert-bottom-toggle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem 0;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.alert-bottom-toggle .chevron {
+    transform: rotate(180deg);
+}
+
+
+/* ======================================================
+   Expand / Collapse
+   ====================================================== */
+.alert-details {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.alert-details.expanded {
+    max-height: 2000px;
+    opacity: 1;
+}
+
+
+/* ======================================================
+   Body Content
+   ====================================================== */
+.alert-content-inner,
+.alert-body {
+    padding: 0 16px 16px 16px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: #1f2937;
+}
+
+.alert-body h3 {
+    margin-top: 0;
+    margin-bottom: 6px;
+}
+
+.alert-body h4 {
+    margin-top: 16px;
+    margin-bottom: 4px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.alert-description {
+    margin-bottom: 8px;
+}
+
+.alert-area {
+    font-style: italic;
+    margin-top: 8px;
+    color: #6b7280;
+}
+
+/* ======================================================
+   Hover effect
+   ====================================================== */
+.alert-card {
+    transition: 
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        border-color 0.18s ease;
+}
+
+.alert-card:hover {
+    transform: translateY(-0.05rem);
+    box-shadow: 0 0.45rem 0.75rem rgba(0, 0, 0, 0.12);
+}
+
+/* ======================================================
+   Map Image
+   ====================================================== */
+.alert-map {
+    width: 100%;
+    border-radius: 6px;
+    margin: 12px 0;
+    display: block;
+}
+
+
+/* ======================================================
+   Time List
+   ====================================================== */
+.alert-time {
+    padding-left: 18px;
+    margin-top: 6px;
+}
+
+.alert-time li {
+    margin-bottom: 4px;
+}
+
+
+/* ======================================================
+   Legend (bottom info)
+   ====================================================== */
+.alert-legend {
+    margin-top: 18px;
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.legend {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin-right: 6px;
+    border-radius: 2px;
+    vertical-align: middle;
+}
+
+.legend.yellow { background: #ffd400; }
+.legend.orange { background: #ff8c00; }
+.legend.red { background: #e00000; }
+
+
+/* ======================================================
+   NowCard container spacing
+   ====================================================== */
+.now-card-alerts {
+    margin-top: 12px;
+}
+
+
+/* ======================================================
+   AltertCards in AlerPage
+   ====================================================== */
+   
+/* Stedsnavnet øverst i headeren */
+.alert-area-name {
+    display: block;
+    font-size: 13px;
+    color: var(--color-text-subtle);
+    margin-bottom: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Raden med tittel og tag */
+.alert-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+/* Domene-tag (Land / Hav) */
+.domain-tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--color-text-base);
+}
+
+/* Spesifikk farge hvis du vil skille dem */
+.tag-marine {
+    background-color: #e1f5fe;
+    color: #0277bd;
+}
+
+.tag-land {
+    background-color: #f1f8e9;
+    color: #33691e;
+}
+
+/* Justering av header-tekst for å gi plass */
+.alert-header-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}

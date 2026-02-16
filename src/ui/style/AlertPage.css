@@ -1,0 +1,137 @@
+/* src/ui/style/AlertPage.css */
+
+.alert-page {
+    width: 100%;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 18px 14px 42px;
+}
+
+.alert-page-header {
+    margin-bottom: 8px;
+    padding-bottom: 10px;
+    text-align: center;
+}
+
+.alert-page-header h1 {
+    font-size: 30px;
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 1.5px;
+    margin: 2rem;
+    color: var(--color-text-base);
+}
+
+/* Spacer som skal matche SearchField i HomePage */
+.search-placeholder {
+    /* Matcher .search marginer */
+    margin: 16px 0 20px 0;
+    
+    /* Matcher den totale høyden til .search-input (padding + line-height + border) */
+    /* 16px + 24px + 16px + 2px + 2px = 60px */
+    height: 60px;
+    
+    /* Valgfritt: Gjør den usynlig, men bevarer plassen */
+    visibility: hidden;
+}
+
+/* --- DOMENE VELGER --- */
+.domain-selector {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.domain-toggle-wrapper {
+    display: flex;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 4px;
+    width: 100%;
+    max-width: 600px;
+    border: 1px solid rgba(6, 22, 41, 0.08);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.domain-toggle-wrapper button {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 10px;
+    color: var(--color-text-base);
+    transition: all 0.2s ease;
+}
+
+.domain-toggle-wrapper button.active {
+    background-color: #b2cff5;
+    color: #0c2b4d;
+}
+
+/* --- FILTER RAD --- */
+.filter-row {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.alert-select-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.alert-select-filter {
+    padding: 8px 36px 8px 16px;
+    border-radius: 20px;
+    border: none;
+    background-color: #b2cff5;
+    color: #0c2b4d;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    appearance: none; /* Skjuler default pil */
+    -webkit-appearance: none;
+    min-width: 150px;
+}
+
+.select-chevron-overlay {
+    position: absolute;
+    right: 14px;
+    pointer-events: none; /* Klikk går gjennom til select */
+    color: #0c2b4d;
+}
+
+/* --- SEKSJONER OG KORT --- */
+.alert-content section h2 {
+    font-size: 22px;
+    font-weight: var(--font-weight-bold);
+    margin: 2rem 0 1rem;
+    color: var(--color-text-base);
+}
+
+.expand-alerts-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px;
+    margin-top: 12px;
+    background-color: #fff;
+    border: 1px solid rgba(6, 22, 41, 0.1);
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.no-alerts-message {
+    background: #fff;
+    padding: 40px;
+    border-radius: 18px;
+    text-align: center;
+    border: 1px solid rgba(6, 22, 41, 0.08);
+}
