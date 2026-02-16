@@ -1,9 +1,9 @@
 //src/ui/view/pages/GraphPage.jsx
 import Navigation from "../../../navigation/Navigation.jsx";
-import WeatherGraph from "../components/HomePage/Graph/WeatherGraph.jsx";
-import WindGraph from "../components/HomePage/Graph/WindGraph.jsx";
-import SunGraph from "../components/HomePage/Graph/SunGraph.jsx";
-import UVGraph from "../components/HomePage/Graph/UVGraph.jsx";
+import WeatherGraph from "../components/GraphPage/WeatherGraph.jsx";
+import WindGraph from "../components/GraphPage/WindGraph.jsx";
+import SunGraph from "../components/GraphPage/SunGraph.jsx";
+import UVGraph from "../components/GraphPage/UVGraph.jsx";
 import SearchField from "../components/HomePage/SearchFeild/SearchField.jsx";
 
 export default function GraphPage({ viewModel, activeScreen, onChangeScreen, SCREENS }) {
