@@ -97,6 +97,42 @@
     margin-top: 20px;
 }
 
+/* src/ui/style/AlertPage.css */
+
+.expand-alerts-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px;
+    margin-top: 12px;
+    background-color: #ffffff;
+    border: 1px solid rgba(6, 22, 41, 0.1);
+    border-radius: 12px;
+    font-weight: 600;
+    color: var(--color-text-base);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+}
+
+.expand-alerts-btn:hover {
+    background-color: #f8f9fa;
+    border-color: rgba(6, 22, 41, 0.2);
+    transform: translateY(-1px);
+}
+
+.expand-alerts-btn span {
+    font-size: 14px;
+}
+
+/* Sørg for at seksjonene har litt luft i bunnen */
+.alerts-section {
+    margin-bottom: 32px;
+}
+
+
 /* Responsiv tilpasning */
 @media (max-width: 600px) {
     .alert-page {
