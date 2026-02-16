@@ -1,33 +1,33 @@
 //src/ui/viewmodel/GraphScreenViewModel.js
-
 export default function useGraphScreenViewModel(homeViewModel) {
 
-	//Henter ut en samlet liste med alle timeprognoser fra forecast gruppert per dato
-	const getHourlyForecastList = (forecastByDate) => {
-		const safeForecast = forecastByDate || {};
-		const entries = Object.entries(safeForecast);
-		const hourlyForecastList = [];
+    const getHourlyForecastList = (forecastByDate) => {
+        const hourlyForecastList = [];
+        
+        //Bruker Object.values() for å slippe entry[1]-styret
+        //Da får vi listen over dager direkte
+        const allDays = Object.values(forecastByDate || {});
 
-		entries.forEach(function (entry) {
+        for (const dayData of allDays) {
+            //Sjekker at vi faktisk har data og at "hours" finnes
+            if (dayData && Array.isArray(dayData.hours)) {
+                
+                //En enkel for-of løkke er ofte lettere å lese enn forEach
+                for (const hour of dayData.hours) {
+                    hourlyForecastList.push(hour);
+                }
+            }
+        }
 
-			const dayData = entry[1];
+        return hourlyForecastList;
+    };
 
-			if (dayData && Array.isArray(dayData.hours)) {
-				dayData.hours.forEach(function (hour) {
-					hourlyForecastList.push(hour);
-				});
-			}
-
-		});
-		return hourlyForecastList;
-	};
-
-	return {
-		hourlyData: getHourlyForecastList(homeViewModel.forecast),
-		sunTimesByDate: homeViewModel.sunTimesByDate,
-		loading: homeViewModel.loading,
-		error: homeViewModel.error,
-		getLocalHour: homeViewModel.getLocalHour,
-		formatLocalDate: homeViewModel.formatLocalDate
-	};
+    return {
+        hourlyData: getHourlyForecastList(homeViewModel.forecast),
+        sunTimesByDate: homeViewModel.sunTimesByDate,
+        loading: homeViewModel.loading,
+        error: homeViewModel.error,
+        getLocalHour: homeViewModel.getLocalHour,
+        formatLocalDate: homeViewModel.formatLocalDate
+    };
 }
