@@ -21,7 +21,9 @@ export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCR
     };
 
     const renderUpcomingSection = () => {
-        if (viewModel.upcomingAlerts.length === 0) return null;
+        if (viewModel.upcomingAlerts.length === 0) {
+			return null;
+		}
 
         return (
             <section className="alerts-section">
