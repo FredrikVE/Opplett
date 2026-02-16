@@ -1,4 +1,4 @@
-// src/ui/view/components/HomePage/Graph/WindMeteogram.jsx
+//src/ui/view/components/GraphPage/WindGraph.jsx
 import { useMemo } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";

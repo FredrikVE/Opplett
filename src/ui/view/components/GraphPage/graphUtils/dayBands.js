@@ -1,4 +1,4 @@
-//src/ui/view/components/HomePage/Graph/graphUtils/dayBands.js
+//src/ui/view/components/GraphPage/graphUtils/dayBands.js
 import { COLORS } from '../graphConfig/constants';
 
 export function buildDayBands(first, last, midnights) {

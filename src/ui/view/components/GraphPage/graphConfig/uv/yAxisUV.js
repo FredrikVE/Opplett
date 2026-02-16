@@ -1,4 +1,4 @@
-//src/ui/view/components/HomePage/Graph/graphConfig/uv/yAxisUV.js
+//src/ui/view/components/GraphPage/graphConfig/uv/xAxisUV.js
 import { COLORS } from "../constants";
 
 export function buildUVYAxis() {

@@ -1,6 +1,8 @@
-//src/ui/view/components/HomePage/Graph/graphUtils/mapHourlyForecastToUV.js
+//src/ui/view/components/GraphPage/graphUtils/mapHourlyForecastToUV.js
 export function mapHourlyForecastToUV(hourlyData, getLocalHour) {
-    if (!hourlyData?.length) return null;
+    if (!hourlyData?.length) {
+        return null;
+    }
 
     const firstTimestamp = Date.parse(hourlyData[0].timeISO);
     const lastTimestamp = Date.parse(hourlyData.at(-1).timeISO);

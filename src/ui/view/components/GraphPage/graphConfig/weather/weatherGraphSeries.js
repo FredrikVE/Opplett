@@ -1,4 +1,4 @@
-//src/ui/view/components/HomePage/Graph/graphConfig/weatherGraphSeries.js
+//src/ui/view/components/GraphPage/graphConfig/weather/weatherGraphSeries.js
 import { COLORS } from "../constants.js";
 import { getWeatherIconFileName } from "../../../../../utils/weatherIcons.js";
 

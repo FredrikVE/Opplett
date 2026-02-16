@@ -1,4 +1,4 @@
-//src/ui/view/components/HomePage/Graph/graphConfig/sun/yAxisSun.js
+//src/ui/view/components/GraphPage/graphConfig/sun/yAxisSun.js
 import { COLORS } from "../constants.js";
 
 export function buildSunYAxis(axisMin) {

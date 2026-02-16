@@ -1,4 +1,4 @@
-//src/ui/view/components/HomePage/Graph/graphConfig/sun/plotOptionsSun.js
+//src/ui/view/components/GraphPage/graphConfig/sun/plotOptionsSun.js
 export function buildSunPlotOptions(axisMin) {
     return {
         column: {

@@ -1,4 +1,4 @@
-//src/ui/view/components/HomePage/Graph/graphConfig/sun/sunSeries.js
+//src/ui/view/components/GraphPage/graphConfig/sun/sunSeries.js
 export function buildSunSeries(data) {
     return [
         {

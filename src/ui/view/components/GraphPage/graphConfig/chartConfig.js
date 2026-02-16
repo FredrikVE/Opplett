@@ -1,4 +1,4 @@
-// src/ui/view/components/HomePage/Graph/graphConfig/chartConfig.js
+//src/ui/view/components/GraphPage/graphConfig/chartConfig.js
 export const CHART_LAYOUT = {
     HEIGHT: 500,
     MARGIN_LEFT: 50,

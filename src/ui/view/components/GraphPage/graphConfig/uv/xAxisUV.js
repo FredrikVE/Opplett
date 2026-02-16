@@ -1,4 +1,4 @@
-//src/ui/view/components/HomePage/Graph/graphConfig/uv/xAxisUV.js
+//src/ui/view/components/GraphPage/graphConfig/uv/xAxisUV.js
 import { buildWeatherXAxis } from "../weather/xAxisWeather";
 
 export function buildUVXAxis({ data, dayBands, getLocalHour, formatLocalDate }) {

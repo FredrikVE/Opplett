@@ -1,3 +1,4 @@
+//src/ui/view/pages/AlertPage.jsx
 import LoadingSpinner from "../components/LoadingSpinner/LoadingSpinner.jsx";
 import Navigation from "../../../navigation/Navigation.jsx";
 import FilterSelect from "../components/AlertPage/FilterSelect.jsx";

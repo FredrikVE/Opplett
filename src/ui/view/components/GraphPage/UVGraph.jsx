@@ -1,4 +1,4 @@
-//src/ui/view/components/HomePage/Graph/UVGraph.jsx
+//src/ui/view/components/GraphPage/UVGraph.jsx
 import { useMemo } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";

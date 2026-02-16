@@ -1,4 +1,4 @@
-// src/ui/view/components/HomePage/Graph/graphConfig/yAxis.js
+//src/ui/view/components/GraphPage/graphConfig/weather/yAxisWeather.js
 import { COLORS } from "../constants.js";
 
 export function buildWeatherYAxis(midnights) {

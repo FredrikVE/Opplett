@@ -1,4 +1,4 @@
-//src/ui/view/components/HomePage/Graph/graphConfig/wind/windSeries.js
+//src/ui/view/components/GraphPage/graphConfig/wind/windSeries.js
 import { COLORS } from "../constants";
 
 export function buildWindSeries(data) {

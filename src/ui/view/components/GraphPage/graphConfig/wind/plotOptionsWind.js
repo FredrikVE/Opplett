@@ -1,4 +1,4 @@
-//src/ui/view/components/HomePage/Graph/graphConfig/wind/plotOptionsWind.js
+//src/ui/view/components/GraphPage/graphConfig/wind/plotOptionsWind.js
 import Highcharts from "highcharts";
 import { COLORS } from "../constants";
 

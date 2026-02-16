@@ -1,4 +1,4 @@
-//src/ui/view/components/HomePage/Graph/graphConfig/constants.js
+//src/ui/view/components/GraphPage/graphConfig/constants.js
 export const COLORS = {
     // Temperatur
     tempPositive: "#dd4141",

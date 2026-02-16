@@ -1,4 +1,4 @@
-//src/ui/view/components/HomePage/Graph/graphConfig/sun/xAxisSun.js
+//src/ui/view/components/GraphPage/graphConfig/sun/xAxisSun.js
 import { COLORS } from "../constants";
 
 export function buildSunXAxis(formatLocalDate) {

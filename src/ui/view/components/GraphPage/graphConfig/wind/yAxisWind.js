@@ -1,4 +1,4 @@
-//src/ui/view/components/HomePage/Graph/graphConfig/wind/yAxisWind.js
+//src/ui/view/components/GraphPage/graphConfig/wind/yAxisWind.js
 import { COLORS } from "../constants";
 
 export function buildWindYAxis(maxGust) {

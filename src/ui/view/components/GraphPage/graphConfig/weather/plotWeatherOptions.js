@@ -1,4 +1,4 @@
-//src/ui/view/components/HomePage/Graph/graphConfig/plotOptions.js
+//src/ui/view/components/GraphPage/graphConfig/weather/plotWeatherOptions.js
 import { HOUR, COLORS } from '../constants';
 
 export function getTempZones() {

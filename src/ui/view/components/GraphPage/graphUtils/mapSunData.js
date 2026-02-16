@@ -1,6 +1,8 @@
-// src/ui/view/components/HomePage/Graph/graphUtils/mapSunData.js
+//src/ui/view/components/GraphPage/graphUtils/mapSunData.js
 export function mapSunData(sunTimesByDate) {
-    if (!sunTimesByDate) return [];
+    if (!sunTimesByDate) {
+        return [];
+    }
 
     const entries = Object.entries(sunTimesByDate).map(([dateISO, data]) => {
         const [riseH, riseM] = data.sunrise.split(':').map(Number);

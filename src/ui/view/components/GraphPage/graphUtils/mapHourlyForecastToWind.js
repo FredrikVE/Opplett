@@ -1,6 +1,8 @@
-//src/ui/view/components/HomePage/Graph/graphUtils/mapHourlyForecastToWind.js
+//src/ui/view/components/GraphPage/graphUtils/mapHourlyForecastToWind.js
 export function mapHourlyForecastToWind(hourlyData, getLocalHour) {
-    if (!hourlyData?.length) return null;
+    if (!hourlyData?.length) {
+        return null;
+    }
 
     const firstTimestamp = Date.parse(hourlyData[0].timeISO);
     const lastTimestamp = Date.parse(hourlyData.at(-1).timeISO);
