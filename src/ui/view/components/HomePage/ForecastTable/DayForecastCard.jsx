@@ -1,4 +1,3 @@
-//src/ui/view/components/HomePage/ForecastTable/DayForecastCard.jsx
 import { useId } from "react";
 import { getWeatherIconFileName } from "../../../../utils/weatherIcons.js";
 import { getAlertIconFileName } from "../../../../utils/getAlertIconFileName.js";
@@ -44,21 +43,26 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, isOpe
         );
     };
 
-    // --- LOGIKK FOR LUKKET TILSTAND ---
-    let alertIcon = null;
+    //Logikk for kortets lukkete tilstand
+    let alertIcons = null;
     if (!isOpen && hasAlerts) {
-        alertIcon = (
-            <img 
-                src={`/alert_symbols/128/${getAlertIconFileName(dayAlerts[0])}`} 
-                alt="Farevarsel" 
-                className="day-card-alert-badge"
-            />
+        alertIcons = (
+            <div className="day-card-alert-stack">
+                {dayAlerts.map((alert, index) => (
+                    <img 
+                        key={alert.id || index}
+                        src={`/alert_symbols/128/${getAlertIconFileName(alert)}`} 
+                        alt="Farevarsel" 
+                        className="day-card-alert-badge-stacked"
+                        style={{ zIndex: dayAlerts.length - index }}
+                    />
+                ))}
+            </div>
         );
     }
 
     let periodCells = <td colSpan={ORDER.length} aria-hidden="true" />;
     if (!isOpen) {
-
         periodCells = ORDER.map((key) => (
             <td key={key} className="day-card-cell-surface day-card-period-cell">
                 <div className="icon-wrapper"> 
@@ -93,7 +97,7 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, isOpe
         windDisplay = `${Math.round(summary.avgWind)} m/s`;
     }
 
-    // --- LOGIKK FOR EKSPANDERT TILSTAND ---
+    //Logikk for kortets åpne tilstand
     let expandedRows = null;
     if (isOpen) {
         expandedRows = (
@@ -148,7 +152,7 @@ export default function DayForecastCard({ date, hourly, summary, sunTimes, isOpe
                 <td className="day-card-cell-surface day-card-date-cell">
                     <div className="day-card-header">
                         <h2 className="day-card-date">{date}</h2>
-                        {alertIcon}
+                        {alertIcons}
                     </div>
                 </td>
 

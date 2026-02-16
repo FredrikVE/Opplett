@@ -197,3 +197,26 @@
     font-weight: 600;
     white-space: nowrap; /* Hindrer dato i å brekke på flere linjer */
 }
+
+/** Stacking av alerts **/
+
+/* --- HEADER OG FAREVARSEL STACKING --- */
+.day-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.day-card-alert-stack {
+    display: flex;
+    align-items: center;
+}
+.day-card-alert-badge-stacked {
+    /* Overlapping-magi: dytter ikonet mot venstre */
+    margin-left: -18px; 
+}
+
+/* Fjern overlapping på det første ikonet i rekka */
+.day-card-alert-badge-stacked:first-child {
+    margin-left: 0;
+}
