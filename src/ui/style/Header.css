@@ -1,4 +1,5 @@
 /* src/ui/style/Header.css */
+
 .main-header {
   background: transparent;
   /*background: var(--color-surface, #fff);*/
@@ -14,11 +15,16 @@
   padding: 1rem 14px;
 
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  align-items: flex-start;    /* "opp" */
+  justify-content: flex-end;  /* høyre */
 
   /* Viktig: gjør at dropdownen kan posisjoneres relativt til innholdsbredde */
   position: relative;
+}
+
+/* Wrapper rundt hamburger + dropdown */
+.menu-wrapper {
+  position: relative; /* gjør at .mobile-menu kan posisjoneres mot denne */
 }
 
 .logo {
