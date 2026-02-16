@@ -3,45 +3,61 @@ import WeatherGraph from "../components/HomePage/Graph/WeatherGraph.jsx";
 import WindGraph from "../components/HomePage/Graph/WindGraph.jsx";
 import SunGraph from "../components/HomePage/Graph/SunGraph.jsx";
 import UVGraph from "../components/HomePage/Graph/UVGraph.jsx";
+import SearchField from "../components/HomePage/SearchFeild/SearchField.jsx";
 
 export default function GraphPage({ viewModel }) {
 
-    if (viewModel.loading) {
-        return <p>Laster graf...</p>;
-    }
+	if (viewModel.loading) {
+		return <p>Laster graf...</p>;
+	}
 
-    if (viewModel.error) {
-        return <p>Feil: {viewModel.error}</p>;
-    }
+	if (viewModel.error) {
+		return <p>Feil: {viewModel.error}</p>;
+	}
 
-    const allHourlyData = viewModel.hourlyData.slice(0, 48);
+	const allHourlyData = viewModel.hourlyData.slice(0, 48);
 
-    return (
-        <section className="meteogram-section">
+	return (
+		<div className="graph-screen">
+			<SearchField
+				query={viewModel.query}
+				suggestions={viewModel.suggestions}
+				onSearchChange={viewModel.onSearchChange}
+				onSuggestionSelected={viewModel.onSuggestionSelected}
+				onResetToDeviceLocation={viewModel.onResetToDeviceLocation}
+			/>
 
-            <WeatherGraph
-                hourlyData={allHourlyData}
-                getLocalHour={viewModel.getLocalHour}
-                formatLocalDate={viewModel.formatLocalDate}
-            />
+			<header className="graph-header">
+				<h1>{viewModel.location?.name || "Min posisjon"}</h1>
+			</header>
 
-            <WindGraph
-                hourlyData={allHourlyData}
-                getLocalHour={viewModel.getLocalHour}
-                formatLocalDate={viewModel.formatLocalDate}
-            />
+			<section className="graph-meteogram-section">
 
-            <UVGraph
-                hourlyData={allHourlyData}
-                getLocalHour={viewModel.getLocalHour}
-                formatLocalDate={viewModel.formatLocalDate}
-            />
+				<WeatherGraph
+					hourlyData={allHourlyData}
+					getLocalHour={viewModel.getLocalHour}
+					formatLocalDate={viewModel.formatLocalDate}
+				/>
 
-            <SunGraph
-                sunTimesByDate={viewModel.sunTimesByDate}
-                formatLocalDate={viewModel.formatLocalDate}
-            />
+				<WindGraph
+					hourlyData={allHourlyData}
+					getLocalHour={viewModel.getLocalHour}
+					formatLocalDate={viewModel.formatLocalDate}
+				/>
 
-        </section>
-    );
+				<UVGraph
+					hourlyData={allHourlyData}
+					getLocalHour={viewModel.getLocalHour}
+					formatLocalDate={viewModel.formatLocalDate}
+				/>
+
+				<SunGraph
+					sunTimesByDate={viewModel.sunTimesByDate}
+					formatLocalDate={viewModel.formatLocalDate}
+				/>
+
+			</section>
+
+		</div>
+	);
 }

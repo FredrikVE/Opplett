@@ -1,0 +1,30 @@
+/*src/ui/style/GraphPage.css*/
+.graph-screen {
+	width: 100%;
+	max-width: 860px;
+	margin: 0 auto;
+	padding: 18px 14px 42px;
+}
+
+.graph-header {
+	margin-bottom: 8px;
+	padding-bottom: 10px;
+	text-align: center;
+}
+
+.graph-header h1 {
+	font-size: 30px;
+	font-weight: var(--font-weight-bold);
+	letter-spacing: 1.5px;
+	margin: 2rem;
+}
+
+/* Gjenbruker samme kortdesign som før */
+.graph-meteogram-section {
+	background: #ffffff;
+	border-radius: 18px;
+	padding: 15px;
+	margin-bottom: 24px;
+	border: 1px solid rgba(6, 22, 41, 0.08);
+	box-shadow: 0 10px 28px rgba(6, 22, 41, 0.08);
+}

@@ -23,11 +23,27 @@ export default function useGraphScreenViewModel(homeViewModel) {
     };
 
     return {
-        hourlyData: getHourlyForecastList(homeViewModel.forecast),
-        sunTimesByDate: homeViewModel.sunTimesByDate,
-        loading: homeViewModel.loading,
-        error: homeViewModel.error,
-        getLocalHour: homeViewModel.getLocalHour,
-        formatLocalDate: homeViewModel.formatLocalDate
+        
+        //Grafdata
+		hourlyData: getHourlyForecastList(homeViewModel.forecast),
+		sunTimesByDate: homeViewModel.sunTimesByDate,
+
+		//Status
+		loading: homeViewModel.loading,
+		error: homeViewModel.error,
+
+		//Lokasjon
+		location: homeViewModel.location,
+
+		//Tid
+		getLocalHour: homeViewModel.getLocalHour,
+		formatLocalDate: homeViewModel.formatLocalDate,
+
+		//Søk
+		query: homeViewModel.query,
+		suggestions: homeViewModel.suggestions,
+		onSearchChange: homeViewModel.onSearchChange,
+		onSuggestionSelected: homeViewModel.onSuggestionSelected,
+		onResetToDeviceLocation: homeViewModel.onResetToDeviceLocation
     };
 }

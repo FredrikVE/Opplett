@@ -11,8 +11,10 @@ import "./ui/style/Alerts.css";
 import "./ui/style/ForecastTable.css";
 import "./ui/style/DayForecastCard.css";
 import "./ui/style/HomePage.css";
+import "./ui/style/GraphPage.css";
 import "./ui/style/Header.css";
 import "./ui/style/Footer.css";
+import "./ui/style/NavButton.css"
 import "./ui/style/NowCard.css"
 import "./ui/style/UVNowBar.css";
 
