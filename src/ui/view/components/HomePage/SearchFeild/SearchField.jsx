@@ -1,8 +1,31 @@
 // src/ui/view/components/SearchField/SearchField.jsx
 import { useState } from "react";
 
+const LocationResetButton = ({ onClick }) => (
+    <button 
+        type="button"
+        className="reset-location-btn"
+        onClick={onClick}
+        title="Bruk min posisjon"
+    >
+        <svg 
+            width="20" 
+            height="20" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+        >
+            <polygon points="3 11 22 2 13 21 11 13 3 11" />
+        </svg>
+    </button>
+);
+
 export default function SearchField({ query, suggestions, onSearchChange, onSuggestionSelected, onResetToDeviceLocation }) {
-    const [activeIndex, setActiveIndex] = useState(-1);
+    
+	const [activeIndex, setActiveIndex] = useState(-1);
 
     const handleKeyDown = (event) => {
         if (!suggestions.length) {
@@ -35,8 +58,10 @@ export default function SearchField({ query, suggestions, onSearchChange, onSugg
             case "Escape":
                 setActiveIndex(-1);
                 break;
+            default:
+                break;
         }
-    }
+    };
 
     return (
         <div className="search">
@@ -55,25 +80,8 @@ export default function SearchField({ query, suggestions, onSearchChange, onSugg
                     autoComplete="off"
                 />
                 
-                <button 
-                    type="button"
-                    className="reset-location-btn"
-                    onClick={onResetToDeviceLocation}
-                    title="Bruk min posisjon"
-                >
-                    <svg 
-                        width="20" 
-                        height="20" 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        strokeWidth="2" 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round"
-                    >
-                        <polygon points="3 11 22 2 13 21 11 13 3 11" />
-                    </svg>
-                </button>
+                {/* Kaller vi på resetknapp med funksjon */}
+                <LocationResetButton onClick={onResetToDeviceLocation} />
             </div>
 
             {suggestions.length > 0 && (
