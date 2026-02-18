@@ -83,7 +83,7 @@ export default function useSearchViewModel(geocodingRepository, onLocationSelect
             lat: lat,
             lon: lon,
             name: null, 
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            timezone: null
         });
     };
 
