@@ -5,6 +5,7 @@ import { resolveTimezone, formatToLocalTime, formatToLocalDateLabel, formatLocal
 import useSearchViewModel from "./SearchViewModel.js";
 
 export default function useForecastPageViewModel(forecastRepository, sunriseRepository, metAlertsRepository, geocodingRepository, initialLat, initialLon, hoursAhead) {
+	const DATA_FETCH_STABILIZATION_MS = 50;
 
 	const initialLocation = { lat: initialLat, lon: initialLon, name: null, timezone: null };
 	const [location, setLocation] = useState(initialLocation);
@@ -56,41 +57,40 @@ export default function useForecastPageViewModel(forecastRepository, sunriseRepo
 
 		let cancelled = false;
 
+        //Inkludert tz i fetchKey for SSOT
 		async function loadData() {
-			const fetchKey = `${location.lat},${location.lon},${hoursAhead}`;
-			if (lastFetchedRef.current === fetchKey) {
+            
+            const fetchKey = `${location.lat},${location.lon},${hoursAhead},${tz}`;
+            if (lastFetchedRef.current === fetchKey) {
 				return;
 			}
 
 			lastFetchedRef.current = fetchKey;
 
-			try {
-				setLoading(true);
-				
-				//Fase 1 av datahenting, henter NÅ-data først.
-				const [hourlyRaw, current, alertResults] = await Promise.all([
-
-					//Henter DAGESN Forecast først...
-					forecastRepository.getHourlyForecast(location.lat, location.lon, 24, tz),	//Hardkodet houresAhed!! CODE SMELL!!!
-					forecastRepository.getCurrentWeather(location.lat, location.lon, tz),
-					metAlertsRepository.findAlerts(location.lat, location.lon)
-				]);
+            try {
+                setLoading(true);
+                
+                const [hourlyRaw, current, alertResults] = await Promise.all([
+                    forecastRepository.getHourlyForecast(location.lat, location.lon, hoursAhead, tz),
+                    forecastRepository.getCurrentWeather(location.lat, location.lon, tz),
+                    metAlertsRepository.findAlerts(location.lat, location.lon)
+                ]);
 
 				if (cancelled) {
 					return;
 				}
 
-				const initialGrouped = {};
-				hourlyRaw.forEach(hour => {
-					const key = hour.dateISO;
-					if (!initialGrouped[key]) {
-						initialGrouped[key] = {
-							label: formatToLocalDateLabel(hour.timeISO, tz),
-							hours: []
-						};
-					}
-					initialGrouped[key].hours.push(hour);
-				});
+                const initialGrouped = {};
+                hourlyRaw.forEach(hour => {
+                    const key = hour.dateISO;
+                    if (!initialGrouped[key]) {
+                        initialGrouped[key] = {
+                            label: formatToLocalDateLabel(hour.timeISO, tz),
+                            hours: []
+                        };
+                    }
+                    initialGrouped[key].hours.push(hour);
+                });
 
 				setForecast(initialGrouped);
 				setCurrentWeather(current);
@@ -98,77 +98,65 @@ export default function useForecastPageViewModel(forecastRepository, sunriseRepo
 				setAlertsByDate(alertResults?.alertsByDate ?? {});
 				setLoading(false); 
 
-				//Fase 2 av datahenting. Henter time "for time data" og "summary-data" etterpå.
-				const [fullHourlyRaw, fullDailySummary] = await Promise.all([
-					forecastRepository.getHourlyForecast(location.lat, location.lon, hoursAhead, tz),
-					forecastRepository.getDailySummary(location.lat, location.lon, hoursAhead, tz)
-				]);
+                const [fullDailySummary] = await Promise.all([
+                    // Her kan man vurdere om man trenger fullHourlyRaw hvis den er lik hourlyRaw fra Fase 1
+                    forecastRepository.getDailySummary(location.lat, location.lon, hoursAhead, tz)
+                ]);
 
-				if (cancelled) {
+                if (cancelled) {
 					return;
 				}
+                //Vi bruker de eksisterende grupperte dataene for å finne datoene
+                setDailySummaryByDate(fullDailySummary);
 
-				const fullGrouped = {};
-				fullHourlyRaw.forEach(hour => {
-
-					const key = hour.dateISO;
-
-					if (!fullGrouped[key]) {
-						fullGrouped[key] = {
-							label: formatToLocalDateLabel(hour.timeISO, tz),
-							hours: []
-						};
-					}
-					fullGrouped[key].hours.push(hour);
-				});
-
-				setForecast(fullGrouped);
-				setDailySummaryByDate(fullDailySummary);
-
-				//Henter soltider
-				const isoDates = Object.keys(fullGrouped);
-				const solarReport = await sunriseRepository.getFullSolarReport(location.lat, location.lon, isoDates, tz, formatToLocalTime);
-				setSunTimesByDate(solarReport);
-			} 
-			
-			catch (error) {
-				if (!cancelled) {
-					setError(error?.message ?? "Feil ved henting av data");
-					lastFetchedRef.current = "";
-					setLoading(false);
-				}
-			}
-		}
+                // ENDRING 4: Dynamisk uthenting av datoer basert på de faktiske værdataene
+                const isoDates = Object.keys(initialGrouped); 
+                const solarReport = await sunriseRepository.getFullSolarReport(
+                    location.lat, 
+                    location.lon, 
+                    isoDates, 
+                    tz, 
+                    formatToLocalTime
+                );
+                
+                setSunTimesByDate(solarReport);
+            } 
+            catch (error) {
+                if (!cancelled) {
+                    setError(error?.message ?? "Feil ved henting av data");
+                    lastFetchedRef.current = "";
+                    setLoading(false);
+                }
+            }
+        }
 
 		//Cleanup funksjon
-		const timer = setTimeout(loadData, 50);
+		const timer = setTimeout(loadData, DATA_FETCH_STABILIZATION_MS);
 		return () => {
 			cancelled = true;
 			clearTimeout(timer);
 		};
 	}, [location.lat, location.lon, hoursAhead, tz, forecastRepository, sunriseRepository, metAlertsRepository]);
 
-	return {
-		forecast,
-		currentWeather,
-		dailySummaryByDate,
-		sunTimesByDate,
+    return {
+        forecast,
+        currentWeather,
+        dailySummaryByDate,
+        sunTimesByDate,
+        alerts,
+        alertsByDate,
+        loading,
+        error,
+        location,
 
-		alerts,
-		alertsByDate,
+        getLocalHour: (zuluTime) => getLocalHour(zuluTime, tz),
+        formatLocalDateTime: (zuluTime) => formatLocalDateTime(zuluTime, tz),
+        formatLocalDate: (zuluTime) => formatLocalDate(zuluTime, tz),
 
-		loading,
-		error,
-		location,
-
-		getLocalHour: (zuluTime) => getLocalHour(zuluTime, tz),
-		formatLocalDateTime: (zuluTime) => formatLocalDateTime(zuluTime, tz),
-		formatLocalDate: (zuluTime) => formatLocalDate(zuluTime, tz),
-
-		query: searchViewModel.query,
-		suggestions: searchViewModel.suggestions,
-		onSearchChange: searchViewModel.onSearchChange,
-		onSuggestionSelected: searchViewModel.onSuggestionSelected,
-		onResetToDeviceLocation: () => searchViewModel.onResetLocation(initialLat, initialLon)
-	};
+        query: searchViewModel.query,
+        suggestions: searchViewModel.suggestions,
+        onSearchChange: searchViewModel.onSearchChange,
+        onSuggestionSelected: searchViewModel.onSuggestionSelected,
+        onResetToDeviceLocation: () => searchViewModel.onResetLocation(initialLat, initialLon)
+    };
 }
