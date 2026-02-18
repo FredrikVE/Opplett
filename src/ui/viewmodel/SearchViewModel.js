@@ -2,7 +2,8 @@
 import { useRef, useState } from "react";
 
 export default function useSearchViewModel(geocodingRepository, onLocationSelected) {
-    
+    const SEARCH_DEBOUNCE_DELAY_MS = 350;
+
     const [query, setQuery] = useState("");
     const [suggestions, setSuggestions] = useState([]);
 
@@ -14,13 +15,21 @@ export default function useSearchViewModel(geocodingRepository, onLocationSelect
         setQuery(text);
 
         if (text.length < 3) {
-            if (debounceRef.current) clearTimeout(debounceRef.current);
-            if (abortRef.current) abortRef.current.abort();
+            if (debounceRef.current) {
+                clearTimeout(debounceRef.current);
+            }
+
+            if (abortRef.current) {
+                abortRef.current.abort();
+            }
+
             setSuggestions([]);
             return;
         }
 
-        if (debounceRef.current) clearTimeout(debounceRef.current);
+        if (debounceRef.current) {
+            clearTimeout(debounceRef.current);
+        }
 
         debounceRef.current = setTimeout(async () => {
             if (abortRef.current) {
@@ -49,7 +58,7 @@ export default function useSearchViewModel(geocodingRepository, onLocationSelect
 					abortRef.current = null;
 				}
             }
-        }, 350);
+        }, SEARCH_DEBOUNCE_DELAY_MS);
     };
 
     const onSuggestionSelected = (suggestion) => {
@@ -63,7 +72,7 @@ export default function useSearchViewModel(geocodingRepository, onLocationSelect
         setSuggestions([]);
     };
 
-    // --- OPPDATERT FUNKSJON ---
+    //OPPDATERT FUNKSJON
     const onResetLocation = (lat, lon) => {
         setQuery(""); 
         setSuggestions([]);
