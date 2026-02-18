@@ -46,8 +46,8 @@ export default function NowCard({ current }) {
                     <span className="info-unit">m/s</span>
 
                     {/*Vindpil */}
-                    <span className="wind-arrow" style={{ transform: `rotate(${current.windDir}deg)` }}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <span className="wind-arrow" style={{ transform: `rotate(${(current.windDir + 180)}deg)` }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M12 19V5M12 5L5 12M12 5L19 12" />
                         </svg>
                     </span>
