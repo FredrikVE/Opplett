@@ -58,7 +58,9 @@ export function buildForecastLayers(data) {
             data: data.temperature,
             zIndex: 3,
             pointPlacement: "on",
-            tooltip: { valueSuffix: "°C" }
+            tooltip: { 
+                valueSuffix: "°C" 
+            }
         },
 
         //Max-nebørd bakerst
@@ -70,7 +72,9 @@ export function buildForecastLayers(data) {
             zIndex: 1,
             pointPlacement: "on",
             color: COLORS.rainPossible,
-            tooltip: { valueSuffix: " mm" }
+            tooltip: { 
+                valueSuffix: " mm" 
+            }
         },
 
         //Forventet foran
@@ -82,7 +86,9 @@ export function buildForecastLayers(data) {
             zIndex: 2,
             pointPlacement: "on",
             color: COLORS.rainExpected,
-            tooltip: { valueSuffix: " mm" }
+            tooltip: { 
+                valueSuffix: " mm" 
+            }
         }
     ];
 }
