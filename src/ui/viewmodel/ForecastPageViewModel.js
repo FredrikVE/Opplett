@@ -4,7 +4,7 @@ import { fetchInitialLocationName } from "../utils/fetchInitialLocationName.js";
 import { resolveTimezone, formatToLocalTime, formatToLocalDateLabel, formatLocalDate, formatLocalDateTime, getLocalHour } from "../utils/timeFormatters.js";
 import useSearchViewModel from "./SearchViewModel.js";
 
-export default function useHomeScreenViewModel(forecastRepository, sunriseRepository, metAlertsRepository, geocodingRepository, initialLat, initialLon, hoursAhead) {
+export default function useForecastPageViewModel(forecastRepository, sunriseRepository, metAlertsRepository, geocodingRepository, initialLat, initialLon, hoursAhead) {
 
 	const initialLocation = { lat: initialLat, lon: initialLon, name: null, timezone: null };
 	const [location, setLocation] = useState(initialLocation);

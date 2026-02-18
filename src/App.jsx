@@ -10,7 +10,7 @@ import "./ui/style/SearchFeild.css";
 import "./ui/style/AlertCard.css";
 import "./ui/style/ForecastTable.css";
 import "./ui/style/DayForecastCard.css";
-import "./ui/style/HomePage.css";
+import "./ui/style/ForecastPage.css";
 import "./ui/style/GraphPage.css";
 import "./ui/style/AlertPage.css";
 import "./ui/style/Header.css";
@@ -35,11 +35,11 @@ import MetAlertsRepository from "./model/repositories/MetAlertsRepository.js";
 import SunriseRepository from "./model/repositories/SunriseRepository.js";
 
 //ViewModel og View
-import useHomeScreenViewModel from "./ui/viewmodel/HomeScreenViewModel.js";
+import useForecastPageViewModel from "./ui/viewmodel/ForecastPageViewModel.js";
 import useGraphScreenViewModel from "./ui/viewmodel/GraphScreenViewModel.js";
 import useAlertPageViewModel from "./ui/viewmodel/AlertPageViewModel.js";
 
-import HomePage from "./ui/view/pages/HomePage.jsx";
+import ForecastPage from "./ui/view/pages/ForecastPage.jsx";
 import GraphPage from "./ui/view/pages/GraphPage.jsx";
 import AlertPage from "./ui/view/pages/AlertPage.jsx";
 
@@ -74,8 +74,8 @@ export default function App() {
 	const { loading, error, coords } = useGeolocation();
 
 	//Initialiser ViewModel med dependancy injection av repositories
-	const homeScreenViewModel = useHomeScreenViewModel(locationRepo, sunriseRepo, alertsRepo, geoRepo, coords?.lat,  coords?.lon, hoursAhead);
-	const graphScreenViewModel = useGraphScreenViewModel(homeScreenViewModel);
+	const forecastPageViewModel = useForecastPageViewModel(locationRepo, sunriseRepo, alertsRepo, geoRepo, coords?.lat,  coords?.lon, hoursAhead);
+	const graphScreenViewModel = useGraphScreenViewModel(forecastPageViewModel);
 	const alertPageViewModel = useAlertPageViewModel(alertsRepo);
 
 	if (loading) {
@@ -107,8 +107,8 @@ export default function App() {
 			)}
 
 			{activeScreen === NAV_SCREENS.TABLE && (
-				<HomePage
-					viewModel={homeScreenViewModel}
+				<ForecastPage
+					viewModel={forecastPageViewModel}
 					activeScreen={activeScreen}
 					onChangeScreen={setActiveScreen}
 					SCREENS={NAV_SCREENS}

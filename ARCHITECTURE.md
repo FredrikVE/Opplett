@@ -19,12 +19,12 @@ flowchart TB
         NavGraph["navGraph.js (NAV_SCREENS)"]
   end
  subgraph Screens["Screens / Views"]
-        HomePage["HomePage.jsx"]
+        ForecastPage["ForecastPage.jsx"]
         GraphPage["GraphPage.jsx"]
         AlertPage["AlertPage.jsx"]
   end
  subgraph Hooks["ViewModels (Hooks)"]
-        HomeVM["useHomeScreenViewModel"]
+        HomeVM["useForecastPageViewModel"]
         GraphVM["useGraphScreenViewModel"]
         AlertVM["useAlertPageViewModel"]
         SearchVM["useSearchViewModel"]
@@ -49,8 +49,8 @@ flowchart TB
  subgraph Device["Device"]
         GeoHook["useGeolocation"]
   end
-    App --> NavGraph & GeoHook & HomePage & GraphPage & AlertPage
-    HomePage --> HomeVM
+    App --> NavGraph & GeoHook & ForecastPage & GraphPage & AlertPage
+    ForecastPage --> HomeVM
     GraphPage --> GraphVM
     AlertPage --> AlertVM
     GraphVM --> HomeVM
