@@ -3,7 +3,8 @@ import { COLORS } from "../constants.js";
 import { getWeatherIconFileName } from "../../../../../utils/weatherIcons.js";
 
 function buildWeatherSymbolSeries(symbolData) {
-	if (!symbolData || symbolData.length === 0) {
+	
+    if (!symbolData || symbolData.length === 0) {
 		return {
 			type: "scatter",
 			data: []
@@ -60,7 +61,7 @@ export function buildForecastLayers(data) {
             tooltip: { valueSuffix: "°C" }
         },
 
-        // MAX bak
+        //Max-nebørd bakerst
         {
             name: "Mulig nedbør",
             type: "column",
@@ -72,7 +73,7 @@ export function buildForecastLayers(data) {
             tooltip: { valueSuffix: " mm" }
         },
 
-        // Forventet foran
+        //Forventet foran
         {
             name: "Forventet nedbør",
             type: "column",
