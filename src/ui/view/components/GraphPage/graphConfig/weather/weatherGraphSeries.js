@@ -47,59 +47,41 @@ function buildWeatherSymbolSeries(symbolData) {
 }
 
 export function buildForecastLayers(data) {
-	return [
+    return [
 
-		buildWeatherSymbolSeries(data.weatherSymbols),
+        buildWeatherSymbolSeries(data.weatherSymbols),
 
-		{
-			name: "Temperatur",
-			type: "areaspline",
-			data: data.temperature,
-			zIndex: 3,
-			pointPlacement: "on",
-			tooltip: {
-				valueSuffix: "°C"
-			}
-		},
+        {
+            name: "Temperatur",
+            type: "areaspline",
+            data: data.temperature,
+            zIndex: 3,
+            pointPlacement: "on",
+            tooltip: { valueSuffix: "°C" }
+        },
 
-		//Forventet nedbør
-		{
-			name: "Nedbør",
-			type: "column",
-			data: data.rain,
-			yAxis: 1,
-			color: COLORS.rainExpected,
-			zIndex: 1,
-			pointPlacement: "on",
-			stacking: "normal",
-			tooltip: {
-				valueSuffix: " mm"
-			}
-		},
+        // MAX bak
+        {
+            name: "Mulig nedbør",
+            type: "column",
+            data: data.rainMax,
+            yAxis: 1,
+            zIndex: 1,
+            pointPlacement: "on",
+            color: COLORS.rainPossible,
+            tooltip: { valueSuffix: " mm" }
+        },
 
-		//Mulig nedbør (samme design-system)
-		{
-			name: "Mulig nedbør",
-			type: "column",
-			data: data.rainExtra,
-			yAxis: 1,
-			pointPlacement: "on",
-			stacking: "normal",
-			zIndex: 2,
-			color: {
-				pattern: {
-					path: {
-						d: "M 0 8 L 8 0",
-						strokeWidth: 1
-					},
-
-					color: COLORS.rainPossible
-				}
-			},
-			borderWidth: 0,
-			tooltip: {
-				valueSuffix: " mm"
-			}
-		}
-	];
+        // Forventet foran
+        {
+            name: "Forventet nedbør",
+            type: "column",
+            data: data.rainExpected,
+            yAxis: 1,
+            zIndex: 2,
+            pointPlacement: "on",
+            color: COLORS.rainExpected,
+            tooltip: { valueSuffix: " mm" }
+        }
+    ];
 }
