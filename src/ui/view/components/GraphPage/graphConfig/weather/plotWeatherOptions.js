@@ -36,7 +36,8 @@ export function buildWeatherPlotOptions() {
 			zones: getTempZones()
 		},
 		column: {
-			stacking: 'normal',		// Beholder stacking-modellen
+			//stacking: "normal",		// Unngå at én søyle stables oppå en annen
+			grouping: false,			// sett grouping til false for å legge "mulig nedbør" BAK "forventet nedbør"
 			borderWidth: 0,			// Ingen kant
 			borderRadius: 3,		// Myke hjørner
 			pointRange: HOUR,		// 1 time bredde
