@@ -18,7 +18,9 @@ export default class LocationNameFormatter {
      * Hovedmetode som koordinerer formateringen
      */
     format(loc) {
-        if (!loc) return "";
+        if (!loc) {
+            return "";
+        }
 
         const rawName = loc.displayName || loc.label || loc.name || loc.city || "";
 
@@ -28,7 +30,9 @@ export default class LocationNameFormatter {
 
         let parts = this._splitAndClean(rawName);
 
-        if (parts.length === 0) return rawName;
+        if (parts.length === 0) {
+            return rawName;
+        }
 
         parts = this._applyCountryRules(parts);
 
