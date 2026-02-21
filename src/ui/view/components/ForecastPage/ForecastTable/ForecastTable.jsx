@@ -1,86 +1,85 @@
-//src/ui/view/components/HomePage/ForecastTable/ForecastTable.jsx
+// src/ui/view/components/HomePage/ForecastTable/ForecastTable.jsx
 import { getWeatherIconFileName } from "../../../../utils/CommonUtils/weatherIcons.js";
+import { getWindSpeedDescription, getWindDirectionText } from "../../../../utils/WindUtils/windDescriptionUtil.js";
 import WindArrow from "../../Common/WindArrow/WindArrow.jsx";
 
-
 const formatPrecipitation = (data) => {
-	if (!data) {
-		return "–";
-	}
-
-	const { amount, min, max } = data;
-
-	if (min !== undefined && max !== undefined && min !== max) {
-		return `${min} – ${max} mm`;
-	}
-	
-	return `${amount} mm`;
+    if (!data) return "–";
+    const { amount, min, max } = data;
+    if (min !== undefined && max !== undefined && min !== max) {
+        return `${min} – ${max} mm`;
+    }
+    return `${amount} mm`;
 };
 
 export default function ForecastTable({ forecast }) {
-	return (
-		<table className="forecast-table">
-			<thead>
-				<tr>
-					<th>Tid</th>
-					<th>Temp</th>
-					<th>UV</th>
-					<th>Vind</th>
-					<th>Nedbør</th>
-					<th>Vær</th>
-				</tr>
-			</thead>
+    return (
+        <table className="forecast-table">
+            <thead>
+                <tr>
+                    <th>Tid</th>
+                    <th>Vær</th>
+                    <th>Temp</th>
+                    <th>Nedbør</th>
+                    <th>Vind</th>
+                    <th>Vindbeskrivelse</th>
+                </tr>
+            </thead>
 
-			<tbody>
-				{forecast.map((item) => {
+            <tbody>
+                {forecast.map((item) => {
+                    const iconFile = getWeatherIconFileName(item.weatherSymbol);
+                    const windSpeed = item.wind;
+                    const gust = item.details?.wind_speed_of_gust;
+                    const windDir = item.details?.wind_from_direction;
 
-					//mapper data for hver time i tabellen
-					const iconFile = getWeatherIconFileName(item.weatherSymbol);
-					const gust = item.details?.wind_speed_of_gust;
-					const windDir = item.details?.wind_from_direction;
-					const p = item.precipitation;
-					const tempClass = item.temp < 0 ? "is-minus" : "is-plus";	// Betinget klasse for temperaturfarge
+                    // Generer beskrivelsen basert på SNL-definisjoner
+                    const windDesc = getWindSpeedDescription(windSpeed);
+                    const dirText = getWindDirectionText(windDir);
+                    const fullDesc = `${windDesc} fra ${dirText}${
+                        gust > windSpeed ? ` med vindkast på ${Math.round(gust)} m/s` : ""
+                    }`;
 
-					return (
-						<tr key={`${item.dateISO}-${item.localTime}`}>
-							
-							<td className="time">{item.localTime}</td>
+                    return (
+                        <tr key={`${item.dateISO}-${item.localTime}`}>
+                            <td className="time">{item.localTime}</td>
+                            
+                            <td className="weather-cell">
+                                {iconFile && (
+                                    <img
+                                        src={`/weather_icons/200/${iconFile}`}
+                                        alt={item.weatherSymbol}
+                                        className="weather-icon"
+                                        loading="lazy"
+                                    />
+                                )}
+                            </td>
 
-							{/* Temperatur med dynamisk klasse i stedet for style */}
-							<td className={`temperature ${tempClass}`}>
-								{Math.round(item.temp)} °C
-							</td>
-							
-							<td>{item.uv ?? "–"}</td>
+                            <td className={`temperature ${item.temp < 0 ? 'is-minus' : 'is-plus'}`}>
+                                {Math.round(item.temp)}°
+                            </td>
+                            
+                            <td className="precipitation">
+                                {formatPrecipitation(item.precipitation)}
+                            </td>
 
-							<td className="wind">
-								<div className="wind-container">
-									<span>
-										{Math.round(item.wind)}
-										{gust != null && ` (${Math.round(gust)})`} m/s
-									</span>
-									<WindArrow degrees={windDir} size={16} />
-								</div>
-							</td>
-							
-							<td className="precipitation">
-								{formatPrecipitation(p)}
-							</td>
+                            <td className="wind">
+                                <div className="wind-container">
+                                    <span>
+                                        {Math.round(windSpeed)}
+                                        {gust != null && ` (${Math.round(gust)})`}
+                                    </span>
+                                    <WindArrow degrees={windDir} size={16} />
+                                </div>
+                            </td>
 
-							<td className="weather-cell">
-								{iconFile && (
-									<img
-										src={`/weather_icons/200/${iconFile}`}
-										alt={item.weatherSymbol}
-										className="weather-icon"
-										loading="lazy"
-									/>
-								)}
-							</td>
-						</tr>
-					);
-				})}
-			</tbody>
-		</table>
-	);
+                            <td className="wind-description">
+                                {fullDesc}
+                            </td>
+                        </tr>
+                    );
+                })}
+            </tbody>
+        </table>
+    );
 }
