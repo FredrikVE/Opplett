@@ -1,6 +1,7 @@
 //src/ui/viewmodel/AlertPageViewModel.js
 import { useState, useEffect } from "react";
 import { formatLocalDateTime } from "../utils/timeFormatters.js";
+import { getRiskLevelText } from "../utils/getRiskLevelText.js";
 
 export default function useAlertPageViewModel(alertsRepository) {
     const [alerts, setAlerts] = useState([]);
@@ -20,39 +21,55 @@ export default function useAlertPageViewModel(alertsRepository) {
             try {
                 setLoading(true);
                 const result = await alertsRepository.getAllAlerts(); 
-                setAlerts(result.alerts);
+                
+                // Vasker data: Beholder kun varsler som har en definert tekst (fjerner "Green")
+                const actualWarnings = result.alerts.filter(a => 
+                    getRiskLevelText(a.riskMatrixColor) !== ""
+                );
+                
+                setAlerts(actualWarnings);
             } 
+
             catch (error) {
                 console.error(error);
                 setError("Kunne ikke hente varsler");
             }
+
             finally {
                 setLoading(false);
             }
         }
         load();
-
     }, [alertsRepository]); 
 
-    //Hjelpefunksjon for å telle varsler per fylke innenfor valgt domene
-    const getCountForCounty = (countyId) => {
-        if (!countyId) {
+    // Nullstiller filter ved domene-bytte
+    const handleSetDomain = (domain) => {
+        setSelectedCounty("");
+        setActiveDomain(domain);
+    };
+
+    // Hjelpefunksjon for å telle varsler per lokasjon (fylke eller område)
+    const getCountForLocation = (locationId) => {
+        if (!locationId) {
             return alerts.filter(a => a.geographicDomain === activeDomain).length;
         }
+
         return alerts.filter(a => 
             a.geographicDomain === activeDomain && 
-            a.county?.includes(countyId)
+            (a.county?.includes(locationId) || a.area === locationId)
         ).length;
     };
 
-    // ENDRING 3: Vi legger til fylkes-filtrering her i stedet for i API-kallet
+    // Filtreringslogikk for listevisning
     const filteredAlerts = alerts.filter(alert => {
         const matchesDomain = alert.geographicDomain === activeDomain;
-        const matchesCounty = !selectedCounty || alert.county?.includes(selectedCounty); // Ny linje
         const matchesLevel = !selectedLevel || alert.riskMatrixColor === selectedLevel;
         const matchesType = !selectedType || alert.event === selectedType;
-        
-        return matchesDomain && matchesCounty && matchesLevel && matchesType; // Inkluder matchesCounty
+        const matchesLocation = !selectedCounty || 
+                                alert.county?.includes(selectedCounty) || 
+                                alert.area === selectedCounty;
+
+        return matchesDomain && matchesLevel && matchesType && matchesLocation;
     });
 
     const ongoingAlerts = filteredAlerts.filter(a => new Date(a.interval?.[0]) <= new Date());
@@ -64,14 +81,14 @@ export default function useAlertPageViewModel(alertsRepository) {
         loading,
         error,
         activeDomain,
-        setActiveDomain,
+        setActiveDomain: handleSetDomain,
         selectedCounty,
         setSelectedCounty,
         selectedLevel,
         setSelectedLevel,
         selectedType,
         setSelectedType,
-        getCountForCounty,
+        getCountForLocation, 
 
         counts: {
             land: alerts.filter(a => a.geographicDomain === "land").length,
