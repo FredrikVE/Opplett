@@ -18,6 +18,7 @@ import "./ui/style/Footer.css";
 import "./ui/style/NavButton.css"
 import "./ui/style/NowCard.css"
 import "./ui/style/UVNowBar.css";
+import "./ui/style/WindArrow.css";
 
 //Navigation
 import { NAV_SCREENS } from "./navigation/navGraph.js";

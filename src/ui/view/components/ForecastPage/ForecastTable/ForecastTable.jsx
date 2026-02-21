@@ -1,90 +1,86 @@
 //src/ui/view/components/HomePage/ForecastTable/ForecastTable.jsx
 import { getWeatherIconFileName } from "../../../../utils/CommonUtils/weatherIcons.js";
+import WindArrow from "../../Common/WindArrow/WindArrow.jsx";
+
 
 const formatPrecipitation = (data) => {
-    if (!data) {
-        return "–";
-    }
+	if (!data) {
+		return "–";
+	}
 
-    const { amount, min, max } = data;
+	const { amount, min, max } = data;
 
-    // Hvis det er et intervall (min og max er forskjellige)
-    if (min !== undefined && max !== undefined && min !== max) {
-        return `${min} – ${max} mm`;
-    }
-    // Ellers vanlig mengde (f.eks. "0 mm" eller "1.2 mm")
-    return `${amount} mm`;
+	if (min !== undefined && max !== undefined && min !== max) {
+		return `${min} – ${max} mm`;
+	}
+	
+	return `${amount} mm`;
 };
 
 export default function ForecastTable({ forecast }) {
-    return (
-        <table className="forecast-table">
-            <thead>
-                <tr>
-                    <th>Tid</th>
-                    <th>Temp</th>
-                    <th>UV</th>
-                    <th>Vind</th>
-                    <th>Nedbør</th>
-                    <th>Vær</th>
-                </tr>
-            </thead>
+	return (
+		<table className="forecast-table">
+			<thead>
+				<tr>
+					<th>Tid</th>
+					<th>Temp</th>
+					<th>UV</th>
+					<th>Vind</th>
+					<th>Nedbør</th>
+					<th>Vær</th>
+				</tr>
+			</thead>
 
-            <tbody>
-                {forecast.map((item) => {
-                    const iconFile = getWeatherIconFileName(item.weatherSymbol);
-                    const gust = item.details?.wind_speed_of_gust;
-                    const p = item.precipitation;
+			<tbody>
+				{forecast.map((item) => {
 
-                    return (
-                        <tr key={`${item.date}-${item.localTime}`}>
-                            
-                            {/* Klokkeslett */}
-                            <td className="time">{item.localTime}</td>
+					//mapper data for hver time i tabellen
+					const iconFile = getWeatherIconFileName(item.weatherSymbol);
+					const gust = item.details?.wind_speed_of_gust;
+					const windDir = item.details?.wind_from_direction;
+					const p = item.precipitation;
+					const tempClass = item.temp < 0 ? "is-minus" : "is-plus";	// Betinget klasse for temperaturfarge
 
-                            {/* Temperatur */}
-                            <td
-                                className="temperature"
-                                style={{
-                                    color: item.temp < 0
-                                            ? "var(--temperature-minus-color)"
-                                            : "var(--temperature-plus-color)",
-                                }}
-                            >
-                                {Math.round(item.temp)} °C
-                            </td>
-                            
-                            {/* UV */}
-                            <td>{item.uv ?? "–"}</td>
+					return (
+						<tr key={`${item.dateISO}-${item.localTime}`}>
+							
+							<td className="time">{item.localTime}</td>
 
-                            {/* Vind */}
-                            <td className="wind">
-                                {Math.round(item.wind)}
-                                {gust != null && ` (${Math.round(gust)})`} m/s
-                            </td>
-                            
-                            {/* Nedbør */}
-                            <td className="precipitation">
-                                {formatPrecipitation(p)}
-                                {p.isPeriod}
-                            </td>
+							{/* Temperatur med dynamisk klasse i stedet for style */}
+							<td className={`temperature ${tempClass}`}>
+								{Math.round(item.temp)} °C
+							</td>
+							
+							<td>{item.uv ?? "–"}</td>
 
-                            {/* Værikon */}
-                            <td>
-                                {iconFile && (
-                                    <img
-                                        src={`/weather_icons/200/${iconFile}`}
-                                        alt={item.weatherSymbol}
-                                        width={32}
-                                        height={32}
-                                        loading="lazy"
-                                    />
-                                )}
-                            </td>
-                        </tr>
-                    );
-                })}
-            </tbody>
-        </table>
-    );
+							<td className="wind">
+								<div className="wind-container">
+									<span>
+										{Math.round(item.wind)}
+										{gust != null && ` (${Math.round(gust)})`} m/s
+									</span>
+									<WindArrow degrees={windDir} size={16} />
+								</div>
+							</td>
+							
+							<td className="precipitation">
+								{formatPrecipitation(p)}
+							</td>
+
+							<td className="weather-cell">
+								{iconFile && (
+									<img
+										src={`/weather_icons/200/${iconFile}`}
+										alt={item.weatherSymbol}
+										className="weather-icon"
+										loading="lazy"
+									/>
+								)}
+							</td>
+						</tr>
+					);
+				})}
+			</tbody>
+		</table>
+	);
 }

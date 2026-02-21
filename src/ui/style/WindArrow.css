@@ -1,0 +1,15 @@
+/*src/ui/style/WindArrow.css*/
+.wind-arrow {
+	display: inline-block;
+	line-height: 0;
+	
+	/* Bruker CSS-variabelen, fallback til 0deg */
+	transform: rotate(var(--wind-rotation, 0deg));
+	
+	transition: transform 0.5s ease; /* Valgfritt: gjør at pilen snur seg pent */
+}
+
+.wind-arrow svg {
+	display: block;
+	/* Bredde og høyde styres herfra hvis du ikke sender props */
+}
