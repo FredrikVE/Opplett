@@ -4,12 +4,14 @@ import { formatLocalDateTime } from "../utils/timeFormatters.js";
 import { getRiskLevelText } from "../utils/getRiskLevelText.js";
 
 export default function useAlertPageViewModel(alertsRepository) {
+
+	//Data, loading og error states
     const [alerts, setAlerts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeDomain, setActiveDomain] = useState("land");
     
-    // Filter-states
+    //Filter-states
     const [selectedCounty, setSelectedCounty] = useState("");
     const [selectedLevel, setSelectedLevel] = useState("");
     const [selectedType, setSelectedType] = useState("");
@@ -39,16 +41,19 @@ export default function useAlertPageViewModel(alertsRepository) {
                 setLoading(false);
             }
         }
-        load();
-    }, [alertsRepository]); 
 
-    // Nullstiller filter ved domene-bytte
+        load();
+    }, 
+	
+	[alertsRepository]); 
+
+    //Nullstiller filter ved domene-bytte
     const handleSetDomain = (domain) => {
         setSelectedCounty("");
         setActiveDomain(domain);
     };
 
-    // Hjelpefunksjon for å telle varsler per lokasjon (fylke eller område)
+    //Hjelpefunksjon for å telle varsler per lokasjon (fylke eller område)
     const getCountForLocation = (locationId) => {
         if (!locationId) {
             return alerts.filter(a => a.geographicDomain === activeDomain).length;

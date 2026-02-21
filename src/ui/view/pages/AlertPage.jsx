@@ -1,169 +1,124 @@
-//src/ui/view/pages/AlertPage.jsx
+// src/ui/view/pages/AlertPage.jsx
 import LoadingSpinner from "../components/Common/LoadingSpinner/LoadingSpinner.jsx";
 import Navigation from "../../../navigation/Navigation.jsx";
 import FilterSelect from "../components/AlertPage/FilterSelect.jsx";
 import AlertSection from "../components/AlertPage/AlertSection.jsx";
+import EmptyAlertMessage from "../components/AlertPage/EmptyAlertMessage.jsx";
+
 import { COUNTIES } from "../../utils/counties.js";
 import { MARINE_AREAS } from "../../utils/marineAreas.js";
+import { buildLocationOptions, buildTypeOptions, getLevelOptions } from "../../utils/alertFilterUtils.js";
 
 export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCREENS }) {
-	
-	if (viewModel.loading) {
-		return <LoadingSpinner />;
-	}
+    
+    if (viewModel.loading) {
+        return <LoadingSpinner />;
+    }
 
-	//LOGIKK FOR DROPDOWN-ALTERNATIVER (Fylker og Havområder)
-	let options = [];
-	
-	if (viewModel.activeDomain === "land") {
-		options = COUNTIES.map((c) => ({
-			id: c.id,
-			name: c.name,
-			displayName: c.name + " (" + viewModel.getCountForLocation(c.id) + ")",
-			count: viewModel.getCountForLocation(c.id)
-		}));
-	} 
-	
-	else {
-		const counties = COUNTIES.map((c) => ({
-			id: c.id,
-			name: c.name,
-			displayName: c.name + " (" + viewModel.getCountForLocation(c.id) + ")",
-			count: viewModel.getCountForLocation(c.id)
-		}));
+    const isLandActive = viewModel.activeDomain === "land";
+    
+    let allAlerts = [];
+    for (const alert of viewModel.ongoingAlerts) {
+        allAlerts.push(alert);
+    }
+    for (const alert of viewModel.upcomingAlerts) {
+        allAlerts.push(alert);
+    }
+    
+    const locationOptions = buildLocationOptions(viewModel, COUNTIES, MARINE_AREAS);
+    const levelOptions = getLevelOptions();
+    const typeOptions = buildTypeOptions(allAlerts);
 
-		const marine = MARINE_AREAS.map((m) => ({
-			id: m.id,
-			name: m.id,
-			displayName: m.id + " (" + viewModel.getCountForLocation(m.id) + ")",
-			count: viewModel.getCountForLocation(m.id)
-		})).filter(m => m.count > 0);
+    const totalCountForAllLocations = viewModel.getCountForLocation("");
 
-		options = [...counties, ...marine];
-	}
+    let locationDefaultLabel = "Alle områder";
+    if (isLandActive) {
+        locationDefaultLabel = "Alle fylker";
+    }
 
-	// Sorterer etter antall varsler, deretter navn
-	options.sort((a, b) => (b.count - a.count) || a.name.localeCompare(b.name, 'no'));
+    let landButtonClass = "";
+    if (isLandActive) {
+        landButtonClass = "active";
+    }
 
-	const totalDomainCount = viewModel.getCountForLocation("");
+    let marineButtonClass = "";
+    if (isLandActive === false) {
+        marineButtonClass = "active";
+    }
 
-	//LOGIKK FOR TOM MELDING
-	let emptyMessage = null;
-	const hasNoAlerts = viewModel.ongoingAlerts.length === 0 && viewModel.upcomingAlerts.length === 0;
-	
-	if (hasNoAlerts) {
-		let domainText = "land";
-		if (viewModel.activeDomain === "marine") {
-			domainText = "hav og kyst";
-		}
-		
-		emptyMessage = (
-			<div className="no-alerts-message">
-				Ingen aktive farevarsler for {domainText} med valgte filtre.
-			</div>
-		);
-	}
+    return (
+        <div className="alert-page">
+            <header className="alert-page-header">
+                <h1>Farevarsler i Norge</h1>
+            </header>
 
-	//CSS KLASSER FOR DOMENE-KNAPPER
-	let landButtonClass = "";
-	if (viewModel.activeDomain === "land") {
-		landButtonClass = "active";
-	}
+            <div className="search-placeholder"></div>
 
-	let marineButtonClass = "";
-	if (viewModel.activeDomain === "marine") {
-		marineButtonClass = "active";
-	}
+            <Navigation 
+                activeScreen={activeScreen} 
+                onChangeScreen={onChangeScreen} 
+                SCREENS={SCREENS} 
+            />
 
-	return (
-		<div className="alert-page">
+            <div className="domain-selector">
+                <div className="domain-toggle-wrapper">
+                    <button 
+                        className={landButtonClass} 
+                        onClick={() => viewModel.setActiveDomain("land")}
+                    >
+                        Land ({viewModel.counts.land})
+                    </button>
+                    <button 
+                        className={marineButtonClass} 
+                        onClick={() => viewModel.setActiveDomain("marine")}
+                    >
+                        Hav og kyst ({viewModel.counts.marine})
+                    </button>
+                </div>
+            </div>
 
-			{/*Overskrift for siden */}
-			<header className="alert-page-header">
-				<h1>Farevarsler i Norge</h1>
-			</header>
+            <div className="filter-row">
+                <FilterSelect
+                    value={viewModel.selectedCounty}
+                    onChange={(event) => viewModel.setSelectedCounty(event.target.value)}
+                    options={locationOptions}
+                    defaultLabel={locationDefaultLabel}
+                    totalCount={totalCountForAllLocations}
+                />
+                
+                <FilterSelect
+                    value={viewModel.selectedLevel}
+                    onChange={(event) => viewModel.setSelectedLevel(event.target.value)}
+                    options={levelOptions}
+                    defaultLabel="Alle farenivåer"
+                />
 
-			{/* Tomt felt som matcher SearchField i høyde og marginer */}
-			<div className="search-placeholder"></div>
+                <FilterSelect
+                    value={viewModel.selectedType}
+                    onChange={(event) => viewModel.setSelectedType(event.target.value)}
+                    options={typeOptions}
+                    defaultLabel="Alle faretyper"
+                />
+            </div>
 
-			{/*Navigasjonsbar for navigasjonskanpper */}
-			<Navigation activeScreen={activeScreen} onChangeScreen={onChangeScreen} SCREENS={SCREENS} />
-
-			{/* Hav/Land kanpper */}
-			<div className="domain-selector">
-				<div className="domain-toggle-wrapper">
-
-					{/*Land-knapp */}
-					<button 
-						className={landButtonClass} 
-						onClick={() => viewModel.setActiveDomain("land")}
-					>
-						Land ({viewModel.counts.land})
-					</button>
-
-					{/* Hav-knapp */}
-					<button 
-						className={marineButtonClass} 
-						onClick={() => viewModel.setActiveDomain("marine")}
-					>
-						Hav og kyst ({viewModel.counts.marine})
-					</button>
-				</div>
-			</div>
-
-			{/* Rad med filterknapper */}
-			<div className="filter-row">
-				<FilterSelect
-					value={viewModel.selectedCounty}
-					onChange={(event) => viewModel.setSelectedCounty(event.target.value)}
-					options={options}
-					defaultLabel={viewModel.activeDomain === "land" ? "Alle fylker" : "Alle områder"}
-					totalCount={totalDomainCount}
-				/>
-				
-				<FilterSelect
-					value={viewModel.selectedLevel}
-					onChange={(event) => viewModel.setSelectedLevel(event.target.value)}
-					options={[
-						{ value: "Yellow", label: "Gult nivå" },
-						{ value: "Orange", label: "Oransje nivå" },
-						{ value: "Red", label: "Rødt nivå" }
-					]}
-					defaultLabel="Alle farenivåer"
-				/>
-
-				<FilterSelect
-					value={viewModel.selectedType}
-					onChange={(event) => viewModel.setSelectedType(event.target.value)}
-					options={[
-						{ value: "snow", label: "Snø" },
-						{ value: "wind", label: "Vind" },
-						{ value: "gale", label: "Kuling" },
-						{ value: "rain", label: "Regn" },
-						{ value: "ice", label: "Is" },
-						{ value: "icing", label: "Ising på skip" },
-						{ value: "forestFire", label: "Skogbrann" },
-						{ value: "avalanche", label: "Snøskred" }
-					]}
-					defaultLabel="Alle faretyper"
-				/>
-			</div>
-
-			<main className="alert-content">
-				<AlertSection 
-					title="Pågår" 
-					alerts={viewModel.ongoingAlerts} 
-					formatLocalDateTime={viewModel.formatLocalDateTime} 
-				/>
-				
-				<AlertSection 
-					title="Ventes" 
-					alerts={viewModel.upcomingAlerts} 
-					formatLocalDateTime={viewModel.formatLocalDateTime} 
-				/>
-				
-				{emptyMessage}
-			</main>
-		</div>
-	);
+            <main className="alert-content">
+                <AlertSection 
+                    title="Pågår" 
+                    alerts={viewModel.ongoingAlerts} 
+                    formatLocalDateTime={viewModel.formatLocalDateTime} 
+                />
+                <AlertSection 
+                    title="Ventes" 
+                    alerts={viewModel.upcomingAlerts} 
+                    formatLocalDateTime={viewModel.formatLocalDateTime} 
+                />
+                
+                <EmptyAlertMessage 
+                    allAlerts={allAlerts} 
+                    isLandActive={isLandActive} 
+                    viewModel={viewModel} 
+                />
+            </main>
+        </div>
+    );
 }
