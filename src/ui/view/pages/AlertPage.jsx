@@ -38,7 +38,7 @@ export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCR
     const levelOptions = getLevelOptions();
     const typeOptions = buildTypeOptions(allAlerts);
 
-    const totalCountForAllLocations = viewModel.getCountForLocation("");
+    //const totalCountForAllLocations = viewModel.getCountForLocation("");
 
     let locationDefaultLabel = "Alle områder";
     if (isLandActive) {
@@ -91,11 +91,11 @@ export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCR
             <div className="filter-row">
                 <FilterSelect
                     value={viewModel.selectedCounty}
-                    //onChange={(event) => viewModel.setSelectedCounty(event.target.value)}
                     onChange={(newValues) => viewModel.setSelectedCounty(newValues)}
                     options={locationOptions}
                     defaultLabel={locationDefaultLabel}
-                    totalCount={totalCountForAllLocations}
+                    //totalCount={totalCountForAllLocations}
+                    getCountForOption={viewModel.getCountForLocation}
                 />
 
                 <FilterSelect
