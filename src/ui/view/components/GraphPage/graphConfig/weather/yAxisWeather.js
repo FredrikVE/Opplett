@@ -4,7 +4,7 @@ import { COLORS } from "../constants.js";
 export function buildWeatherYAxis(midnights) {
     return [
         {
-            // --- INDEX 0: TEMPERATUR ---
+            //Temperatur
             title: { text: null },
             top: "20%",
             height: "80%",
@@ -25,7 +25,7 @@ export function buildWeatherYAxis(midnights) {
                     dashStyle: "Dash",
                     width: 1
                 },
-                // Vertikale skillelinjer for midnatt
+                //Vertikale skillelinjer for midnatt
                 ...midnights.map(t => ({
                     value: t,
                     color: "#ddd",
@@ -35,7 +35,7 @@ export function buildWeatherYAxis(midnights) {
             ]
         },
         {
-            // --- INDEX 1: NEDBØR ---
+            //Nedbør
             title: { text: null },
             opposite: true,
             min: 0,
@@ -56,7 +56,7 @@ export function buildWeatherYAxis(midnights) {
             }
         },
         {
-            // --- INDEX 2: VÆRSYMBOLER ---
+            //Værsymboler
             title: { text: null },
             labels: { enabled: false },
             gridLineWidth: 0,

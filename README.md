@@ -57,18 +57,14 @@ Etter installasjon kan Highcharts importeres i komponentene der grafene konfigur
 ```bash
 TestMVVMReact
 │
-├── package.json
-├── vite.config.js
+├── ARCHITECTURE.md
 ├── README.md
+├── vite.config.js
+├── yarn.lock
 │
 ├── public
 │   ├── alert_symbols
-│   │   └── 128
 │   ├── credit_icons
-│   │   ├── highcharts
-│   │   ├── met
-│   │   ├── open_cage
-│   │   └── yr
 │   ├── sun_rise
 │   └── weather_icons
 │       ├── 100
@@ -102,20 +98,21 @@ TestMVVMReact
 │   │
 │   └── ui
 │       ├── style
-│       │   ├── App.css
-│       │   ├── HomePage.css
+│       │   ├── AlertCard.css
+│       │   ├── AlertPage.css
+│       │   ├── ForecastPage.css
 │       │   ├── GraphPage.css
 │       │   └── ...
 │       │
 │       ├── utils
-│       │   ├── counties.js
-│       │   ├── timeFormatters.js
-│       │   ├── weatherIcons.js
-│       │   └── getAlertIconFileName.js
+│       │   ├── AlertPageUtils
+│       │   ├── CommonUtils
+│       │   ├── LocationUtils
+│       │   └── TimeZoneUtils
 │       │
 │       ├── view
 │       │   ├── pages
-│       │   │   ├── HomePage.jsx
+│       │   │   ├── ForecastPage.jsx
 │       │   │   ├── GraphPage.jsx
 │       │   │   └── AlertPage.jsx
 │       │   │
@@ -126,13 +123,24 @@ TestMVVMReact
 │       │       └── Common
 │       │
 │       └── viewmodel
-│           ├── HomeScreenViewModel.js
+│           ├── ForecastPageViewModel.js
 │           ├── GraphScreenViewModel.js
 │           ├── AlertPageViewModel.js
 │           └── SearchViewModel.js
 │
 └── test
     ├── model
+    │   ├── datasource
+    │   └── repositories
     └── ui
-
 ```
+
+
+
+## Om Varslingsområder for Hav og kyst
+
+
+![Polygoner for varslingsområder for kyst og hav](images/HavPolygoner.png)
+
+Se mer informasjon om dette hos met.no
+https://www.met.no/vaer-og-klima/ekstremvaervarsler-og-andre-farevarsler/varslingsomrader-kyst-og-hav

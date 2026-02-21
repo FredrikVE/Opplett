@@ -1,4 +1,4 @@
-    //src/ui/utils/getRiskLevelText.js
+    //src/ui/utils/CommonUtils/getRiskLevelText.js
     export function getRiskLevelText(riskMatrixColor) {
         
         switch (riskMatrixColor) {

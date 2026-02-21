@@ -1,6 +1,6 @@
 import { useId } from "react";
-import { getWeatherIconFileName } from "../../../../utils/weatherIcons.js";
-import { getAlertIconFileName } from "../../../../utils/getAlertIconFileName.js";
+import { getWeatherIconFileName } from "../../../../utils/CommonUtils/weatherIcons.js";
+import { getAlertIconFileName } from "../../../../utils/CommonUtils/getAlertIconFileName.js";
 import ForecastTable from "./ForecastTable.jsx";
 import SolarInformation from "./SolarInformation.jsx";
 import AlertList from "../../Common/AlertCard/AlertList.jsx";

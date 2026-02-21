@@ -36,11 +36,17 @@ export function buildWeatherPlotOptions() {
 			zones: getTempZones()
 		},
 		column: {
-			stacking: 'normal',
-			borderWidth: 0,
-			borderRadius: 3,
-			pointRange: HOUR,
-			groupPadding: 0.1
+			//stacking: "normal",		// Unngå at én søyle stables oppå en annen
+			grouping: false,			// sett grouping til false for å legge "mulig nedbør" BAK "forventet nedbør"
+			borderWidth: 0,			// Ingen kant
+			borderRadius: 3,		// Myke hjørner
+			pointRange: HOUR,		// 1 time bredde
+			groupPadding: 0.1,
+			states: {
+				hover: {
+					brightness: 0	// Hindrer at hover ødelegger kontrasten
+				}
+			}
 		}
 	};
 }
