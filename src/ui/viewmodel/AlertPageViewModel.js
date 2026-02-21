@@ -1,105 +1,145 @@
-//src/ui/viewmodel/AlertPageViewModel.js
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { formatLocalDateTime } from "../utils/TimeZoneUtils/timeFormatters.js";
-import { getRiskLevelText } from "../utils/CommonUtils/getRiskLevelText.js"
+import { getRiskLevelText } from "../utils/CommonUtils/getRiskLevelText.js";
 
 export default function useAlertPageViewModel(alertsRepository) {
-
-	//Data, loading og error states
-    const [alerts, setAlerts] = useState([]);
+    
+    //Statevariabler for alert-data, loading og error
+    const [allAlerts, setAllAlerts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [activeDomain, setActiveDomain] = useState("land");
     
-    //Filter-states
+    //Filter-tilstander
+    const [activeDomain, setActiveDomain] = useState("land");
     const [selectedCounty, setSelectedCounty] = useState("");
     const [selectedLevel, setSelectedLevel] = useState("");
     const [selectedType, setSelectedType] = useState("");
 
     const defaultTz = "Europe/Oslo";
 
+    //Hook for datahenting
     useEffect(() => {
-        async function load() {
+
+        const fetchAlerts = async () => {
             try {
                 setLoading(true);
-                const result = await alertsRepository.getAllAlerts(); 
+                const { alerts } = await alertsRepository.getAllAlerts();
                 
-                // Vasker data: Beholder kun varsler som har en definert tekst (fjerner "Green")
-                const actualWarnings = result.alerts.filter(a => 
-                    getRiskLevelText(a.riskMatrixColor) !== ""
-                );
+                // Beholder kun varsler med gyldig risikonivå (fjerner "grønne/ufarlige" varsler)
+                const validAlerts = alerts.filter(a => getRiskLevelText(a.riskMatrixColor) !== "");
                 
-                setAlerts(actualWarnings);
+                setAllAlerts(validAlerts);
+                setError(null);
             } 
 
-            catch (error) {
-                console.error(error);
-                setError("Kunne ikke hente varsler");
-            }
+            catch (err) {
+                console.error("Feil ved henting av varsler:", err);
+                setError("Kunne ikke laste inn varsler. Vennligst prøv igjen senere.");
+            } 
 
             finally {
                 setLoading(false);
             }
-        }
+        };
 
-        load();
+        fetchAlerts();
     }, 
-	
-	[alertsRepository]); 
+    [alertsRepository]);
 
-    //Nullstiller filter ved domene-bytte
-    const handleSetDomain = (domain) => {
+
+    //Nullstiller filtre når man bytter mellom Land/Sjø
+    const changeDomain = (domain) => {
         setSelectedCounty("");
+        setSelectedType("");
+        setSelectedLevel("");
         setActiveDomain(domain);
     };
 
-    //Hjelpefunksjon for å telle varsler per lokasjon (fylke eller område)
-    const getCountForLocation = (locationId) => {
-        if (!locationId) {
-            return alerts.filter(a => a.geographicDomain === activeDomain).length;
-        }
+    // Global telling for tabs/knapper (uavhengig av filtre)
+    const counts = useMemo(() => ({
+        land: allAlerts.filter(a => a.geographicDomain === "land").length,
+        marine: allAlerts.filter(a => a.geographicDomain === "marine").length
+    }),
 
-        return alerts.filter(a => 
-            a.geographicDomain === activeDomain && 
-            (a.county?.includes(locationId) || a.area === locationId)
+    [allAlerts]);
+
+    // Hovedfiltrering: Kjøres kun når data eller filtre endres
+    const filteredAlerts = useMemo(() => {
+
+        return allAlerts.filter(alert => {    
+            
+            //Domene-sjekk for sjø eller land
+            if (alert.geographicDomain !== activeDomain) {
+                return false;
+            }
+            
+            //Fare-nivå-sjekk
+            if (selectedLevel && alert.riskMatrixColor !== selectedLevel) {
+                return false;
+            }
+            
+            //Sjekk for faretype (Snø, Vind, etc.)
+            if (selectedType && alert.event !== selectedType) {
+                return false;
+            }
+            
+            //Sjekk for advarselsområde som fylke eller havpolygon
+            if (selectedCounty) {
+                const matchesCounty = alert.county?.includes(selectedCounty);
+                const matchesArea = alert.area === selectedCounty;
+                if (!matchesCounty && !matchesArea) {
+                    return false;
+                }
+            }
+
+            //Hvis ingen av de over returnerte false, er varslet godkjent
+            return true;
+        });
+    }, 
+
+    [allAlerts, activeDomain, selectedLevel, selectedType, selectedCounty]);
+
+    // Deler i pågående og kommende varsler
+    const { ongoingAlerts, upcomingAlerts } = useMemo(() => {
+        const now = new Date();
+        return {
+            ongoingAlerts: filteredAlerts.filter(a => new Date(a.interval?.[0]) <= now),
+            upcomingAlerts: filteredAlerts.filter(a => new Date(a.interval?.[0]) > now)
+        };
+    }, [filteredAlerts]);
+
+    // Hjelpefunksjon for å telle varsler i en spesifikk region (f.eks. til dropdown-menyen)
+    const getCountForLocation = (locationId) => {
+        const domainAlerts = allAlerts.filter(a => a.geographicDomain === activeDomain);
+        if (!locationId) return domainAlerts.length;
+
+        return domainAlerts.filter(a => 
+            a.county?.includes(locationId) || a.area === locationId
         ).length;
     };
 
-    // Filtreringslogikk for listevisning
-    const filteredAlerts = alerts.filter(alert => {
-        const matchesDomain = alert.geographicDomain === activeDomain;
-        const matchesLevel = !selectedLevel || alert.riskMatrixColor === selectedLevel;
-        const matchesType = !selectedType || alert.event === selectedType;
-        const matchesLocation = !selectedCounty || 
-                                alert.county?.includes(selectedCounty) || 
-                                alert.area === selectedCounty;
-
-        return matchesDomain && matchesLevel && matchesType && matchesLocation;
-    });
-
-    const ongoingAlerts = filteredAlerts.filter(a => new Date(a.interval?.[0]) <= new Date());
-    const upcomingAlerts = filteredAlerts.filter(a => new Date(a.interval?.[0]) > new Date());
-
     return {
+        // Data
         ongoingAlerts,
         upcomingAlerts,
         loading,
         error,
-        activeDomain,
-        setActiveDomain: handleSetDomain,
-        selectedCounty,
-        setSelectedCounty,
-        selectedLevel,
-        setSelectedLevel,
-        selectedType,
-        setSelectedType,
-        getCountForLocation, 
-
-        counts: {
-            land: alerts.filter(a => a.geographicDomain === "land").length,
-            marine: alerts.filter(a => a.geographicDomain === "marine").length
-        },
+        counts,
         
-        formatLocalDateTime: (zuluTime) => formatLocalDateTime(zuluTime, defaultTz)
+        // Filter-verdier
+        activeDomain,
+        selectedCounty,
+        selectedLevel,
+        selectedType,
+
+        // Handlinger (Setters)
+        setActiveDomain: changeDomain,
+        setSelectedCounty,
+        setSelectedLevel,
+        setSelectedType,
+        
+        // Hjelpere
+        getCountForLocation,
+        formatTime: (zulu) => formatLocalDateTime(zulu, defaultTz)
     };
 }
