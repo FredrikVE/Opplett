@@ -38,6 +38,7 @@ export default function useGraphScreenViewModel(homeViewModel) {
 		//Tid
 		getLocalHour: homeViewModel.getLocalHour,
 		formatLocalDate: homeViewModel.formatLocalDate,
+        formatLocalDateTime: homeViewModel.formatLocalDateTime,
 
 		//Søk
 		query: homeViewModel.query,

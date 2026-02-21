@@ -3,18 +3,21 @@ import { useMemo } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 
+import { COLORS } from "./graphConfig/constants";
+
 import { mapHourlyForecastToWind } from "./graphUtils/mapHourlyForecastToWind";
 import { buildCommonChartConfig } from "./graphConfig/chartConfig";
 import { buildDayBands } from "./graphUtils/dayBands";
 
-import { buildWindXAxis } from "./graphConfig/wind/xAxisWind";
-import { buildWindYAxis } from "./graphConfig/wind/yAxisWind";
+import { createTooltipFormatter } from "./graphUtils/tooltipFormatter";
 import { buildWindPlotOptions } from "./graphConfig/wind/plotOptionsWind";
 import { buildWindSeries } from "./graphConfig/wind/windSeries";
 
-import { COLORS } from "./graphConfig/constants";
+import { buildWindXAxis } from "./graphConfig/wind/xAxisWind";
+import { buildWindYAxis } from "./graphConfig/wind/yAxisWind";
 
-export default function WindGraph({ hourlyData, getLocalHour, formatLocalDate }) {
+
+export default function WindGraph({ hourlyData, getLocalHour, formatLocalDate, formatLocalDateTime }) {
     
     const options = useMemo(() => {
         const data = mapHourlyForecastToWind(hourlyData, getLocalHour);
@@ -31,7 +34,7 @@ export default function WindGraph({ hourlyData, getLocalHour, formatLocalDate })
                 chart: buildCommonChartConfig(),
                 title: { text: "Vind (m/s)" },
                 subtitle: {
-                    text: "Ingen målbar vind i perioden 🌬️",
+                    text: "Ingen målbar vind i perioden",
                     style: { color: COLORS.textMuted }
                 },
                 credits: { enabled: false }
@@ -55,7 +58,10 @@ export default function WindGraph({ hourlyData, getLocalHour, formatLocalDate })
              
             tooltip: {
                 shared: true,
-                valueSuffix: " m/s"
+                formatter: function() {
+                    return createTooltipFormatter(this, formatLocalDateTime)
+                }
+                
             },
 
             legend: {
@@ -65,7 +71,9 @@ export default function WindGraph({ hourlyData, getLocalHour, formatLocalDate })
                 itemStyle: { fontWeight: "bold", fontSize: "14px" }
             }
         };
-    }, [hourlyData, getLocalHour, formatLocalDate]);
+    }, 
+    
+    [hourlyData, getLocalHour, formatLocalDate, formatLocalDateTime]);
 
     if (!options) {
         return null;

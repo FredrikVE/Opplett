@@ -46,18 +46,21 @@ export default function GraphPage({ viewModel, activeScreen, onChangeScreen, SCR
 					hourlyData={allHourlyData}
 					getLocalHour={viewModel.getLocalHour}
 					formatLocalDate={viewModel.formatLocalDate}
+					formatLocalDateTime={viewModel.formatLocalDateTime}
 				/>
 
 				<WindGraph
 					hourlyData={allHourlyData}
 					getLocalHour={viewModel.getLocalHour}
 					formatLocalDate={viewModel.formatLocalDate}
+					formatLocalDateTime={viewModel.formatLocalDateTime}
 				/>
 
 				<UVGraph
 					hourlyData={allHourlyData}
 					getLocalHour={viewModel.getLocalHour}
 					formatLocalDate={viewModel.formatLocalDate}
+					formatLocalDateTime={viewModel.formatLocalDateTime}
 				/>
 
 				<SunGraph

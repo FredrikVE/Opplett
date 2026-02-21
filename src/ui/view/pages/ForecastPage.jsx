@@ -2,10 +2,10 @@ import { useState } from "react";
 import Navigation from "../../../navigation/Navigation.jsx";
 import LoadingSpinner from "../components/Common/LoadingSpinner/LoadingSpinner.jsx";
 import SearchField from "../components/Common/SearchFeild/SearchField.jsx";
-import DayForecastCard from "../components/HomePage/ForecastTable/DayForecastCard.jsx";
-import NowCard from "../components/HomePage/NowCard/NowCard.jsx";
+import DayForecastCard from "../components/ForecastPage/ForecastTable/DayForecastCard.jsx";
+import NowCard from "../components/ForecastPage/NowCard/NowCard.jsx";
 
-export default function HomePage({ viewModel, activeScreen, onChangeScreen, SCREENS }) {
+export default function ForecastPage({ viewModel, activeScreen, onChangeScreen, SCREENS }) {
 
 	const [openDate, setOpenDate] = useState(null);
 

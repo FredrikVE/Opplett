@@ -1,22 +1,90 @@
-//src/ui/view/components/AlertPage/FilterSelect.jsx
+import { useState } from "react";
 import ChevronIcon from "../Common/Buttons/ChevronIcon.jsx";
+import CheckBoxItem from "./CheckBoxItem.jsx";
 
-export default function FilterSelect({ value, onChange, options, defaultLabel, totalCount }) {
-    const finalLabel = totalCount !== undefined ? `${defaultLabel} (${totalCount})` : defaultLabel;
+
+export default function FilterSelect({ value, onChange, options, defaultLabel, getCountForOption }) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    //Handler funksjoner
+    const handleOptionClick = (optionValue) => {
+        let newValue;
+
+        if (value.includes(optionValue)) {
+            newValue = value.filter((v) => v !== optionValue);	//Fjerner verdien hvis den allerede finnes
+        } 
+		
+		else {												//Ellers Legger vi til verdien
+            newValue = [...value, optionValue];
+        }
+
+        onChange(newValue);
+	}
+
+    const handleClearAll = () => {
+        onChange([]);
+    }
+
+    const handleToggleDropdown = () => {
+        setIsOpen(!isOpen);
+    }
+
+    const handleBlur = (event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {		//Lukker bare hvis fokus flyttes helt ut av komponenten
+            setIsOpen(false);
+        }
+    }
+
+    //Hjelpefunksjoner
+    function getOptionData(option) {
+        return {
+            id: option.id || option.value,
+            label: option.displayName || option.label
+        };
+    }
+
+    function getDisplayLabel() {
+        if (value.length === 0) {
+            return defaultLabel;
+        }
+        return `${value.length} valgt`;
+    }
 
     return (
-        <div className="alert-select-wrapper">
-            <select className="alert-select-filter" value={value} onChange={onChange}>
-                <option value="">{finalLabel}</option>
-                {options.map((opt) => (
-                    <option key={opt.id || opt.value} value={opt.id || opt.value}>
-                        {opt.displayName || opt.label}
-                    </option>
-                ))}
-            </select>
-            <div className="select-chevron-overlay">
-                <ChevronIcon isOpen={false} size={14} />
-            </div>
+        <div className="custom-select-wrapper" tabIndex={0} onBlur={handleBlur}>
+            <button className="custom-select-trigger" onClick={handleToggleDropdown}>
+                <span>{getDisplayLabel()}</span>
+                <ChevronIcon isOpen={isOpen} size={14} />
+            </button>
+
+            {isOpen && (
+                <div className="custom-select-dropdown">
+
+                    {/* Standardvalget (tøm filter) */}
+                    <CheckBoxItem
+                        label={defaultLabel} 
+                        isChecked={value.length === 0} 
+                        onClick={handleClearAll} 
+                    />
+
+                    {/* Mapper over opsjoner med eksplisitt logikk */}
+                    {options.map((option) => {
+                        const { id, label } = getOptionData(option);
+                        const isChecked = value.includes(id);
+                        const count = getCountForOption ? getCountForOption(id) : 0;
+
+                        return (
+                            <CheckBoxItem
+                                key={id}
+                                label={label}
+                                isChecked={isChecked}
+                                hasAlerts={count > 0}
+                                onClick={() => handleOptionClick(id)}
+                            />
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 }

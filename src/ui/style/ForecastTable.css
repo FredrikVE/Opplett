@@ -2,50 +2,77 @@
 
 /* Header */
 .forecast-table thead th {
-  font-size: var(--table-header-font-size);
-  line-height: var(--table-header-line-height);
-  text-align: left;
-  padding: 12px 14px;
+	font-size: var(--table-header-font-size);
+	line-height: var(--table-header-line-height);
+	text-align: left;
+	padding: 12px 14px;
 }
 
 /* Celler */
 .forecast-table td {
-  padding: 12px 14px;
-  border-bottom: none; /* borderless */
-  font-variant-numeric: var(--font-variant-numeric);
+	padding: 12px 14px;
+	border-bottom: none; /* borderless */
+	font-variant-numeric: var(--font-variant-numeric);
 }
 
 /* Zebra: legg bakgrunn på TD (mest robust) */
 .forecast-table tbody tr:nth-child(even) td {
-  background: rgba(23, 103, 206, 0.03);
+	background: rgba(23, 103, 206, 0.03);
 }
 
 /* Hover: også på TD */
 .forecast-table tbody tr:hover td {
-  background: rgba(23, 103, 206, 0.07);
+	background: rgba(23, 103, 206, 0.07);
 }
 
 .temperature {
-  font-size: var(--temperature-font-size);
-  line-height: var(--temperature-line-height);
-  font-weight: 700;
-  white-space: nowrap;
+	font-size: var(--temperature-font-size);
+	line-height: var(--temperature-line-height);
+	font-weight: 700;
+	white-space: nowrap;
 }
 
 /* små “chips” for vind/nedbør */
 .wind,
 .precipitation {
-  font-size: 0.95rem;
-  line-height: 1.1;
-  white-space: nowrap;
+	font-size: 0.95rem;
+	line-height: 1.1;
+	white-space: nowrap;
 }
 
 .precipitation {
-  color: var(--precipitation-color);
-  font-weight: 600;
+	color: var(--precipitation-color);
+	font-weight: 600;
 }
 
 .wind {
-  color: var(--wind-color);
-  font-weight: 600;
+	color: var(--wind-color);
+	font-weight: 600;
+}
+
+/* Temperaturfarger via klasser */
+.temperature.is-minus {
+		color: var(--temperature-minus-color);
+}
+
+.temperature.is-plus {
+		color: var(--temperature-plus-color);
+}
+
+/* Layout for vind-cellen */
+.wind-container {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+}
+
+/* Værikon-styling i tabell */
+.weather-icon {
+		width: 32px;
+		height: 32px;
+		display: block;
+}
+
+.weather-cell {
+		padding: 4px 14px; /* Litt mindre padding for ikoner */
 }

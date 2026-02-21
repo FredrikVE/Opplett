@@ -6,7 +6,9 @@ import ChevronIcon from "../Common/Buttons/ChevronIcon.jsx";
 export default function AlertSection({ title, alerts, formatLocalDateTime, limit = 4 }) {
     const [isExpanded, setIsExpanded] = useState(false);
     
-    if (alerts.length === 0) return null;
+    if (alerts.length === 0) {
+        return null;
+    }
 
     const alertsToShow = isExpanded ? alerts : alerts.slice(0, limit);
     const hasMore = alerts.length > limit;
@@ -19,7 +21,10 @@ export default function AlertSection({ title, alerts, formatLocalDateTime, limit
             {hasMore && (
                 <button className="expand-alerts-btn" onClick={() => setIsExpanded(!isExpanded)}>
                     <span>{isExpanded ? "Vis færre" : `Vis alle (${alerts.length})`}</span>
-                    <ChevronIcon isOpen={isExpanded} size={16} />
+                    <ChevronIcon 
+                        isOpen={isExpanded} 
+                        size={16} 
+                    />
                 </button>
             )}
         </section>
