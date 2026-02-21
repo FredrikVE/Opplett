@@ -1,4 +1,4 @@
-//src/ui/utils/alertUtils/marineAreas.js
+//src/ui/utils/AlertPageUtils/marineAreas.js
 export const MARINE_AREAS = [
     /*
     Områdene i denne lista er hentet fra meterologisk institutt.

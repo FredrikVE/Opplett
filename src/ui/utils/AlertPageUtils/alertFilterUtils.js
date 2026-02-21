@@ -1,4 +1,4 @@
-//src/ui/utils/alertUtils/alertFilterUtils.js
+//src/ui/utils/AlertPageUtils/alertFilterUtils.js
 import { getRiskLevelText } from "../getRiskLevelText.js";
 
 export function buildLocationOptions(viewModel, counties, marineAreas) {

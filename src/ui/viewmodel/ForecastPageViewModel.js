@@ -1,6 +1,6 @@
 // src/ui/viewmodels/useHomeScreenViewModel.js
 import { useEffect, useState, useRef, useMemo } from "react";
-import { fetchInitialLocationName } from "../utils/fetchInitialLocationName.js";
+import { fetchInitialLocationName } from "../utils/LocationUtils/fetchInitialLocationName.js";
 import { resolveTimezone, formatToLocalTime, formatToLocalDateLabel, formatLocalDate, formatLocalDateTime, getLocalHour } from "../utils/timeFormatters.js";
 import useSearchViewModel from "./SearchViewModel.js";
 

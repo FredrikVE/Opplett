@@ -1,4 +1,4 @@
-// src/ui/utils/fetchInitialLocationName.js
+//src/ui/utils/LocationUtils/fetchInitialLocationName.js
 export async function fetchInitialLocationName(setLocation, geocodingRepository, lat, lon) {
 	try {
 		const result = await geocodingRepository.getCoordinates(`${lat}, ${lon}`);
