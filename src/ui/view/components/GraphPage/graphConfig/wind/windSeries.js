@@ -2,7 +2,6 @@
 import { COLORS } from "../constants";
 import { WIND_ARROW_SHAPE } from "../../../Common/WindArrow/WindArrowShape.js"
 
-
 function createWindArrowSvg(degrees, color) {
     
 	//Standarder og Protokoller
@@ -48,8 +47,7 @@ function createWindArrowSvg(degrees, color) {
         </svg>
     `;
 
-    //Optimalisering av strengen før koding
-    //Vi fjerner linjeskift og ekstra mellomrom for å holde URL-en kompakt.
+    //Fjerner linjeskift og ekstra mellomrom for å holde URL-en kompakt.
     const minimizeWhitespaceRegex = /\s+/g;
     const optimizedSvgCode = svgCode.trim().replace(minimizeWhitespaceRegex, ' ');
 
