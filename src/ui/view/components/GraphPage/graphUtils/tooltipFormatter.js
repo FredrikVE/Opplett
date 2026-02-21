@@ -1,4 +1,4 @@
-// src/ui/view/components/GraphPage/graphUtils/tooltipFormatter.js
+//src/ui/view/components/GraphPage/graphUtils/tooltipFormatter.js
 
 export function createTooltipFormatter(context, formatLocalDateTime) {
 	//Hent ut data fra Highcharts-konteksten
