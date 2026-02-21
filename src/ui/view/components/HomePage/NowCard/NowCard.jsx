@@ -1,5 +1,5 @@
 //src/ui/view/components/HomePage/ForecastTable/NowCard.jsx
-import { getWeatherIconFileName } from "../../../../utils/weatherIcons.js";
+import { getWeatherIconFileName } from "../../../../utils/CommonUtils/weatherIcons.js";
 import UVNowBar from "./UVNowBar.jsx";
 
 export default function NowCard({ current }) {

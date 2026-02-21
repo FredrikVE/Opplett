@@ -1,7 +1,7 @@
 //src/ui/viewmodel/AlertPageViewModel.js
 import { useState, useEffect } from "react";
 import { formatLocalDateTime } from "../utils/TimeZoneUtils/timeFormatters.js";
-import { getRiskLevelText } from "../utils/getRiskLevelText.js";
+import { getRiskLevelText } from "../utils/CommonUtils/getRiskLevelText.js"
 
 export default function useAlertPageViewModel(alertsRepository) {
 

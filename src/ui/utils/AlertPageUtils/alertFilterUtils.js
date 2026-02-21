@@ -1,5 +1,5 @@
 //src/ui/utils/AlertPageUtils/alertFilterUtils.js
-import { getRiskLevelText } from "../getRiskLevelText.js";
+import { getRiskLevelText } from "../CommonUtils/getRiskLevelText";
 
 export function buildLocationOptions(viewModel, counties, marineAreas) {
     const format = (loc) => {

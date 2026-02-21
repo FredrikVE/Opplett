@@ -1,4 +1,6 @@
-//src/ui/utils/getAlertIconFileName.js
+//src/ui/utils/CommonUtils/getAlertIconFileName.js
+
+
 /******************** Kildehenvisning ****************************
 
 ## Bruk av ikoner.

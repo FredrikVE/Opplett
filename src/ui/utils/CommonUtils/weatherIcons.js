@@ -1,4 +1,5 @@
-//src/ui/utils/weatherIcons.js
+//src/ui/utils/CommonUtils/weatherIcons.js
+
 /******************** Kildehenvisning ****************************
 
 ## Bruk av ikoner.
