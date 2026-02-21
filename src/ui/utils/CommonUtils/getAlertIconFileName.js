@@ -44,8 +44,7 @@ export function getAlertIconFileName(alert) {
         lightning: "icon-warning-lightning",
 
         ice: "icon-warning-ice",
-        icing: "icon-warning-ice",
-
+        
         polarLow: "icon-warning-polarlow"
     };
 
