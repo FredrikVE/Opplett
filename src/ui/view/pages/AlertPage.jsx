@@ -15,6 +15,15 @@ export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCR
         return <LoadingSpinner />;
     }
 
+    //Event-handlers for land/kyst-knapp
+    const switchToLand = () => {
+        viewModel.setActiveDomain("land");
+    };
+
+    const switchToMarine = () => {
+        viewModel.setActiveDomain("marine");
+    };
+
     const isLandActive = viewModel.activeDomain === "land";
     
     let allAlerts = [];
@@ -63,16 +72,18 @@ export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCR
             <div className="domain-selector">
                 <div className="domain-toggle-wrapper">
                     <button 
-                        className={landButtonClass} 
-                        onClick={() => viewModel.setActiveDomain("land")}
-                    >
-                        Land ({viewModel.counts.land})
+						className={landButtonClass} 
+						onClick={switchToLand}>
+
+                        	Land ({viewModel.counts.land})
+
                     </button>
                     <button 
-                        className={marineButtonClass} 
-                        onClick={() => viewModel.setActiveDomain("marine")}
-                    >
-                        Hav og kyst ({viewModel.counts.marine})
+						className={marineButtonClass} 
+						onClick={switchToMarine}>
+
+                        	Hav og kyst ({viewModel.counts.marine})
+							
                     </button>
                 </div>
             </div>
@@ -107,6 +118,7 @@ export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCR
                     alerts={viewModel.ongoingAlerts} 
                     formatLocalDateTime={viewModel.formatLocalDateTime} 
                 />
+                
                 <AlertSection 
                     title="Ventes" 
                     alerts={viewModel.upcomingAlerts} 
