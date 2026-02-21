@@ -19,6 +19,7 @@ import "./ui/style/NavButton.css"
 import "./ui/style/NowCard.css"
 import "./ui/style/UVNowBar.css";
 import "./ui/style/WindArrow.css";
+import "./ui/style/FilterDropDown.css"
 
 //Navigation
 import { NAV_SCREENS } from "./navigation/navGraph.js";
