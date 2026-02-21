@@ -58,7 +58,8 @@ export default class MetAlertsRepository {
                 moreInfoURL: p.web,
                 riskMatrixColor: p.riskMatrixColor,
                 interval: feature.when?.interval,
-                geographicDomain: p.geographicDomain // Nyttig for å skille Land/Hav i UI
+                geographicDomain: p.geographicDomain, // Nyttig for å skille Land/Hav i UI
+                county: p.county
             };
         });
 

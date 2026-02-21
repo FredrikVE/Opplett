@@ -17,6 +17,7 @@ export default function useAlertPageViewModel(alertsRepository) {
 
     useEffect(() => {
         async function load() {
+            
             try {
                 setLoading(true);
                 const result = await alertsRepository.getAllAlerts(selectedCounty);
@@ -33,18 +34,19 @@ export default function useAlertPageViewModel(alertsRepository) {
             }
         }
         load();
+
     }, [alertsRepository, selectedCounty]);
 
     //Hjelpefunksjon for å telle varsler per fylke innenfor valgt domene
     const getCountForCounty = (countyId) => {
-
         if (!countyId) {
+            // Denne teller alle varsler uavhengig av om de har fylkesinfo eller ikke
             return alerts.filter(a => a.geographicDomain === activeDomain).length;
         }
 
         return alerts.filter(a => 
             a.geographicDomain === activeDomain && 
-            a.county?.includes(countyId)
+            a.county?.includes(countyId) // NÅ fungerer denne fordi county er mappet!
         ).length;
     };
 
