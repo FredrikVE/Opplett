@@ -59,15 +59,30 @@ function createWindArrowSvg(degrees, color) {
 }
 
 export function buildWindSeries(data) {
-	const windArrowPoints = (data.windDirections || []).map(d => ({
-		x: d.x,
-		y: 0.5,
-		marker: {
-			symbol: `url(${createWindArrowSvg(d.degrees, COLORS.wind)})`,
-			width: 24,
-			height: 24
-		}
-	}));
+    
+    const windArrowPoints = [];		                    //Tom liste for å holde på pil-punktene
+    const WindDirections = data.windDirections || [];	//Henter data for vindretning med tom array som fallback
+
+    //Løper igjennom datapunktene
+    for (const directionData of WindDirections) {
+        
+        //Generer bilde-URL-en for dette spesifikke punktet
+        const arrowIconUrl = createWindArrowSvg(directionData.degrees, COLORS.wind);
+
+        //Konstruer det ferdige punkt-objektet slik Highcharts vil ha det
+        const point = {
+            x: directionData.x,
+            y: 0.5,                             //Legger pilene litt over y-aksen
+            marker: {
+                symbol: `url(${arrowIconUrl})`,
+                width: 24,
+                height: 24
+            }
+        };
+
+        //Legger inn punktet i arrayet
+        windArrowPoints.push(point);
+    }
 
 	return [
 		{
