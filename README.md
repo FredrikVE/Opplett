@@ -52,6 +52,30 @@ Etter installasjon kan Highcharts importeres i komponentene der grafene konfigur
 ## Arkitektur-tegning
 ![Arkitekturdiagram](images/Arkitektur.png)
 
+## Forenklet mappestruktur
+
+```bash
+.
+├── images
+├── public
+├── src
+│   ├── geolocation
+│   ├── model
+│   │   ├── datasource
+│   │   └── repositories
+│   ├── navigation
+│   └── ui
+│       ├── style
+│       ├── utils
+│       ├── view
+│       └── viewmodel
+└── test
+    ├── model
+    │   ├── datasource
+    │   └── repositories
+    └── ui
+```
+
 ## Filstruktur
 
 ```bash
