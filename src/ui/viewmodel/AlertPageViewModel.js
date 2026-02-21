@@ -55,7 +55,7 @@ export default function useAlertPageViewModel(alertsRepository) {
         setActiveDomain(domain);
     };
 
-    // Global telling for tabs/knapper (uavhengig av filtre)
+    //Global telling for tabs/knapper (uavhengig av filtre)
     const counts = useMemo(() => ({
         land: allAlerts.filter(a => a.geographicDomain === "land").length,
         marine: allAlerts.filter(a => a.geographicDomain === "marine").length
@@ -99,46 +99,81 @@ export default function useAlertPageViewModel(alertsRepository) {
 
     [allAlerts, activeDomain, selectedLevel, selectedType, selectedCounty]);
 
-    // Deler i pågående og kommende varsler
+    //Deler varsler inn i pågående og kommende varsler
     const { ongoingAlerts, upcomingAlerts } = useMemo(() => {
         const now = new Date();
-        return {
-            ongoingAlerts: filteredAlerts.filter(a => new Date(a.interval?.[0]) <= now),
-            upcomingAlerts: filteredAlerts.filter(a => new Date(a.interval?.[0]) > now)
+
+        const ongoing = [];
+        const upcoming = [];
+
+        filteredAlerts.forEach(alert => {
+            const startTime = new Date(alert.interval?.[0]);
+            const hasStarted = startTime <= now;
+
+            if (hasStarted) {
+                ongoing.push(alert);
+            } 
+
+            else {
+                upcoming.push(alert);
+            }
+        });
+
+        return { 
+            ongoingAlerts: ongoing, 
+            upcomingAlerts: upcoming 
         };
-    }, [filteredAlerts]);
+    }, 
 
-    // Hjelpefunksjon for å telle varsler i en spesifikk region (f.eks. til dropdown-menyen)
+    [filteredAlerts]);
+
+    //Hjelpefunksjon for å telle varsler i en spesifikk region
     const getCountForLocation = (locationId) => {
-        const domainAlerts = allAlerts.filter(a => a.geographicDomain === activeDomain);
-        if (!locationId) return domainAlerts.length;
+        let count = 0;
 
-        return domainAlerts.filter(a => 
-            a.county?.includes(locationId) || a.area === locationId
-        ).length;
+        for (const alert of allAlerts) {
+            // Vi bryr oss bare om varsler i det aktive domenet (land eller marine)
+            if (alert.geographicDomain === activeDomain) {
+                
+                if (!locationId) {
+                    count++;    // Hvis ingen spesifikk lokasjon er valgt, teller vi alt i domenet
+                } 
+                
+                else {
+                    // Hvis en lokasjon er valgt, sjekker vi om varslet matcher
+                    const isMatch = alert.county?.includes(locationId) || alert.area === locationId;
+                    
+                    if (isMatch) {
+                        count++;
+                    }
+                }
+            }
+        }
+        return count;
     };
+ 
 
     return {
-        // Data
+        //Data
         ongoingAlerts,
         upcomingAlerts,
         loading,
         error,
         counts,
         
-        // Filter-verdier
+        //Filter-verdier
         activeDomain,
         selectedCounty,
         selectedLevel,
         selectedType,
 
-        // Handlinger (Setters)
+        //Setters
         setActiveDomain: changeDomain,
         setSelectedCounty,
         setSelectedLevel,
         setSelectedType,
         
-        // Hjelpere
+        //Hjelpefunksjoner
         getCountForLocation,
         formatTime: (zulu) => formatLocalDateTime(zulu, defaultTz)
     };
