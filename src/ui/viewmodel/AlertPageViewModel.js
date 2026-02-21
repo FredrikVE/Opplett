@@ -175,6 +175,6 @@ export default function useAlertPageViewModel(alertsRepository) {
         
         //Hjelpefunksjoner
         getCountForLocation,
-        formatTime: (zulu) => formatLocalDateTime(zulu, defaultTz)
+        formatLocalDateTime: (zulu) => formatLocalDateTime(zulu, defaultTz)
     };
 }
