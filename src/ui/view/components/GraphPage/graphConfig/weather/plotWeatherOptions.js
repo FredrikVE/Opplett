@@ -29,6 +29,13 @@ export function getTempZones() {
 
 export function buildWeatherPlotOptions() {
 	return {
+
+		//Styler oppførselen til Værikonene
+        scatter: {
+            states: { 
+				inactive: { opacity: 1 } //Særger for at værikoner forblir synlig ved hovring
+			}
+        },
 		areaspline: {
 			marker: { enabled: false },
 			lineWidth: 2.5,
