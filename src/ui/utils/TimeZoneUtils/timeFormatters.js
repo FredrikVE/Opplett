@@ -1,4 +1,4 @@
-//src/ui/utils/timeFormatters.js
+//src/ui/utils/TimeZoneUtils/timeFormatters.js
 const UI_LOCALE = "nb-NO";
 
 //Finn aktiv tidssone med fallback
