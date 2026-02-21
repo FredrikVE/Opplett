@@ -23,14 +23,8 @@
 
 /* Spacer som skal matche SearchField i HomePage */
 .search-placeholder {
-    /* Matcher .search marginer */
     margin: 16px 0 20px 0;
-    
-    /* Matcher den totale høyden til .search-input (padding + line-height + border) */
-    /* 16px + 24px + 16px + 2px + 2px = 60px */
     height: 60px;
-    
-    /* Valgfritt: Gjør den usynlig, men bevarer plassen */
     visibility: hidden;
 }
 
@@ -75,16 +69,19 @@
     display: flex;
     gap: 10px;
     margin: 20px 0;
-    flex-wrap: wrap;
+    flex-wrap: nowrap; /* Sørger for at de holder seg på én linje */
 }
 
 .alert-select-wrapper {
     position: relative;
     display: flex;
     align-items: center;
+    flex: 1;           /* Sørger for at alle filter-wrappers tar like stor plass */
+    min-width: 0;      /* Tillater flex-elementet å krympe under innholdets størrelse */
 }
 
 .alert-select-filter {
+    width: 100%;       /* Tvinger select-boksen til å fylle hele wrapperen */
     padding: 8px 36px 8px 16px;
     border-radius: 20px;
     border: none;
@@ -93,15 +90,19 @@
     font-weight: 600;
     font-size: 14px;
     cursor: pointer;
-    appearance: none; /* Skjuler default pil */
+    appearance: none;
     -webkit-appearance: none;
-    min-width: 150px;
+    
+    /* Håndtering av lang tekst (f.eks "Alle områder (9)") */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .select-chevron-overlay {
     position: absolute;
     right: 14px;
-    pointer-events: none; /* Klikk går gjennom til select */
+    pointer-events: none; 
     color: #0c2b4d;
 }
 

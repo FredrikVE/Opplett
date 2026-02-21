@@ -15,7 +15,10 @@ export default function FilterSelect({ value, onChange, options, defaultLabel, t
                 ))}
             </select>
             <div className="select-chevron-overlay">
-                <ChevronIcon isOpen={false} size={14} />
+                <ChevronIcon 
+                    isOpen={false} 
+                    size={14} 
+                />
             </div>
         </div>
     );
