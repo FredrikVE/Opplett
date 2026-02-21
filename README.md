@@ -76,7 +76,7 @@ Etter installasjon kan Highcharts importeres i komponentene der grafene konfigur
     └── ui
 ```
 
-## Filstruktur
+## Utvidet Filstruktur
 
 ```bash
 TestMVVMReact
