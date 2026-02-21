@@ -1,10 +1,10 @@
-//src/ui/utils/marineAreas.js
-
-/*
-Områdene i denne lista er hentet fra meterologisk institutt.
-https://www.met.no/vaer-og-klima/ekstremvaervarsler-og-andre-farevarsler/varslingsomrader-kyst-og-hav
-*/
+//src/ui/utils/alertUtils/marineAreas.js
 export const MARINE_AREAS = [
+    /*
+    Områdene i denne lista er hentet fra meterologisk institutt.
+    https://www.met.no/vaer-og-klima/ekstremvaervarsler-og-andre-farevarsler/varslingsomrader-kyst-og-hav
+    */
+   
     { id: "A1" },
     { id: "A2" },
     { id: "A3" },

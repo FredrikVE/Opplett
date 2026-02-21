@@ -1,4 +1,4 @@
-//src/ui/utils/counties.js
+//src/ui/utils/alertUtils/counties.js
 export const COUNTIES = [
     { id: "42", name: "Agder" },
     { id: "32", name: "Akershus" },

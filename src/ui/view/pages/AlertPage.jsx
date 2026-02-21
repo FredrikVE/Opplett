@@ -5,9 +5,9 @@ import FilterSelect from "../components/AlertPage/FilterSelect.jsx";
 import AlertSection from "../components/AlertPage/AlertSection.jsx";
 import EmptyAlertMessage from "../components/AlertPage/EmptyAlertMessage.jsx";
 
-import { COUNTIES } from "../../utils/counties.js";
-import { MARINE_AREAS } from "../../utils/marineAreas.js";
-import { buildLocationOptions, buildTypeOptions, getLevelOptions } from "../../utils/alertFilterUtils.js";
+import { COUNTIES } from "../../utils/alertUtils/counties.js";
+import { MARINE_AREAS } from "../../utils/alertUtils/marineAreas.js";
+import { buildLocationOptions, buildTypeOptions, getLevelOptions } from "../../utils/alertUtils/alertFilterUtils.js";
 
 export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCREENS }) {
     
@@ -83,7 +83,7 @@ export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCR
 						onClick={switchToMarine}>
 
                         	Hav og kyst ({viewModel.counts.marine})
-							
+
                     </button>
                 </div>
             </div>
