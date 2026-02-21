@@ -1,4 +1,5 @@
 //src/ui/view/components/HomePage/ForecastTable/SolarInformation.jsx
+
 export default function SolarInformation({ sunTimes }) {
     // Sjekker om vi har nødvendig data før vi tegner
     if (!sunTimes || !sunTimes.dayLengthDiffText) {

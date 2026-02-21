@@ -1,16 +1,8 @@
 // src/ui/view/components/HomePage/ForecastTable/ForecastTable.jsx
 import { getWeatherIconFileName } from "../../../../utils/CommonUtils/weatherIcons.js";
-import { getWindSpeedDescription, getWindDirectionText } from "../../../../utils/WindUtils/windDescriptionUtil.js";
+import { getWindSpeedDescription, getWindDirectionText } from "../../../../utils/ForecastUtils/windDescriptionUtil.js";
+import { formatPrecipitation } from "../../../../utils/ForecastUtils/formatPrecipitationUtil.js";
 import WindArrow from "../../Common/WindArrow/WindArrow.jsx";
-
-const formatPrecipitation = (data) => {
-    if (!data) return "–";
-    const { amount, min, max } = data;
-    if (min !== undefined && max !== undefined && min !== max) {
-        return `${min} – ${max} mm`;
-    }
-    return `${amount} mm`;
-};
 
 export default function ForecastTable({ forecast }) {
     return (
@@ -33,12 +25,14 @@ export default function ForecastTable({ forecast }) {
                     const gust = item.details?.wind_speed_of_gust;
                     const windDir = item.details?.wind_from_direction;
 
-                    // Generer beskrivelsen basert på SNL-definisjoner
+                    //Generer beskrivelsen basert på SNL-definisjoner
                     const windDesc = getWindSpeedDescription(windSpeed);
                     const dirText = getWindDirectionText(windDir);
-                    const fullDesc = `${windDesc} fra ${dirText}${
-                        gust > windSpeed ? ` med vindkast på ${Math.round(gust)} m/s` : ""
-                    }`;
+
+                    let fullDesc = `${windDesc} fra ${dirText}`;
+                    if (gust > windSpeed) {
+                        fullDesc += ` med vindkast på ${Math.round(gust)} m/s`;
+                    }
 
                     return (
                         <tr key={`${item.dateISO}-${item.localTime}`}>
