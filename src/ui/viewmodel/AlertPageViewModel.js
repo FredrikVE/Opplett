@@ -17,45 +17,42 @@ export default function useAlertPageViewModel(alertsRepository) {
 
     useEffect(() => {
         async function load() {
-            
             try {
                 setLoading(true);
-                const result = await alertsRepository.getAllAlerts(selectedCounty);
+                const result = await alertsRepository.getAllAlerts(); 
                 setAlerts(result.alerts);
             } 
-
             catch (error) {
                 console.error(error);
                 setError("Kunne ikke hente varsler");
             }
-
             finally {
                 setLoading(false);
             }
         }
         load();
 
-    }, [alertsRepository, selectedCounty]);
+    }, [alertsRepository]); 
 
     //Hjelpefunksjon for å telle varsler per fylke innenfor valgt domene
     const getCountForCounty = (countyId) => {
         if (!countyId) {
-            // Denne teller alle varsler uavhengig av om de har fylkesinfo eller ikke
             return alerts.filter(a => a.geographicDomain === activeDomain).length;
         }
-
         return alerts.filter(a => 
             a.geographicDomain === activeDomain && 
-            a.county?.includes(countyId) // NÅ fungerer denne fordi county er mappet!
+            a.county?.includes(countyId)
         ).length;
     };
 
-    //Filtreringslogikk for listevisning
+    // ENDRING 3: Vi legger til fylkes-filtrering her i stedet for i API-kallet
     const filteredAlerts = alerts.filter(alert => {
         const matchesDomain = alert.geographicDomain === activeDomain;
+        const matchesCounty = !selectedCounty || alert.county?.includes(selectedCounty); // Ny linje
         const matchesLevel = !selectedLevel || alert.riskMatrixColor === selectedLevel;
         const matchesType = !selectedType || alert.event === selectedType;
-        return matchesDomain && matchesLevel && matchesType;
+        
+        return matchesDomain && matchesCounty && matchesLevel && matchesType; // Inkluder matchesCounty
     });
 
     const ongoingAlerts = filteredAlerts.filter(a => new Date(a.interval?.[0]) <= new Date());
