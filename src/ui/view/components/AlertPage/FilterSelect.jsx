@@ -2,13 +2,7 @@ import { useState } from "react";
 import ChevronIcon from "../Common/Buttons/ChevronIcon.jsx";
 import "../../../style/FilterDropDown.css";
 
-export default function FilterSelect({
-    value,
-    onChange,
-    options,
-    defaultLabel,
-    getCountForOption
-}) {
+export default function FilterSelect({ value, onChange, options, defaultLabel, getCountForOption }) {
     const [isOpen, setIsOpen] = useState(false);
 
     function isValueSelected(optionValue) {
