@@ -11,8 +11,9 @@ import { buildWeatherXAxis } from "./graphConfig/weather/xAxisWeather.js";
 import { buildWeatherYAxis } from "./graphConfig/weather/yAxisWeather.js";
 import { buildForecastLayers } from "./graphConfig/weather/weatherGraphSeries.js";
 import { buildWeatherPlotOptions } from "./graphConfig/weather/plotWeatherOptions.js";
+import { createTooltipFormatter } from "./graphUtils/tooltipFormatter.js";
 
-export default function WeatherGraph({ hourlyData, getLocalHour, formatLocalDate }) {
+export default function WeatherGraph({ hourlyData, getLocalHour, formatLocalDate, formatLocalDateTime }) {
     
     const options = useMemo(() => {
 
@@ -36,10 +37,14 @@ export default function WeatherGraph({ hourlyData, getLocalHour, formatLocalDate
             },
 
             tooltip: {
-                shared: true,
-                split: false,
-                followPointer: true 
-            },
+				shared: true,
+				split: false,
+				followPointer: true,
+				formatter: function () {
+					//Bruker tooltipFormatter for å få riktig lokaltid i infoboksen
+					return createTooltipFormatter(this, formatLocalDateTime);
+				}
+			},
             
             credits: { enabled: false },
 
@@ -55,7 +60,7 @@ export default function WeatherGraph({ hourlyData, getLocalHour, formatLocalDate
                 margin: 10 
             }
         };
-    }, [hourlyData, getLocalHour, formatLocalDate]);
+    }, [hourlyData, getLocalHour, formatLocalDate, formatLocalDateTime]);
 
     if (!options) {
         return null;
