@@ -15,34 +15,43 @@ export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCR
     const countiesWithCounts = COUNTIES.map((county) => {
 		const count = viewModel.getCountForCounty(county.id);  //Hent antall varsler for fylket
 
-		//Opprett det nye objektet eksplisitt
-		const countyWithCount = {
+		return {
 			id: county.id,
 			name: county.name,
-			displayName: county.name + " (" + count + ")"
+			count: count, // Beholder tallet for sortering
+			displayName: `${county.name} (${count})`
 		};
+	});
 
-		return countyWithCount;
+	//Sorteringslogikk for antall alerts i dropdown-menyen for fylkes-filter. 
+	//Flest varsler øverst, ellers alfabetisk
+	countiesWithCounts.sort((a, b) => {
+		// Hvis antall varsler er forskjellig, sorter etter antall (synkende)
+		if (b.count !== a.count) {
+			return b.count - a.count;
+		}
+		// Hvis antall varsler er likt (f.eks. begge er 0), sorter alfabetisk (stigende)
+		return a.name.localeCompare(b.name, 'no');
 	});
 	
-    const totalDomainCount = viewModel.getCountForCounty("");
+	const totalDomainCount = viewModel.getCountForCounty("");
 
-    //LOGIKK FOR TOM MELDING
-    let emptyMessage = null;
-    const hasNoAlerts = viewModel.ongoingAlerts.length === 0 && viewModel.upcomingAlerts.length === 0;
-    
-    if (hasNoAlerts) {
-        let domainText = "land";
-        if (viewModel.activeDomain === "marine") {
-            domainText = "hav og kyst";
-        }
-        
-        emptyMessage = (
-            <div className="no-alerts-message">
-                Ingen aktive farevarsler for {domainText} med valgte filtre.
-            </div>
-        );
-    }
+	//Logikk for tom melding hvis ingen farevarsler.
+	let emptyMessage = null;
+	const hasNoAlerts = viewModel.ongoingAlerts.length === 0 && viewModel.upcomingAlerts.length === 0;
+	
+	if (hasNoAlerts) {
+		let domainText = "land";
+		if (viewModel.activeDomain === "marine") {
+			domainText = "hav og kyst";
+		}
+		
+		emptyMessage = (
+			<div className="no-alerts-message">
+				Ingen aktive farevarsler for {domainText} med valgte filtre.
+			</div>
+		);
+	}
 
     //CSS KLASSER FOR DOMENE-KNAPPER
     let landButtonClass = "";
@@ -112,20 +121,22 @@ export default function AlertPage({ viewModel, activeScreen, onChangeScreen, SCR
                     defaultLabel="Alle farenivåer"
                 />
 
-                <FilterSelect
-                    value={viewModel.selectedType}
-                    onChange={(event) => viewModel.setSelectedType(event.target.value)}
-                    options={[
-                        { value: "snow", label: "Snø" },
-                        { value: "wind", label: "Vind" },
-                        { value: "gale", label: "Kuling" },
-                        { value: "rain", label: "Regn" },
-                        { value: "forestFire", label: "Skogbrann" },
-                        { value: "avalanche", label: "Snøskred" }
-                    ]}
-                    defaultLabel="Alle faretyper"
-                />
-            </div>
+				<FilterSelect
+					value={viewModel.selectedType}
+					onChange={(event) => viewModel.setSelectedType(event.target.value)}
+					options={[
+						{ value: "snow", label: "Snø" },
+						{ value: "wind", label: "Vind" },
+						{ value: "gale", label: "Kuling" },
+						{ value: "rain", label: "Regn" },
+						{ value: "ice", label: "Is" },
+						{ value: "icing", label: "Ising på skip" },
+						{ value: "forestFire", label: "Skogbrann" },
+						{ value: "avalanche", label: "Snøskred" }
+					]}
+					defaultLabel="Alle faretyper"
+				/>
+			</div>
 
             <main className="alert-content">
                 <AlertSection 

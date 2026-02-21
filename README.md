@@ -136,3 +136,13 @@ TestMVVMReact
     └── ui
 
 ```
+
+
+
+## Om Varslingsområder for Hav og kyst
+
+
+![Polygoner for varslingsområder for kyst og hav](images/HavPolygoner.png)
+
+Se mer informasjon om dette hos met.no
+https://www.met.no/vaer-og-klima/ekstremvaervarsler-og-andre-farevarsler/varslingsomrader-kyst-og-hav
