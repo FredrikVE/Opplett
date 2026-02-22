@@ -116,6 +116,7 @@ export default function App() {
 		getMapConfigUseCase,
 		searchLocationUseCase,
 		getLocationNameUseCase,
+		getCurrentWeatherUseCase,
 		coords?.lat,
 		coords?.lon
 	);

@@ -1,74 +1,76 @@
-//src/ui/view/components/MapPage/WeatherMap.jsx
 import { useEffect, useRef } from "react";
 import * as maptilersdk from "@maptiler/sdk";
 import "@maptiler/sdk/dist/maptiler-sdk.css";
+import { getWeatherIconFileName } from "../../../utils/CommonUtils/weatherIcons.js";
 
-export default function WeatherMap({ apiKey, style, lat, lon, zoom }) {
+export default function WeatherMap({ apiKey, style, lat, lon, zoom, currentWeather }) {
     const mapContainerRef = useRef(null);
     const mapRef = useRef(null);
+    const markerRef = useRef(null);
+    
+    // Vi lagrer start-verdiene i en Ref slik at den første useEffecten 
+    // ikke trenger å "lytte" på endringer i lat/lon/zoom.
     const initialConfig = useRef({ lat, lon, zoom });
 
-    //UseEffect som initialiserer kartet én gang.
+    // 1. Initialiser kartet (Kjører kun ved mount eller bytte av API-nøkkel/Stil)
     useEffect(() => {
-        if (!mapContainerRef.current || !apiKey || mapRef.current) {
-			return;
-		}
-
-        //Sjeker om vi har startkoordinater
-        const startLat = initialConfig.current.lat;
-        const startLon = initialConfig.current.lon;
-        if (startLat == null || startLon == null) {
-			return;
-		}
-
+        if (!mapContainerRef.current || !apiKey || mapRef.current) return;
+        
         maptilersdk.config.apiKey = apiKey;
 
-        try {
-            const map = new maptilersdk.Map({
-                container: mapContainerRef.current,
-                style: style,
-                center: [Number(startLon), Number(startLat)],
-                zoom: Number(initialConfig.current.zoom) || 6,
-                attributionControl: false
-            });
+        const map = new maptilersdk.Map({
+            container: mapContainerRef.current,
+            style: style,
+            // Bruker verdiene fra Ref-en her
+            center: [Number(initialConfig.current.lon), Number(initialConfig.current.lat)],
+            zoom: Number(initialConfig.current.zoom) || 6,
+            attributionControl: false
+        });
 
-            mapRef.current = map;
+        mapRef.current = map;
 
-            const resizeObserver = new ResizeObserver(() => {
-                if (mapRef.current) map.resize();
-            });
-            resizeObserver.observe(mapContainerRef.current);
+        return () => { 
+            if (mapRef.current) {
+                mapRef.current.remove(); 
+                mapRef.current = null;
+            }
+        };
+    }, [apiKey, style]); // lat, lon, zoom er nå ikke lenger nødvendige her
 
-            return () => {
-                resizeObserver.disconnect();
-                if (mapRef.current) {
-                    map.remove();
-                    mapRef.current = null;
-                }
-            };
-        } 
-		catch (error) {
-            console.error("MapTiler Init Error:", error);
-        }
-    }, 
-	[apiKey, style]); //Lytter etter endinger i API-key og Style
-
-    //UseEffekt som styrer flyTo effek ved søk og endring av koordinater.
+    // 2. Oppdater markør og flytt kart (Kjører ved hver endring i posisjon eller vær)
     useEffect(() => {
-        const isReady = mapRef.current && lat != null && lon != null;
-        if (!isReady) {
-			return;
-		}
+        const map = mapRef.current;
+        if (!map || lat == null || lon == null) return;
 
-        mapRef.current.flyTo({
+        // Flytt kameraet til ny posisjon
+        map.flyTo({
             center: [Number(lon), Number(lat)],
             zoom: Number(zoom) || 6,
-            speed: 0.8,
-            curve: 1.2,
             essential: true
         });
-    }, 
-	[lat, lon, zoom]);
+
+        // Oppdater vær-markøren
+        if (currentWeather) {
+            if (markerRef.current) {
+                markerRef.current.remove();
+            }
+
+            const el = document.createElement('div');
+            el.className = 'map-weather-marker';
+            
+            const iconFile = getWeatherIconFileName(currentWeather.weatherSymbol);
+            el.innerHTML = `
+                <div class="marker-container">
+                    <img src="/weather_icons/100/${iconFile}" alt="vær" class="marker-icon" />
+                    <span class="marker-temp">${Math.round(currentWeather.temp)}°</span>
+                </div>
+            `;
+
+            markerRef.current = new maptilersdk.Marker({ element: el })
+                .setLngLat([Number(lon), Number(lat)])
+                .addTo(map);
+        }
+    }, [lat, lon, zoom, currentWeather]); // Denne vil nå styre alle bevegelser
 
     return (
         <div className="map-page-wrap">

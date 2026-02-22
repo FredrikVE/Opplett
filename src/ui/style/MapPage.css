@@ -1,53 +1,74 @@
 /* src/ui/style/MapPage.css */
 
-/* ================================
-   MapPage container – samme bredde som resten
-   ================================ */
 .map-screen {
-	width: 100%;
-	max-width: 860px;
-	margin: 0 auto;
-	padding: 18px 14px 42px;
-
-	display: flex;
-	flex-direction: column;
+    width: 100%;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 18px 14px 42px;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Header på kart-siden */
 .map-header {
-	margin-bottom: 8px;
-	padding-bottom: 10px;
-	text-align: center;
+    margin-bottom: 8px;
+    padding-bottom: 10px;
+    text-align: center;
 }
 
 .map-header h1 {
-	font-size: 30px;
-	font-weight: var(--font-weight-bold);
-	letter-spacing: 1.5px;
-	margin: 2rem;
+    font-size: 30px;
+    font-weight: bold;
+    letter-spacing: 1.5px;
+    margin: 2rem;
 }
 
-/* ================================
-   Kart-container
-   ================================ */
 .map-content {
-	width: 100%;
-	height: 500px;              /* Juster høyde ved behov */
-	border-radius: 18px;
-	overflow: hidden;
-	background: #ffffff;
-	border: 1px solid rgba(6, 22, 41, 0.08);
-	box-shadow: 0 10px 28px rgba(6, 22, 41, 0.08);
+    width: 100%;
+    height: 500px;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid rgba(6, 22, 41, 0.08);
+    box-shadow: 0 10px 28px rgba(6, 22, 41, 0.08);
+    position: relative;
 }
 
-/* Wrapper */
-.map-page-wrap {
-	width: 100%;
-	height: 100%;
+.map-page-wrap, .map {
+    width: 100%;
+    height: 100%;
 }
 
-/* Selve kartet */
-.map {
-	width: 100%;
-	height: 100%;
+/* --- Værmarkør på kartet --- */
+.map-weather-marker {
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
+    transition: transform 0.2s ease-out;
+}
+
+.map-weather-marker:hover {
+    transform: scale(1.1);
+    z-index: 1000;
+}
+
+.marker-container {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    border: 1.5px solid #ffffff;
+    padding: 4px 12px 4px 6px;
+    border-radius: 40px;
+    gap: 6px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.marker-icon {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+.marker-temp {
+    font-weight: 800;
+    font-size: 16px;
+    color: #1a1a1a;
 }
