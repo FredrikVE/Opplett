@@ -1,68 +1,68 @@
-import { useEffect, useRef, useState } from "react";
+// src/ui/view/components/MapPage/WeatherMap.jsx
+import { useEffect, useRef } from "react";
 import * as maptilersdk from "@maptiler/sdk";
-import { GeocodingControl } from "@maptiler/geocoding-control/react";
-
 import "@maptiler/sdk/dist/maptiler-sdk.css";
-import "@maptiler/geocoding-control/style.css";
 
-export default function WeatherMap({ apiKey, style, lat, lon, zoom }) {
-    const mapContainerRef = useRef(null);
-    const mapRef = useRef(null);
-    const [mapInstance, setMapInstance] = useState(null);
+const STREETS_V4_STYLE = "https://api.maptiler.com/maps/streets-v4/style.json";
+const DEFAULT_CENTER = [10.75, 59.91];
+const DEFAULT_ZOOM = 6;
 
-    // Initialisering (Kjører kun én gang)
-    useEffect(() => {
-        if (!mapContainerRef.current || !apiKey || mapRef.current) return;
+export default function WeatherMap({ apiKey, lat, lon, zoom }) {
 
-        maptilersdk.config.apiKey = apiKey;
+	
 
-        const map = new maptilersdk.Map({
-            container: mapContainerRef.current,
-            style: maptilersdk.MapStyle[style] ?? maptilersdk.MapStyle.STREETS,
-            center: [lon || 10.75, lat || 59.91],
-            zoom: zoom || 6
-        });
+	const mapContainerRef = useRef(null);
+	const mapRef = useRef(null);
 
-        map.on('load', () => {
-            mapRef.current = map;
-            setMapInstance(map);
-        });
 
-        return () => {
-            if (mapRef.current) {
-                mapRef.current.remove();
-                mapRef.current = null;
-            }
-        };
-    }, [apiKey, lat, lon, style, zoom]); // Kun ved endring av API-nøkkel
+	//INIT – kjører kun én gang
+	useEffect(() => {
+		if (!mapContainerRef.current || !apiKey || mapRef.current) {
+			return;
+		}
 
-    // Flytt kartet når props (lat/lon) endres fra utsiden (f.eks. søkefeltet ditt)
-    useEffect(() => {
-        if (!mapRef.current || lat == null || lon == null) return;
-        
-        mapRef.current.flyTo({
-            center: [lon, lat],
-            zoom: zoom,
-            essential: true
-        });
-    }, [lat, lon, zoom]);
+		maptilersdk.config.apiKey = apiKey;
 
-    return (
-        <div className="map-page-wrap">
-            {/* Dette er DIV-en som MÅ ha høyde i CSS */}
-            <div ref={mapContainerRef} className="map" />
+		const map = new maptilersdk.Map({
+			container: mapContainerRef.current,
+			style: STREETS_V4_STYLE,
+			center: DEFAULT_CENTER,
+			zoom: DEFAULT_ZOOM
+		});
 
-            {mapInstance && (
-                <div className="geocoding">
-                    <GeocodingControl
-                        apiKey={apiKey}
-                        map={mapInstance}
-                        marker={true}
-                        showResultsWhileTyping={true}
-                        placeholder="Søk på kartet..."
-                    />
-                </div>
-            )}
-        </div>
-    );
+		mapRef.current = map;
+
+		const resizeObserver = new ResizeObserver(() => {
+			map.resize();
+		});
+
+		resizeObserver.observe(mapContainerRef.current);
+
+		return () => {
+			resizeObserver.disconnect();
+			map.remove();
+			mapRef.current = null;
+		};
+	}, [apiKey]);
+
+	//Fly når coords endres
+	useEffect(() => {
+		if (!mapRef.current || lat == null || lon == null) {
+			return;
+		}
+
+		mapRef.current.flyTo({
+			center: [lon, lat],
+			zoom: zoom ?? DEFAULT_ZOOM,
+			speed: 0.8,
+			curve: 1.2,
+			essential: true
+		});
+	}, [lat, lon, zoom]);
+
+	return (
+		<div className="map-page-wrap">
+			<div ref={mapContainerRef} className="map" />
+		</div>
+	);
 }

@@ -177,6 +177,7 @@ export default function App() {
 					SCREENS={NAV_SCREENS}
 				/>
 			)}
+			
 			<Footer />
 		</>
 	);

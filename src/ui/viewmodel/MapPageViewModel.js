@@ -1,16 +1,16 @@
 // src/ui/viewmodel/MapPageViewModel.js
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import useSearchViewModel from "./SearchViewModel.js";
 import { resolveTimezone } from "../utils/TimeZoneUtils/timeFormatters.js";
 
 export default function useMapPageViewModel(getMapConfigUseCase, searchLocationUseCase, getLocationNameUseCase, initialLat, initialLon) {
-	// Hent kart-config fra domenelaget
-	const baseConfig = useMemo(
-		() => getMapConfigUseCase.execute(),
+
+	//Statevariabler og config
+	const baseConfig = useMemo(() =>
+		getMapConfigUseCase.execute(),
 		[getMapConfigUseCase]
 	);
 
-	// Samme mønster som ForecastPageViewModel
 	const initialLocation = {
 		lat: initialLat ?? baseConfig.defaultCenter.lat,
 		lon: initialLon ?? baseConfig.defaultCenter.lon,
@@ -19,12 +19,10 @@ export default function useMapPageViewModel(getMapConfigUseCase, searchLocationU
 	};
 
 	const [location, setLocation] = useState(initialLocation);
-	const [prevInitial, setPrevInitial] = useState({
-		lat: initialLat,
-		lon: initialLon
-	});
+	const [prevInitial, setPrevInitial] = useState({lat: initialLat, lon: initialLon});
 
-	// Synk GPS-koordinater likt som resten av appen
+
+	//UseEffekt som oppdaterer GPS-koordinater
 	if (initialLat !== prevInitial.lat || initialLon !== prevInitial.lon) {
 		setPrevInitial({ lat: initialLat, lon: initialLon });
 		setLocation(prev => ({
@@ -34,20 +32,22 @@ export default function useMapPageViewModel(getMapConfigUseCase, searchLocationU
 		}));
 	}
 
-	// Rebruk SearchViewModel identisk
+	//SearchViewModel
 	const searchViewModel = useSearchViewModel(
 		searchLocationUseCase,
 		setLocation
 	);
 
-	// SSOT for tidssone
+
+	//SSOT for tidssone
 	const tz = useMemo(
 		() => resolveTimezone(location.timezone),
 		[location.timezone]
 	);
 
-	// Reverse geocoding (identisk struktur som ForecastPageViewModel)
+	//UseEffect for reverse geocoding
 	useEffect(() => {
+
 		if (!location.lat || !location.lon) {
 			return;
 		}
@@ -87,24 +87,28 @@ export default function useMapPageViewModel(getMapConfigUseCase, searchLocationU
 
 		loadLocationName();
 
+		//Clean-up-funksjon
 		return () => {
 			cancelled = true;
 		};
-	}, [location.lat, location.lon, getLocationNameUseCase]);
+	},
+	[location.lat, location.lon, getLocationNameUseCase]);
 
-	// Kartcenter utledes likt
+
+	// Map center (lik struktur som Forecast)
 	const mapCenter = useMemo(() => ({
 			lat: location.lat ?? baseConfig.defaultCenter.lat,
 			lon: location.lon ?? baseConfig.defaultCenter.lon
 		}),
-		
 		[location.lat, location.lon, baseConfig.defaultCenter.lat, baseConfig.defaultCenter.lon]
 	);
 
+
 	return {
+
 		// Kart-config
 		apiKey: baseConfig.apiKey,
-		style: baseConfig.defaultStyle,
+		style: baseConfig.style,
 		zoom: baseConfig.defaultZoom,
 
 		// Lokasjon

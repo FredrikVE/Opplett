@@ -2,31 +2,29 @@
 const API_KEY = import.meta.env.VITE_MAPTILER_API_KEY;
 
 export default class MapTilerDataSource {
-    constructor() {
-        this.apiKey = API_KEY;
-        this.baseUrl = "https://api.maptiler.com";
-        this.callCount = 0; //Teller for logging av API-klall
-    }
+	constructor() {
+		this.apiKey = API_KEY;
+		this.style = "https://api.maptiler.com/maps/streets-v4/style.json"
+	}
 
-    getBaseConfig() {
+	getBaseConfig() {
+		if (!this.apiKey) {
+			throw new Error("Mangler VITE_MAPTILER_API_KEY i .env");
+		}
 
-		//Logg antall api-kall
-        this.callCount++;
-        console.log(`[MapTilerDataSource] Kall nr: ${this.callCount}`);
+		return {
+			apiKey: this.apiKey,
 
-        if (!this.apiKey) {
-            throw new Error("Mangler VITE_MAPTILER_API_KEY i .env");
-        }
+			// Stil flyttet hit
+			style: this.style,
 
-        return {
-            apiKey: this.apiKey,
-            baseUrl: this.baseUrl,
-            defaultStyle: "HYBRID",
-            defaultZoom: 6,
-            defaultCenter: {
-                lat: 59.91,
-                lon: 10.75
-            }
-        };
-    }
+			//Defaults flyttet hit
+			defaultCenter: {
+				lat: 59.91,
+				lon: 10.75
+			},
+
+			defaultZoom: 6
+		};
+	}
 }

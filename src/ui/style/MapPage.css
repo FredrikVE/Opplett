@@ -1,28 +1,53 @@
-/* Sørg for at hovedskjermen tar hele høyden minus header/footer */
+/* src/ui/style/MapPage.css */
+
+/* ================================
+   MapPage container – samme bredde som resten
+   ================================ */
 .map-screen {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 60px); /* Juster 60px etter din header-høyde */
+	width: 100%;
+	max-width: 860px;
+	margin: 0 auto;
+	padding: 18px 14px 42px;
+
+	display: flex;
+	flex-direction: column;
 }
 
+/* Header på kart-siden */
+.map-header {
+	margin-bottom: 8px;
+	padding-bottom: 10px;
+	text-align: center;
+}
+
+.map-header h1 {
+	font-size: 30px;
+	font-weight: var(--font-weight-bold);
+	letter-spacing: 1.5px;
+	margin: 2rem;
+}
+
+/* ================================
+   Kart-container
+   ================================ */
 .map-content {
-  flex: 1; /* Lar denne fylle resten av plassen */
-  position: relative;
-  width: 100%;
+	width: 100%;
+	height: 500px;              /* Juster høyde ved behov */
+	border-radius: 18px;
+	overflow: hidden;
+	background: #ffffff;
+	border: 1px solid rgba(6, 22, 41, 0.08);
+	box-shadow: 0 10px 28px rgba(6, 22, 41, 0.08);
 }
 
+/* Wrapper */
 .map-page-wrap {
-  width: 100%;
-  height: 100%; /* Viktig! Tar høyden fra .map-content */
-  position: relative;
+	width: 100%;
+	height: 100%;
 }
 
+/* Selve kartet */
 .map {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 100%;
-  background-color: #f0f0f0; /* Debug-farge: hvis du ser grått, er div-en der! */
-  height: 500px !important; /* TEST: Se om kartet dukker opp nå */
-  width: 100%;
+	width: 100%;
+	height: 100%;
 }
