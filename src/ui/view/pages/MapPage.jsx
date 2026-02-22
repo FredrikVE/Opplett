@@ -2,14 +2,16 @@
 import Navigation from "../../../navigation/Navigation.jsx";
 import SearchField from "../components/Common/SearchFeild/SearchField.jsx";
 import WeatherMap from "../components/MapPage/WeatherMap.jsx";
+import LoadingSpinner from "../components/Common/LoadingSpinner/LoadingSpinner.jsx";
 
 export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREENS }) {
-	const { location, mapCenter, zoom, apiKey, style } = viewModel;
+	// Destructer og pakker ut nødvendige variabler fra viewModel
+	const { location, mapCenter, zoom, apiKey, style, weatherPoints, isLoading, onMapChange } = viewModel;
 
 	return (
 		<div className="map-screen">
 			<header className="map-header">
-				<h1>{location.name || "Min posisjon"}</h1>
+				<h1>{location.name || "Værkart"}</h1>
 			</header>
 
 			<SearchField
@@ -27,14 +29,21 @@ export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREE
 			/>
 
 			<main className="map-content">
+				{/* Viser spinner over kartet når vi laster inn nye vær-punkter */}
+				{isLoading && (
+					<div className="map-loading-overlay">
+						<LoadingSpinner />
+					</div>
+				)}
+
 				<WeatherMap
 					apiKey={apiKey}
 					style={style}
 					lat={mapCenter.lat}
 					lon={mapCenter.lon}
 					zoom={zoom}
-					//currentWeather={viewModel.currentWeather}
-					weatherPoints={viewModel.weatherPoints} // Pass på at navnet matcher
+					weatherPoints={weatherPoints}
+					onMapChange={onMapChange} 
 				/>
 			</main>
 		</div>

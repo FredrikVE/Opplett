@@ -1,88 +1,104 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import useSearchViewModel from "./SearchViewModel.js";
 import { resolveTimezone } from "../utils/TimeZoneUtils/timeFormatters.js";
-import { getGridPoints } from "../utils/MapForecastUtils/gridCalculator.js";
 
-export default function useMapPageViewModel(getMapConfigUseCase, searchLocationUseCase, getLocationNameUseCase, getCurrentWeatherUseCase, initialLat, initialLon) {
+export default function useMapPageViewModel(
+	getMapConfigUseCase, 
+	searchLocationUseCase, 
+	getMapWeatherUseCase, 
+	initialLat, 
+	initialLon
+) {
+	const baseConfig = useMemo(() => getMapConfigUseCase.execute(), [getMapConfigUseCase]);
+	const { defaultZoom, apiKey, style, defaultCenter } = baseConfig;
 
-    const baseConfig = useMemo(() => getMapConfigUseCase.execute(), [getMapConfigUseCase]);
-    const { defaultZoom, apiKey, style, defaultCenter } = baseConfig;
+	// Lokasjon styres primært av søkefeltet eller GPS ved oppstart
+	const [location, setLocation] = useState({
+		lat: initialLat ?? defaultCenter.lat,
+		lon: initialLon ?? defaultCenter.lon,
+		name: null,
+		timezone: null
+	});
 
-    const [location, setLocation] = useState({
-        lat: initialLat ?? defaultCenter.lat,
-        lon: initialLon ?? defaultCenter.lon,
-        name: null,
-        timezone: null
-    });
+	// Denne staten holder styr på hva brukeren faktisk ser på kartet akkurat nå
+	const [mapView, setMapView] = useState({
+		lat: location.lat,
+		lon: location.lon,
+		bbox: null // [vest, sør, øst, nord]
+	});
 
-    const [weatherPoints, setWeatherPoints] = useState([]);
-    const weatherCache = useRef({});
+	const [weatherPoints, setWeatherPoints] = useState([]);
+	const [isLoading, setIsLoading] = useState(false);
 
-    const searchViewModel = useSearchViewModel(searchLocationUseCase, setLocation);
-    
-    // Fikset: tz brukes nå i return-objektet
-    const tz = useMemo(() => resolveTimezone(location.timezone), [location.timezone]);
+	const searchViewModel = useSearchViewModel(searchLocationUseCase, setLocation);
+	const tz = useMemo(() => resolveTimezone(location.timezone), [location.timezone]);
 
-    useEffect(() => {
-        if (!location.lat || !location.lon) return;
+	/**
+	 * Callback som WeatherMap kaller på hver 'moveend' (når kartet stopper).
+	 * Bruker useCallback for å unngå unødvendige re-renders av kartkomponenten.
+	 */
+	const onMapChange = useCallback((lat, lon, bbox) => {
+		setMapView({ lat, lon, bbox });
+	}, []);
 
-        let cancelled = false;
+	useEffect(() => {
+		// Vi prioriterer mapView (utsnittet), men faller tilbake på location (søket)
+		const targetLat = mapView.lat || location.lat;
+		const targetLon = mapView.lon || location.lon;
 
-        async function updateMapWeather() {
-            // Simulert utsnitt basert på posisjon
-            const bounds = {
-                south: location.lat - 2,
-                north: location.lat + 2,
-                west: location.lon - 3,
-                east: location.lon + 3
-            };
+		if (!targetLat || !targetLon) return;
 
-            // Fikset: Bruker defaultZoom her
-            const grid = getGridPoints(bounds, defaultZoom);
+		let cancelled = false;
 
-            const pointsToFetch = grid.filter(p => !weatherCache.current[`${p.lat},${p.lon}`]);
+		// DEBOUNCE: Vi venter 500ms før vi faktisk utfører de tunge API-kallene.
+		// Dette fjerner "lugging" når man zoomer eller flytter kartet raskt.
+		const timer = setTimeout(async () => {
+			setIsLoading(true);
+			try {
+				const points = await getMapWeatherUseCase.execute(
+					targetLat, 
+					targetLon, 
+					tz,
+					mapView.bbox
+				);
 
-            if (pointsToFetch.length === 0) {
-                if (!cancelled) setWeatherPoints(Object.values(weatherCache.current));
-                return;
-            }
+				if (!cancelled) {
+					setWeatherPoints(points);
+				}
+			} catch (error) {
+				console.error("Feil ved oppdatering av kart-vær:", error);
+			} finally {
+				if (!cancelled) setIsLoading(false);
+			}
+		}, 500); 
 
-            try {
-                const requests = pointsToFetch.slice(0, 15).map(async (p) => {
-                    const data = await getCurrentWeatherUseCase.execute({ lat: p.lat, lon: p.lon });
-                    if (data) {
-                        weatherCache.current[`${p.lat},${p.lon}`] = { ...data, lat: p.lat, lon: p.lon };
-                    }
-                });
+		// Cleanup: Hvis mapView eller koordinater endres før 500ms har gått, 
+		// avbryter vi den forrige timeren og starter en ny.
+		return () => { 
+			cancelled = true;
+			clearTimeout(timer);
+		};
+	}, [mapView, tz, getMapWeatherUseCase, location.lat, location.lon]); 
 
-                await Promise.all(requests);
+	return {
+		// Kart-konfigurasjon
+		apiKey,
+		style,
+		zoom: defaultZoom,
 
-                if (!cancelled) {
-                    setWeatherPoints(Object.values(weatherCache.current));
-                }
-            } catch (error) {
-                console.error("Feil ved henting av rutenett-vær:", error);
-            }
-        }
+		// Vær-punkter og tilstand
+		location,
+		timezone: tz,
+		mapCenter: { lat: location.lat, lon: location.lon },
+		weatherPoints,
+		isLoading,
+		onMapChange,
 
-        updateMapWeather();
-        return () => { cancelled = true; };
-        
-        // Fikset: Lagt til alle nødvendige avhengigheter
-    }, [location.lat, location.lon, getCurrentWeatherUseCase, defaultZoom]); 
-
-    return {
-        apiKey,
-        style,
-        zoom: defaultZoom,
-        location,
-        timezone: tz,
-        mapCenter: { lat: location.lat, lon: location.lon },
-        weatherPoints,
-        query: searchViewModel.query,
-        suggestions: searchViewModel.suggestions,
-        onSearchChange: searchViewModel.onSearchChange,
-        onSuggestionSelected: searchViewModel.onSuggestionSelected,
-        onResetToDeviceLocation: () => searchViewModel.onResetLocation(initialLat, initialLon)
-    };
+		// Søke-logikk
+		query: searchViewModel.query,
+		suggestions: searchViewModel.suggestions,
+		onSearchChange: searchViewModel.onSearchChange,
+		onSuggestionSelected: searchViewModel.onSuggestionSelected,
+		onResetToDeviceLocation: () => searchViewModel.onResetLocation(initialLat, initialLon)
+	};
 }

@@ -38,6 +38,7 @@ import LocationForecastRepository from "./model/repositories/LocationForecastRep
 import MetAlertsRepository from "./model/repositories/MetAlertsRepository.js";
 import SunriseRepository from "./model/repositories/SunriseRepository.js";
 import MapTilerRepository from "./model/repositories/MapTilerRepository.js"
+
 //UseCases fra domain-layer
 import GetForecastUseCase from "./model/domain/GetForecastUseCase.js";
 import GetAllAlertsUseCase from "./model/domain/GetAllAlertsUseCase.js";
@@ -47,6 +48,7 @@ import GetLocationNameUseCase from "./model/domain/GetLocationNameUseCase.js";
 import GetSunTimesUseCase from "./model/domain/GetSunTimesUseCase.js";
 import GetAlertsUseCase from "./model/domain/GetAlertsUseCase.js";
 import GetMapConfigUseCase from "./model/domain/GetMapConfigUseCase.js"
+import GetMapWeatherUseCase from "./model/domain/GetMapWeatherUseCase.js";
 
 //ViewModel og View
 import useForecastPageViewModel from "./ui/viewmodel/ForecastPageViewModel.js";
@@ -89,6 +91,7 @@ const getCurrentWeatherUseCase = new GetCurrentWeatherUseCase(locationRepo);
 const searchLocationUseCase = new SearchLocationUseCase(geoRepo);
 const getLocationNameUseCase = new GetLocationNameUseCase(geoRepo);
 const getMapConfigUseCase = new GetMapConfigUseCase(mapTilerRepo);
+const getMapWeatherUseCase = new GetMapWeatherUseCase(mapTilerRepo, getCurrentWeatherUseCase);
 
 export default function App() {
 	const hoursAhead = 120;
@@ -115,8 +118,7 @@ export default function App() {
 	const mapPageViewModel = useMapPageViewModel(
 		getMapConfigUseCase,
 		searchLocationUseCase,
-		getLocationNameUseCase,
-		getCurrentWeatherUseCase,
+		getMapWeatherUseCase,
 		coords?.lat,
 		coords?.lon
 	);
