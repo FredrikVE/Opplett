@@ -15,11 +15,11 @@ import "./ui/style/GraphPage.css";
 import "./ui/style/AlertPage.css";
 import "./ui/style/Header.css";
 import "./ui/style/Footer.css";
-import "./ui/style/NavButton.css"
-import "./ui/style/NowCard.css"
+import "./ui/style/NavButton.css";
+import "./ui/style/NowCard.css";
 import "./ui/style/UVNowBar.css";
 import "./ui/style/WindArrow.css";
-import "./ui/style/FilterDropDown.css"
+import "./ui/style/FilterDropDown.css";
 
 //Navigation
 import { NAV_SCREENS } from "./navigation/navGraph.js";
@@ -36,6 +36,9 @@ import LocationForecastRepository from "./model/repositories/LocationForecastRep
 import MetAlertsRepository from "./model/repositories/MetAlertsRepository.js";
 import SunriseRepository from "./model/repositories/SunriseRepository.js";
 
+//UseCases fra domain-layer
+import GetForecastUseCase from "./model/domain/GetForecastUseCase.js";
+
 //ViewModel og View
 import useForecastPageViewModel from "./ui/viewmodel/ForecastPageViewModel.js";
 import useGraphScreenViewModel from "./ui/viewmodel/GraphScreenViewModel.js";
@@ -46,7 +49,7 @@ import GraphPage from "./ui/view/pages/GraphPage.jsx";
 import AlertPage from "./ui/view/pages/AlertPage.jsx";
 
 //Header og footer
-import Header from "./ui/view/components/Common/Layout/Header.jsx"
+import Header from "./ui/view/components/Common/Layout/Header.jsx";
 import Footer from "./ui/view/components/Common/Layout/Footer.jsx";
 import LoadingSpinner from "./ui/view/components/Common/LoadingSpinner/LoadingSpinner.jsx";
 
@@ -55,17 +58,18 @@ import LocationNameFormatter from "./geolocation/LocationNameFormatter.js";
 
 //Instansierer LocationFormatter of penere formatering av stedsnavn
 const locationNameFormatter = new LocationNameFormatter();
-
 const formatLocation = (locationData) => {
 	return locationNameFormatter.format(locationData);
-}
+};
 
-//Initialiserer instanser utenfor komponentens livssyklus for stabilitet og unødvendige re-renders.
-//Dette hindrer doble instanser ved re-renders og fikser teller-problemet i loggen.
+// Repositories (composition root)
 const locationRepo = new LocationForecastRepository(new LocationForecastDataSource());
 const sunriseRepo = new SunriseRepository(new SunriseDataSource());
 const alertsRepo = new MetAlertsRepository(new MetAlertsDataSource());
 const geoRepo = new OpenCageGeocodingRepository(new OpenCageGeocodingDataSource(), formatLocation);
+
+//Oppretter instanser av UseCasees fra domain-layer
+const getForecastUseCase = new GetForecastUseCase(locationRepo, sunriseRepo, alertsRepo);
 
 export default function App() {
 	const hoursAhead = 120;
@@ -75,8 +79,9 @@ export default function App() {
 	//Henter koordinater fra enheten (starter som null)
 	const { loading, error, coords } = useGeolocation();
 
-	//Initialiser ViewModel med dependancy injection av repositories
-	const forecastPageViewModel = useForecastPageViewModel(locationRepo, sunriseRepo, alertsRepo, geoRepo, coords?.lat,  coords?.lon, hoursAhead);
+	//ViewModel får nå usecase istedenfor repositories
+	//Initialiser ViewModel med dependancy injection av useCasees og repositories
+	const forecastPageViewModel = useForecastPageViewModel(getForecastUseCase, geoRepo, coords?.lat, coords?.lon, hoursAhead);
 	const graphScreenViewModel = useGraphScreenViewModel(forecastPageViewModel);
 	const alertPageViewModel = useAlertPageViewModel(alertsRepo);
 
@@ -100,7 +105,7 @@ export default function App() {
 			<Header />
 
 			{activeScreen === NAV_SCREENS.ALERTS && (
-				<AlertPage 
+				<AlertPage
 					viewModel={alertPageViewModel}
 					activeScreen={activeScreen}
 					onChangeScreen={setActiveScreen}
@@ -118,7 +123,7 @@ export default function App() {
 			)}
 
 			{activeScreen === NAV_SCREENS.GRAPH && (
-				<GraphPage 
+				<GraphPage
 					viewModel={graphScreenViewModel}
 					activeScreen={activeScreen}
 					onChangeScreen={setActiveScreen}

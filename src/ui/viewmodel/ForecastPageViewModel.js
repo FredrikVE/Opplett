@@ -1,10 +1,10 @@
-// src/ui/viewmodels/useHomeScreenViewModel.js
+//src/ui/viewmodel/ForecastPageViewModel.js
 import { useEffect, useState, useRef, useMemo } from "react";
 import { fetchInitialLocationName } from "../utils/LocationUtils/fetchInitialLocationName.js";
 import { resolveTimezone, formatToLocalTime, formatToLocalDateLabel, formatLocalDate, formatLocalDateTime, getLocalHour } from "../utils/TimeZoneUtils/timeFormatters.js";
 import useSearchViewModel from "./SearchViewModel.js";
 
-export default function useForecastPageViewModel(forecastRepository, sunriseRepository, metAlertsRepository, geocodingRepository, initialLat, initialLon, hoursAhead) {
+export default function useForecastPageViewModel(getForecastUseCase, geocodingRepository, initialLat, initialLon, hoursAhead) {
 	const DATA_FETCH_STABILIZATION_MS = 50;
 
 	const initialLocation = { lat: initialLat, lon: initialLon, name: null, timezone: null };
@@ -20,15 +20,13 @@ export default function useForecastPageViewModel(forecastRepository, sunriseRepo
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(null);
 
-	// Oppdater lokasjon når vi får enhetens posisjon
 	if (initialLat !== prevInitial.lat || initialLon !== prevInitial.lon) {
 		setPrevInitial({ lat: initialLat, lon: initialLon });
 		setLocation(prev => ({
-			 ...prev, 
-			 lat: initialLat, 
-			 lon: initialLon 
-			}
-		));
+			...prev,
+			lat: initialLat,
+			lon: initialLon
+		}));
 	}
 
 	const lastFetchedRef = useRef("");
@@ -36,8 +34,8 @@ export default function useForecastPageViewModel(forecastRepository, sunriseRepo
 
 	//SSOT for tidshåndtering
 	//Bruk useMemo for å unngå unødvendig re-evaluering av tidssone
-	const tz = useMemo(() => 
-		resolveTimezone(location.timezone), 
+	const tz = useMemo(() =>
+		resolveTimezone(location.timezone),
 	[location.timezone]);
 
 	//Henter stedsnavn (Dette må fortsatt være en Effect fordi det er et asynkront nettverkskall)
@@ -46,7 +44,7 @@ export default function useForecastPageViewModel(forecastRepository, sunriseRepo
 			return;
 		}
 		fetchInitialLocationName(setLocation, geocodingRepository, location.lat, location.lon);
-	}, 
+	},
 	[location.lat, location.lon, geocodingRepository]);
 
 	//Hovedeffekt for datalasting (forblir asynkron i useEffect)
@@ -59,7 +57,7 @@ export default function useForecastPageViewModel(forecastRepository, sunriseRepo
 
 		//Inkludert tz i fetchKey for SSOT
 		async function loadData() {
-			
+
 			const fetchKey = `${location.lat},${location.lon},${hoursAhead},${tz}`;
 			if (lastFetchedRef.current === fetchKey) {
 				return;
@@ -69,58 +67,37 @@ export default function useForecastPageViewModel(forecastRepository, sunriseRepo
 
 			try {
 				setLoading(true);
-				
-				const [hourlyRaw, current, alertResults] = await Promise.all([
-					forecastRepository.getHourlyForecast(location.lat, location.lon, hoursAhead, tz),
-					forecastRepository.getCurrentWeather(location.lat, location.lon, tz),
-					metAlertsRepository.findAlerts(location.lat, location.lon)
-				]);
+
+				const result = await getForecastUseCase.execute({ lat: location.lat, lon: location.lon, hoursAhead, timeZone: tz, formatToLocalTime });
 
 				if (cancelled) {
 					return;
 				}
 
 				const initialGrouped = {};
-				hourlyRaw.forEach(hour => {
-					const key = hour.dateISO;
-					if (!initialGrouped[key]) {
-						initialGrouped[key] = {
-							label: formatToLocalDateLabel(hour.timeISO, tz),
-							hours: []
-						};
-					}
-					initialGrouped[key].hours.push(hour);
+				Object.entries(result.hourlyByDate).forEach(([dateISO, data]) => {
+					const firstHour = data.hours[0];
+					initialGrouped[dateISO] = {
+						label: firstHour ? formatToLocalDateLabel(firstHour.timeISO, tz) : "",
+						hours: data.hours
+					};
 				});
 
 				setForecast(initialGrouped);
-				setCurrentWeather(current);
-				setAlerts(alertResults?.alerts ?? []);
-				setAlertsByDate(alertResults?.alertsByDate ?? {});
-				setLoading(false); 
+				setDailySummaryByDate(result.dailySummaryByDate);
+				setSunTimesByDate(result.sunTimesByDate);
+				setAlerts(result.alerts ?? []);
+				setAlertsByDate(result.alertsByDate ?? {});
 
-				const [fullDailySummary] = await Promise.all([
-					// Her kan man vurdere om man trenger fullHourlyRaw hvis den er lik hourlyRaw fra Fase 1
-					forecastRepository.getDailySummary(location.lat, location.lon, hoursAhead, tz)
-				]);
+				const firstDateKey = Object.keys(initialGrouped)[0];
+				const firstHour = firstDateKey
+					? initialGrouped[firstDateKey].hours[0]
+					: null;
 
-				if (cancelled) {
-					return;
-				}
-				//Vi bruker de eksisterende grupperte dataene for å finne datoene
-				setDailySummaryByDate(fullDailySummary);
+				setCurrentWeather(firstHour ?? null);
 
-				// ENDRING 4: Dynamisk uthenting av datoer basert på de faktiske værdataene
-				const isoDates = Object.keys(initialGrouped); 
-				const solarReport = await sunriseRepository.getFullSolarReport(
-					location.lat, 
-					location.lon, 
-					isoDates, 
-					tz, 
-					formatToLocalTime
-				);
-				
-				setSunTimesByDate(solarReport);
-			} 
+				setLoading(false);
+			}
 			catch (error) {
 				if (!cancelled) {
 					setError(error?.message ?? "Feil ved henting av data");
@@ -136,7 +113,8 @@ export default function useForecastPageViewModel(forecastRepository, sunriseRepo
 			cancelled = true;
 			clearTimeout(timer);
 		};
-	}, [location.lat, location.lon, hoursAhead, tz, forecastRepository, sunriseRepository, metAlertsRepository]);
+	},
+	[location.lat, location.lon, hoursAhead, tz, getForecastUseCase]);
 
 	return {
 		forecast,
