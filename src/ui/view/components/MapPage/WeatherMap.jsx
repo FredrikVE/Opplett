@@ -6,14 +6,18 @@ import "@maptiler/sdk/dist/maptiler-sdk.css";
 export default function WeatherMap({ apiKey, style, lat, lon, zoom }) {
     const mapContainerRef = useRef(null);
     const mapRef = useRef(null);
+    const initialConfig = useRef({ lat, lon, zoom });
 
-    //UseEffekt som initialiserer oppretter karet én gang.
+    //UseEffect som initialiserer kartet én gang.
     useEffect(() => {
         if (!mapContainerRef.current || !apiKey || mapRef.current) {
 			return;
 		}
 
-        if (lat == null || lon == null) {
+        //Sjeker om vi har startkoordinater
+        const startLat = initialConfig.current.lat;
+        const startLon = initialConfig.current.lon;
+        if (startLat == null || startLon == null) {
 			return;
 		}
 
@@ -23,8 +27,8 @@ export default function WeatherMap({ apiKey, style, lat, lon, zoom }) {
             const map = new maptilersdk.Map({
                 container: mapContainerRef.current,
                 style: style,
-                center: [Number(lon), Number(lat)],
-                zoom: Number(zoom) || 6,
+                center: [Number(startLon), Number(startLat)],
+                zoom: Number(initialConfig.current.zoom) || 6,
                 attributionControl: false
             });
 
@@ -42,12 +46,14 @@ export default function WeatherMap({ apiKey, style, lat, lon, zoom }) {
                     mapRef.current = null;
                 }
             };
-        } catch (error) {
+        } 
+		catch (error) {
             console.error("MapTiler Init Error:", error);
         }
-    }, [apiKey, style]);
+    }, 
+	[apiKey, style]); //Lytter etter endinger i API-key og Style
 
-    //FlyTo effekt ved søk 
+    //UseEffekt som styrer flyTo effek ved søk og endring av koordinater.
     useEffect(() => {
         const isReady = mapRef.current && lat != null && lon != null;
         if (!isReady) {
@@ -61,12 +67,12 @@ export default function WeatherMap({ apiKey, style, lat, lon, zoom }) {
             curve: 1.2,
             essential: true
         });
-    }, [lat, lon, zoom]);
+    }, 
+	[lat, lon, zoom]);
 
     return (
         <div className="map-page-wrap">
-            {/* CSS bør sørge for at .map har høyde/bredde */}
-            <div ref={mapContainerRef} className="map" style={{ width: '100%', height: '100%' }} />
+            <div ref={mapContainerRef} className="map" />
         </div>
     );
 }
