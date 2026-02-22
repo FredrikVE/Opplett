@@ -91,8 +91,7 @@ export default function useMapPageViewModel(getMapConfigUseCase, searchLocationU
 					return;
 				}
 
-                // Vi henter "currentWeather" fra forecast-resultatet
-                // Antar her at Use Case returnerer et objekt med currentWeather-egenskap
+                //Henter være fra currentWeather
                 if (forecastData) {
 					setCurrentWeather(forecastData);
 				}
