@@ -1,10 +1,9 @@
 // src/ui/viewmodel/ForecastPageViewModel.js
-
 import { useEffect, useState, useRef, useMemo } from "react";
 import { resolveTimezone, formatToLocalTime, formatToLocalDateLabel, formatLocalDate, formatLocalDateTime, getLocalHour } from "../utils/TimeZoneUtils/timeFormatters.js";
 import useSearchViewModel from "./SearchViewModel.js";
 
-export default function useForecastPageViewModel(getForecastUseCase, getCurrentWeatherUseCase, searchLocationUseCase, getLocationNameUseCase, getSunTimesUseCase, initialLat, initialLon, hoursAhead) {
+export default function useForecastPageViewModel(getForecastUseCase, getAlertsUseCase, getCurrentWeatherUseCase, searchLocationUseCase, getLocationNameUseCase, getSunTimesUseCase, initialLat, initialLon, hoursAhead) {
 
 	//Statevariabler og consts
 	const DATA_FETCH_STABILIZATION_MS = 50;
@@ -77,9 +76,8 @@ export default function useForecastPageViewModel(getForecastUseCase, getCurrentW
 	}, 
 	[location.lat, location.lon, getLocationNameUseCase]);
 
-	// =========================
-	// LOAD FORECAST + SUN
-	// =========================
+
+	//UseEffekt for å laste inne dat om værmelding og soltider fra UseCases.
 	useEffect(() => {
 		if (!location.lat || !location.lon) {
 			return;
@@ -100,7 +98,7 @@ export default function useForecastPageViewModel(getForecastUseCase, getCurrentW
 				setError(null);
 
 				//Henter forecast fra UseCase i Dommenelaget
-				const result = await getForecastUseCase.execute({
+				const forecastResult = await getForecastUseCase.execute({
 					lat: location.lat,
 					lon: location.lon,
 					hoursAhead,
@@ -112,7 +110,7 @@ export default function useForecastPageViewModel(getForecastUseCase, getCurrentW
 				}
 
 				const grouped = {};
-				Object.entries(result.hourlyByDate).forEach(([dateISO, data]) => {
+				Object.entries(forecastResult.hourlyByDate).forEach(([dateISO, data]) => {
 					const firstHour = data.hours[0];
 					grouped[dateISO] = {
 						label: firstHour ? formatToLocalDateLabel(firstHour.timeISO, tz) : "",
@@ -121,9 +119,18 @@ export default function useForecastPageViewModel(getForecastUseCase, getCurrentW
 				});
 
 				setForecast(grouped);
-				setDailySummaryByDate(result.dailySummaryByDate);
-				setAlerts(result.alerts ?? []);
-				setAlertsByDate(result.alertsByDate ?? {});
+				setDailySummaryByDate(forecastResult.dailySummaryByDate);
+
+				//Henter farevarsler fra separat UseCase i dommenelaget
+				const alertsResult = await getAlertsUseCase.execute({
+					lat: location.lat,
+					lon: location.lon
+				});
+
+				if (!cancelled) {
+					setAlerts(alertsResult.alerts ?? []);
+					setAlertsByDate(alertsResult.alertsByDate ?? {});
+				}
 
 				//Henter sunTimes som separat use case fra dommene lag
 				const isoDates = Object.keys(grouped);
@@ -170,7 +177,7 @@ export default function useForecastPageViewModel(getForecastUseCase, getCurrentW
 			clearTimeout(timer);
 		};
 	}, 
-	[location.lat, location.lon, hoursAhead, tz, getForecastUseCase, getSunTimesUseCase, getCurrentWeatherUseCase]);
+	[location.lat, location.lon, hoursAhead, tz, getForecastUseCase, getAlertsUseCase, getSunTimesUseCase, getCurrentWeatherUseCase]);
 
 	return {
 		forecast,

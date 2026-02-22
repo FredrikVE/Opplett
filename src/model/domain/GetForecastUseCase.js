@@ -1,22 +1,26 @@
 //src/model/domain/GetForecastUseCase.js
 export default class GetForecastUseCase {
 
-	//Konstruktør for å ta inn repositories i App.jsx
-	constructor(forecastRepository, alertsRepository) {
+	// Konstruktør for å ta inn forecastRepository fra App.jsx
+	constructor(forecastRepository) {
 		this.forecastRepository = forecastRepository;
-		this.alertsRepository = alertsRepository;
 	}
 
 	async execute({ lat, lon, hoursAhead, timeZone }) {
 
-		if (!lat || !lon) {
+		if (lat == null || lon == null) {
 			throw new Error("Latitude and longitude are required");
 		}
 
 		// Henter time-for-time værdata
-		const hourly = await this.forecastRepository.getHourlyForecast(lat, lon, hoursAhead, timeZone);
+		const hourly = await this.forecastRepository.getHourlyForecast(
+			lat,
+			lon,
+			hoursAhead,
+			timeZone
+		);
 
-		//Grupperer timer per dato
+		// Grupperer timer per dato
 		const hourlyByDate = {};
 		for (const hour of hourly) {
 			if (!hourlyByDate[hour.dateISO]) {
@@ -25,17 +29,18 @@ export default class GetForecastUseCase {
 			hourlyByDate[hour.dateISO].hours.push(hour);
 		}
 
-		//Henter dagsoppsummering
-		const dailySummaryByDate = await this.forecastRepository.getDailySummary(lat, lon, hoursAhead, timeZone);
-
-		//Henter varsler
-		const { alerts, alertsByDate } = await this.alertsRepository.findAlerts(lat, lon);
+		// Henter dagsoppsummering
+		const dailySummaryByDate =
+			await this.forecastRepository.getDailySummary(
+				lat,
+				lon,
+				hoursAhead,
+				timeZone
+			);
 
 		return {
 			hourlyByDate,
-			dailySummaryByDate,
-			alerts,
-			alertsByDate
+			dailySummaryByDate
 		};
 	}
 }
