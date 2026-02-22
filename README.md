@@ -48,6 +48,16 @@ Dette legger til:
 
 Etter installasjon kan Highcharts importeres i komponentene der grafene konfigureres og renderes.
 
+## Om arkitekturvalg i appen
+
+Appen er strukturert etter en MVVM-inspirert lagdeling, hvor modellen består av **DataSources, Repositories og UseCases (Domain)**, mens View og ViewModel utgjør UI-laget.
+
+Jeg har valgt å bruke et domenelag for å skille tydelig mellom **presentasjonslogikk** og **applikasjonslogikk**. DataSources håndterer kommunikasjon med eksterne API-er. Repositories mapper og strukturerer rådata. UseCases orkestrerer flyten mellom disse. ViewModels skal kun håndtere UI-tilstand og presentasjon.
+
+Hensikten er ikke å gjøre arkitekturen mer avansert enn nødvendig, men å redusere kognitiv kompleksitet i UI-laget. Målet med dette er å skape en enda tydeligere ansvarsdeling, og tilstrebe enda høyere kohesjon, lavere kobling, bedre utvidbarhet, bedre testbarhet og bedre forståelighet/leselighet igjennom å unngå unødvendig kognitiv kompleksitet.
+
+Dette er ikke full Domain-Driven Design, men et bevisst og pragmatisk valg for å samle applikasjonslogikk appens i model med eksplisite og tydelige useCases. Tanken er at ved å gjøre arkitekturen mer mer modulær, så vil den også gjøre fremtidig utvidelse lettere og samtidig håndterer økende kompleksitet på en ryddig måte.
+
 
 ## Arkitektur-tegning
 ![Arkitekturdiagram](images/Arkitektur.png)
@@ -60,15 +70,18 @@ Etter installasjon kan Highcharts importeres i komponentene der grafene konfigur
 ├── public
 ├── src
 │   ├── geolocation
-│   ├── model
-│   │   ├── datasource
-│   │   └── repositories
 │   ├── navigation
+│   ├── model                               <- Model    (M)
+│   │   ├── datasource
+│   │   ├── domain
+│   │   └── repositories
 │   └── ui
 │       ├── style
 │       ├── utils
-│       ├── view
-│       └── viewmodel
+│       ├── view                           <- View      (V)
+│       │   ├── components
+│       │   └── pages
+│       └── viewmodel                      <- ViewModel (VM)
 └── test
     ├── model
     │   ├── datasource
@@ -81,18 +94,12 @@ Etter installasjon kan Highcharts importeres i komponentene der grafene konfigur
 ```bash
 TestMVVMReact
 │
-├── ARCHITECTURE.md
-├── README.md
-├── vite.config.js
-├── yarn.lock
-│
+├── images
 ├── public
 │   ├── alert_symbols
 │   ├── credit_icons
 │   ├── sun_rise
 │   └── weather_icons
-│       ├── 100
-│       └── 200
 │
 ├── src
 │   ├── App.jsx
@@ -114,6 +121,15 @@ TestMVVMReact
 │   │   │   ├── OpenCageGeocodingDataSource.js
 │   │   │   └── SunriseDataSource.js
 │   │   │
+│   │   ├── domain
+│   │   │   ├── GetAlertsUseCase.js
+│   │   │   ├── GetAllAlertsUseCase.js
+│   │   │   ├── GetCurrentWeatherUseCase.js
+│   │   │   ├── GetForecastUseCase.js
+│   │   │   ├── GetLocationNameUseCase.js
+│   │   │   ├── GetSunTimesUseCase.js
+│   │   │   └── SearchLocationUseCase.js
+│   │   │
 │   │   └── repositories
 │   │       ├── LocationForecastRepository.js
 │   │       ├── MetAlertsRepository.js
@@ -123,33 +139,40 @@ TestMVVMReact
 │   └── ui
 │       ├── style
 │       │   ├── AlertCard.css
-│       │   ├── AlertPage.css
-│       │   ├── ForecastPage.css
-│       │   ├── GraphPage.css
-│       │   └── ...
+│       │   ....
+│       │   ....
 │       │
 │       ├── utils
 │       │   ├── AlertPageUtils
+│       │   │   ├── alertFilterUtils.js
+│       │   │   ├── counties.js
+│       │   │   └── marineAreas.js
 │       │   ├── CommonUtils
-│       │   ├── LocationUtils
+│       │   │   ├── getAlertIconFileName.js
+│       │   │   ├── getRiskLevelText.js
+│       │   │   └── weatherIcons.js
+│       │   ├── ForecastUtils
+│       │   │   ├── formatPrecipitationUtil.js
+│       │   │   └── windDescriptionUtil.js
 │       │   └── TimeZoneUtils
+│       │       └── timeFormatters.js
 │       │
 │       ├── view
-│       │   ├── pages
-│       │   │   ├── ForecastPage.jsx
-│       │   │   ├── GraphPage.jsx
-│       │   │   └── AlertPage.jsx
+│       │   ├── components
+│       │   │   ├── AlertPage
+│       │   │   ├── Common
+│       │   │   ├── ForecastPage
+│       │   │   └── GraphPage
 │       │   │
-│       │   └── components
-│       │       ├── HomePage
-│       │       ├── GraphPage
-│       │       ├── AlertPage
-│       │       └── Common
+│       │   └── pages
+│       │       ├── AlertPage.jsx
+│       │       ├── ForecastPage.jsx
+│       │       └── GraphPage.jsx
 │       │
 │       └── viewmodel
+│           ├── AlertPageViewModel.js
 │           ├── ForecastPageViewModel.js
 │           ├── GraphScreenViewModel.js
-│           ├── AlertPageViewModel.js
 │           └── SearchViewModel.js
 │
 └── test

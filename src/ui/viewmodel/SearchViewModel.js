@@ -1,7 +1,7 @@
 // src/ui/viewmodel/SearchViewModel.js
 import { useRef, useState } from "react";
 
-export default function useSearchViewModel(geocodingRepository, onLocationSelected) {
+export default function useSearchViewModel(searchLocationUseCase, onLocationSelected) {
 	const SEARCH_DEBOUNCE_DELAY_MS = 350;
 
 	const [query, setQuery] = useState("");
@@ -41,18 +41,17 @@ export default function useSearchViewModel(geocodingRepository, onLocationSelect
 			const requestId = ++requestIdRef.current;
 
 			try {
-				const results = await geocodingRepository.getSuggestions(text, controller.signal);
+				const results = await searchLocationUseCase.getSuggestions(text, controller.signal);
+
 				if (requestId === requestIdRef.current) {
 					setSuggestions(results);
 				}
-			} 
-
+			}
 			catch (error) {
 				if (error?.name !== "AbortError") {
 					console.warn("Søk feilet:", error);
 				}
-			} 
-
+			}
 			finally {
 				if (requestId === requestIdRef.current) {
 					abortRef.current = null;
@@ -68,21 +67,21 @@ export default function useSearchViewModel(geocodingRepository, onLocationSelect
 			name: suggestion.name,
 			timezone: suggestion.timezone,
 		});
+
 		setQuery(suggestion.name);
 		setSuggestions([]);
 	};
 
-	//OPPDATERT FUNKSJON
 	const onResetLocation = (lat, lon) => {
-		setQuery(""); 
+		setQuery("");
 		setSuggestions([]);
 		
-		// Vi setter name til null. 
-		// Dette trigger useEffect i HomeScreenViewModel til å hente navnet på nytt via reverse geocoding.
+		//Vi setter name til null. 
+		//Dette trigger useEffect i ForecastPageViewModel til å hente navnet på nytt via reverse geocoding.
 		onLocationSelected({
-			lat: lat,
-			lon: lon,
-			name: null, 
+			lat,
+			lon,
+			name: null,
 			timezone: null
 		});
 	};
