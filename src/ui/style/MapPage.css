@@ -1,21 +1,28 @@
-/*src/ui/style/MapPage.css*/
+/* Sørg for at hovedskjermen tar hele høyden minus header/footer */
+.map-screen {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 60px); /* Juster 60px etter din header-høyde */
+}
 
-.map-page-wrap {
+.map-content {
+  flex: 1; /* Lar denne fylle resten av plassen */
   position: relative;
   width: 100%;
-  /* Juster høyde etter hvordan header/footer ser ut hos deg */
-  height: calc(100vh - 120px);
+}
+
+.map-page-wrap {
+  width: 100%;
+  height: 100%; /* Viktig! Tar høyden fra .map-content */
+  position: relative;
 }
 
 .map {
   position: absolute;
-  inset: 0;
-}
-
-/* Geocoding-control plassert oppe til venstre */
-.geocoding {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 2;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+  background-color: #f0f0f0; /* Debug-farge: hvis du ser grått, er div-en der! */
+  height: 500px !important; /* TEST: Se om kartet dukker opp nå */
+  width: 100%;
 }

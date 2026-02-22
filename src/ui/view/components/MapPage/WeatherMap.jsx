@@ -1,92 +1,68 @@
-// src/ui/view/components/MapPage/WeatherMap.jsx
 import { useEffect, useRef, useState } from "react";
 import * as maptilersdk from "@maptiler/sdk";
-import "@maptiler/sdk/dist/maptiler-sdk.css";
-
 import { GeocodingControl } from "@maptiler/geocoding-control/react";
+
+import "@maptiler/sdk/dist/maptiler-sdk.css";
 import "@maptiler/geocoding-control/style.css";
 
 export default function WeatherMap({ apiKey, style, lat, lon, zoom }) {
-	const mapContainerRef = useRef(null);
-	const mapRef = useRef(null);
-	const [mapInstance, setMapInstance] = useState(null);
+    const mapContainerRef = useRef(null);
+    const mapRef = useRef(null);
+    const [mapInstance, setMapInstance] = useState(null);
 
-	//Frys initial center/zoom så init-effekten slipper å ha lat/lon/zoom i deps
-	const initialCenterRef = useRef({ lat, lon });
-	const initialZoomRef = useRef(zoom);
+    // Initialisering (Kjører kun én gang)
+    useEffect(() => {
+        if (!mapContainerRef.current || !apiKey || mapRef.current) return;
 
-	// Init kart (kun én gang per apiKey/style)
-	useEffect(() => {
-		if (!mapContainerRef.current) {
-			return;
-		}
+        maptilersdk.config.apiKey = apiKey;
 
-		if (!apiKey) {
-			return;
-		}
+        const map = new maptilersdk.Map({
+            container: mapContainerRef.current,
+            style: maptilersdk.MapStyle[style] ?? maptilersdk.MapStyle.STREETS,
+            center: [lon || 10.75, lat || 59.91],
+            zoom: zoom || 6
+        });
 
-		if (mapRef.current) {
-			return;
-		}
+        map.on('load', () => {
+            mapRef.current = map;
+            setMapInstance(map);
+        });
 
-		maptilersdk.config.apiKey = apiKey;
+        return () => {
+            if (mapRef.current) {
+                mapRef.current.remove();
+                mapRef.current = null;
+            }
+        };
+    }, [apiKey, lat, lon, style, zoom]); // Kun ved endring av API-nøkkel
 
-		const mapStyle = maptilersdk.MapStyle[style] ?? maptilersdk.MapStyle.HYBRID;
+    // Flytt kartet når props (lat/lon) endres fra utsiden (f.eks. søkefeltet ditt)
+    useEffect(() => {
+        if (!mapRef.current || lat == null || lon == null) return;
+        
+        mapRef.current.flyTo({
+            center: [lon, lat],
+            zoom: zoom,
+            essential: true
+        });
+    }, [lat, lon, zoom]);
 
-		const { lat: initialLat, lon: initialLon } = initialCenterRef.current;
-		const initialZoom = initialZoomRef.current;
+    return (
+        <div className="map-page-wrap">
+            {/* Dette er DIV-en som MÅ ha høyde i CSS */}
+            <div ref={mapContainerRef} className="map" />
 
-		const map = new maptilersdk.Map({
-			container: mapContainerRef.current,
-			style: mapStyle,
-			center: [initialLon, initialLat],
-			zoom: initialZoom
-		});
-
-		map.addControl(new maptilersdk.NavigationControl(), "top-right");
-
-		mapRef.current = map;
-		setMapInstance(map);
-
-		return () => {
-			map.remove();
-			mapRef.current = null;
-			setMapInstance(null);
-		};
-	}, [apiKey, style]);
-
-	// Fly når ViewModel endrer koordinater
-	useEffect(() => {
-		if (!mapRef.current) {
-			return;
-		}
-
-		if (lat == null || lon == null) {
-			return;
-		}
-
-		mapRef.current.flyTo({
-			center: [lon, lat],
-			zoom: zoom,
-			speed: 0.8
-		});
-	}, [lat, lon, zoom]);
-
-	return (
-		<div className="map-page-wrap">
-			<div ref={mapContainerRef} className="map" />
-
-			{mapInstance && (
-				<div className="geocoding">
-					<GeocodingControl
-						apiKey={apiKey}
-						map={mapInstance}
-						marker={true}
-						showResultsWhileTyping={true}
-						placeholder="Søk etter sted..."
-					/>
-				</div>
-			)}
-		</div>
-	);
+            {mapInstance && (
+                <div className="geocoding">
+                    <GeocodingControl
+                        apiKey={apiKey}
+                        map={mapInstance}
+                        marker={true}
+                        showResultsWhileTyping={true}
+                        placeholder="Søk på kartet..."
+                    />
+                </div>
+            )}
+        </div>
+    );
 }
