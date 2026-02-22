@@ -47,6 +47,24 @@ export default function useForecastPageViewModel(getForecastUseCase, geocodingRe
 	},
 	[location.lat, location.lon, geocodingRepository]);
 
+	//Ny liten mapper (display-model for NowCard)
+	function mapHourlyToCurrent(hour) {
+		if (!hour) {
+			return null;
+		}
+
+		return {
+			weatherSymbol: hour.weatherSymbol,
+			temp: hour.temp,
+			feelsLike: hour.details?.apparent_temperature ?? hour.temp,
+			precip: hour.precipitation?.amount ?? 0,
+			wind: hour.wind,
+			gust: hour.details?.wind_speed_of_gust ?? hour.wind,
+			windDir: hour.details?.wind_from_direction ?? 0,
+			uv: hour.uv ?? 0
+		};
+	}
+
 	//Hovedeffekt for datalasting (forblir asynkron i useEffect)
 	useEffect(() => {
 		if (!location.lat || !location.lon) {
@@ -94,7 +112,7 @@ export default function useForecastPageViewModel(getForecastUseCase, geocodingRe
 					? initialGrouped[firstDateKey].hours[0]
 					: null;
 
-				setCurrentWeather(firstHour ?? null);
+				setCurrentWeather(mapHourlyToCurrent(firstHour)); //Bruker mapperen her
 
 				setLoading(false);
 			}
