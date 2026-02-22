@@ -21,7 +21,6 @@ export default function useMapPageViewModel(getMapConfigUseCase, searchLocationU
 	const [location, setLocation] = useState(initialLocation);
 	const [prevInitial, setPrevInitial] = useState({lat: initialLat, lon: initialLon});
 
-
 	//UseEffekt som oppdaterer GPS-koordinater
 	if (initialLat !== prevInitial.lat || initialLon !== prevInitial.lon) {
 		setPrevInitial({ lat: initialLat, lon: initialLon });
