@@ -8,7 +8,7 @@ export default class DataSource {
 	async get(path) {
 		this.apiCallCount += 1;
 
-		const who = this.constructor.name; // <- hvilken datasource som arver fra DataSource
+		const who = this.constructor.name;
 		const url = this.hostURL + path;
 		const startedAt = performance.now();
 
