@@ -19,7 +19,7 @@ function buildWeatherSymbolSeries(symbolData) {
                 return null;
             }
 
-			const iconUrl = `/weather_icons/200/${iconFileName}`;
+			const iconUrl = `/weather_icons/100/${iconFileName}`;
 
 			return {
 				x: symbol.x,
