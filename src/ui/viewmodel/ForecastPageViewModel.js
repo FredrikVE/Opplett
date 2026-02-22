@@ -57,40 +57,40 @@ export default function useForecastPageViewModel(forecastRepository, sunriseRepo
 
 		let cancelled = false;
 
-        //Inkludert tz i fetchKey for SSOT
+		//Inkludert tz i fetchKey for SSOT
 		async function loadData() {
-            
-            const fetchKey = `${location.lat},${location.lon},${hoursAhead},${tz}`;
-            if (lastFetchedRef.current === fetchKey) {
+			
+			const fetchKey = `${location.lat},${location.lon},${hoursAhead},${tz}`;
+			if (lastFetchedRef.current === fetchKey) {
 				return;
 			}
 
 			lastFetchedRef.current = fetchKey;
 
-            try {
-                setLoading(true);
-                
-                const [hourlyRaw, current, alertResults] = await Promise.all([
-                    forecastRepository.getHourlyForecast(location.lat, location.lon, hoursAhead, tz),
-                    forecastRepository.getCurrentWeather(location.lat, location.lon, tz),
-                    metAlertsRepository.findAlerts(location.lat, location.lon)
-                ]);
+			try {
+				setLoading(true);
+				
+				const [hourlyRaw, current, alertResults] = await Promise.all([
+					forecastRepository.getHourlyForecast(location.lat, location.lon, hoursAhead, tz),
+					forecastRepository.getCurrentWeather(location.lat, location.lon, tz),
+					metAlertsRepository.findAlerts(location.lat, location.lon)
+				]);
 
 				if (cancelled) {
 					return;
 				}
 
-                const initialGrouped = {};
-                hourlyRaw.forEach(hour => {
-                    const key = hour.dateISO;
-                    if (!initialGrouped[key]) {
-                        initialGrouped[key] = {
-                            label: formatToLocalDateLabel(hour.timeISO, tz),
-                            hours: []
-                        };
-                    }
-                    initialGrouped[key].hours.push(hour);
-                });
+				const initialGrouped = {};
+				hourlyRaw.forEach(hour => {
+					const key = hour.dateISO;
+					if (!initialGrouped[key]) {
+						initialGrouped[key] = {
+							label: formatToLocalDateLabel(hour.timeISO, tz),
+							hours: []
+						};
+					}
+					initialGrouped[key].hours.push(hour);
+				});
 
 				setForecast(initialGrouped);
 				setCurrentWeather(current);
@@ -98,37 +98,37 @@ export default function useForecastPageViewModel(forecastRepository, sunriseRepo
 				setAlertsByDate(alertResults?.alertsByDate ?? {});
 				setLoading(false); 
 
-                const [fullDailySummary] = await Promise.all([
-                    // Her kan man vurdere om man trenger fullHourlyRaw hvis den er lik hourlyRaw fra Fase 1
-                    forecastRepository.getDailySummary(location.lat, location.lon, hoursAhead, tz)
-                ]);
+				const [fullDailySummary] = await Promise.all([
+					// Her kan man vurdere om man trenger fullHourlyRaw hvis den er lik hourlyRaw fra Fase 1
+					forecastRepository.getDailySummary(location.lat, location.lon, hoursAhead, tz)
+				]);
 
-                if (cancelled) {
+				if (cancelled) {
 					return;
 				}
-                //Vi bruker de eksisterende grupperte dataene for å finne datoene
-                setDailySummaryByDate(fullDailySummary);
+				//Vi bruker de eksisterende grupperte dataene for å finne datoene
+				setDailySummaryByDate(fullDailySummary);
 
-                // ENDRING 4: Dynamisk uthenting av datoer basert på de faktiske værdataene
-                const isoDates = Object.keys(initialGrouped); 
-                const solarReport = await sunriseRepository.getFullSolarReport(
-                    location.lat, 
-                    location.lon, 
-                    isoDates, 
-                    tz, 
-                    formatToLocalTime
-                );
-                
-                setSunTimesByDate(solarReport);
-            } 
-            catch (error) {
-                if (!cancelled) {
-                    setError(error?.message ?? "Feil ved henting av data");
-                    lastFetchedRef.current = "";
-                    setLoading(false);
-                }
-            }
-        }
+				// ENDRING 4: Dynamisk uthenting av datoer basert på de faktiske værdataene
+				const isoDates = Object.keys(initialGrouped); 
+				const solarReport = await sunriseRepository.getFullSolarReport(
+					location.lat, 
+					location.lon, 
+					isoDates, 
+					tz, 
+					formatToLocalTime
+				);
+				
+				setSunTimesByDate(solarReport);
+			} 
+			catch (error) {
+				if (!cancelled) {
+					setError(error?.message ?? "Feil ved henting av data");
+					lastFetchedRef.current = "";
+					setLoading(false);
+				}
+			}
+		}
 
 		//Cleanup funksjon
 		const timer = setTimeout(loadData, DATA_FETCH_STABILIZATION_MS);
@@ -138,25 +138,25 @@ export default function useForecastPageViewModel(forecastRepository, sunriseRepo
 		};
 	}, [location.lat, location.lon, hoursAhead, tz, forecastRepository, sunriseRepository, metAlertsRepository]);
 
-    return {
-        forecast,
-        currentWeather,
-        dailySummaryByDate,
-        sunTimesByDate,
-        alerts,
-        alertsByDate,
-        loading,
-        error,
-        location,
+	return {
+		forecast,
+		currentWeather,
+		dailySummaryByDate,
+		sunTimesByDate,
+		alerts,
+		alertsByDate,
+		loading,
+		error,
+		location,
 
-        getLocalHour: (zuluTime) => getLocalHour(zuluTime, tz),
-        formatLocalDateTime: (zuluTime) => formatLocalDateTime(zuluTime, tz),
-        formatLocalDate: (zuluTime) => formatLocalDate(zuluTime, tz),
+		getLocalHour: (zuluTime) => getLocalHour(zuluTime, tz),
+		formatLocalDateTime: (zuluTime) => formatLocalDateTime(zuluTime, tz),
+		formatLocalDate: (zuluTime) => formatLocalDate(zuluTime, tz),
 
-        query: searchViewModel.query,
-        suggestions: searchViewModel.suggestions,
-        onSearchChange: searchViewModel.onSearchChange,
-        onSuggestionSelected: searchViewModel.onSuggestionSelected,
-        onResetToDeviceLocation: () => searchViewModel.onResetLocation(initialLat, initialLon)
-    };
+		query: searchViewModel.query,
+		suggestions: searchViewModel.suggestions,
+		onSearchChange: searchViewModel.onSearchChange,
+		onSuggestionSelected: searchViewModel.onSuggestionSelected,
+		onResetToDeviceLocation: () => searchViewModel.onResetLocation(initialLat, initialLon)
+	};
 }
