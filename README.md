@@ -48,6 +48,16 @@ Dette legger til:
 
 Etter installasjon kan Highcharts importeres i komponentene der grafene konfigureres og renderes.
 
+## Om arkitekturvalg i appen
+
+Appen er strukturert etter en MVVM-inspirert lagdeling, hvor modellen består av **DataSources, Repositories og UseCases (Domain)**, mens View og ViewModel utgjør UI-laget.
+
+Jeg har valgt å bruke et domenelag for å skille tydelig mellom **presentasjonslogikk** og **applikasjonslogikk**. DataSources håndterer kommunikasjon med eksterne API-er. Repositories mapper og strukturerer rådata. UseCases orkestrerer flyten mellom disse. ViewModels skal kun håndtere UI-tilstand og presentasjon.
+
+Hensikten er ikke å gjøre arkitekturen mer avansert enn nødvendig, men å redusere kognitiv kompleksitet i UI-laget. Målet med dette er å skape en enda tydeligere ansvarsdeling, og tilstrebe enda høyere kohesjon, lavere kobling, bedre utvidbarhet, bedre testbarhet og bedre forståelighet/leselighet igjennom å unngå unødvendig kognitiv kompleksitet.
+
+Dette er ikke full Domain-Driven Design, men et bevisst og pragmatisk valg for å samle applikasjonslogikk appens i model med eksplisite og tydelige useCases. Tanken er at ved å gjøre arkitekturen mer mer modulær, så vil den også gjøre fremtidig utvidelse lettere og samtidig håndterer økende kompleksitet på en ryddig måte.
+
 
 ## Arkitektur-tegning
 ![Arkitekturdiagram](images/Arkitektur.png)
