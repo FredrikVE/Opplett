@@ -1,12 +1,11 @@
 // src/ui/viewmodel/ForecastPageViewModel.js
 
 import { useEffect, useState, useRef, useMemo } from "react";
-import { fetchInitialLocationName } from "../utils/LocationUtils/fetchInitialLocationName.js";
 import { resolveTimezone, formatToLocalTime, formatToLocalDateLabel, formatLocalDate, formatLocalDateTime, getLocalHour } from "../utils/TimeZoneUtils/timeFormatters.js";
 import useSearchViewModel from "./SearchViewModel.js";
 
-export default function useForecastPageViewModel(getForecastUseCase, getCurrentWeatherUseCase, searchLocationUseCase, initialLat, initialLon, hoursAhead) {
-	
+export default function useForecastPageViewModel(getForecastUseCase, getCurrentWeatherUseCase, searchLocationUseCase, getLocationNameUseCase, initialLat, initialLon, hoursAhead) {
+
 	//Statevariabler og consts
 	const DATA_FETCH_STABILIZATION_MS = 50;
 	const initialLocation = { lat: initialLat, lon: initialLon, name: null, timezone: null };
@@ -39,26 +38,59 @@ export default function useForecastPageViewModel(getForecastUseCase, getCurrentW
 		resolveTimezone(location.timezone),
 	[location.timezone]);
 
+	//UseEffect for å laste inn stedsnavn med reverse geocoding.
 	useEffect(() => {
-		if (!location.lat || !location.lon) {
-			return;
-		}
 
-		fetchInitialLocationName(setLocation, searchLocationUseCase, location.lat, location.lon);
-	},
-	[location.lat, location.lon, searchLocationUseCase]);
-
-	//Hovedeffekt for datalasting (forblir asynkron i useEffect)
-	useEffect(() => {
 		if (!location.lat || !location.lon) {
 			return;
 		}
 
 		let cancelled = false;
 
+		//Funksjon som hetner loakasjonsnavn fra UseCase i dommenelag
+		async function loadLocationName() {
+			try {
+				const result = await getLocationNameUseCase.execute({ lat: location.lat, lon: location.lon });
+				
+				if (cancelled || !result?.name) {
+					return;
+				}
+
+				setLocation(prev => {
+					if (prev.name === result.name && prev.timezone === result.timezone) {
+						return prev;
+					}
+
+					return { ...prev, name: result.name, timezone: result.timezone };
+				});
+			}
+
+			catch (error) {
+				console.warn("Kunne ikke hente stedsnavn", error);
+			}
+		}
+
+		loadLocationName();
+
+		//Clean-up-funksjon for å stoppe async state-oppdatering etter at komponenten er unmounted
+		return () => { 
+			cancelled = true; 
+		};
+	}, 
+	[location.lat, location.lon, getLocationNameUseCase]);
+
+	
+	//UseEffek for å laste inn data fra UseCases i Domene-lag
+	useEffect(() => {
+		if (!location.lat || !location.lon) {
+			return;
+		}
+		let cancelled = false;
+
 		//Inkludert tz i fetchKey for SSOT
 		async function loadData() {
 			const fetchKey = `${location.lat},${location.lon},${hoursAhead},${tz}`;
+			
 			if (lastFetchedRef.current === fetchKey) {
 				return;
 			}
@@ -69,7 +101,14 @@ export default function useForecastPageViewModel(getForecastUseCase, getCurrentW
 				setLoading(true);
 				setError(null);
 
-				const result = await getForecastUseCase.execute({ lat: location.lat, lon: location.lon, hoursAhead, timeZone: tz, formatToLocalTime });
+				//Påkaller værmelingsdata fra useCase i Domene-lag
+				const result = await getForecastUseCase.execute({ 
+					lat: location.lat, 
+					lon: location.lon, 
+					hoursAhead, 
+					timeZone: tz, 
+					formatToLocalTime 
+				});
 
 				if (cancelled) {
 					return;
@@ -90,7 +129,12 @@ export default function useForecastPageViewModel(getForecastUseCase, getCurrentW
 				setAlerts(result.alerts ?? []);
 				setAlertsByDate(result.alertsByDate ?? {});
 
-				const current = await getCurrentWeatherUseCase.execute({ lat: location.lat, lon: location.lon, timeZone: tz });
+				//Henter værmelding NÅ fra useCase i domenelag
+				const current = await getCurrentWeatherUseCase.execute({ 
+					lat: location.lat,
+					lon: location.lon,
+					timeZone: tz
+				});
 
 				if (!cancelled) {
 					setCurrentWeather(current);
@@ -98,6 +142,7 @@ export default function useForecastPageViewModel(getForecastUseCase, getCurrentW
 
 				setLoading(false);
 			}
+
 			catch (error) {
 				if (!cancelled) {
 					setError(error?.message ?? "Feil ved henting av data");
@@ -113,7 +158,8 @@ export default function useForecastPageViewModel(getForecastUseCase, getCurrentW
 			cancelled = true;
 			clearTimeout(timer);
 		};
-	}, 
+	},
+	
 	[location.lat, location.lon, hoursAhead, tz, getForecastUseCase, getCurrentWeatherUseCase]);
 
 	return {

@@ -18,8 +18,9 @@ export default class OpenCageGeocodingRepository {
 		}));
 	}
 
-	async getCoordinates(query) {
+	async getCoordinates(lat, lon) {
+		const query = `${lat},${lon}`;
 		const results = await this.getSuggestions(query);
-		return (results && results.length > 0) ? results[0] : null;
+		return results?.[0] ?? null;
 	}
 }

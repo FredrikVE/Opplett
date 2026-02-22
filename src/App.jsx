@@ -41,6 +41,7 @@ import GetForecastUseCase from "./model/domain/GetForecastUseCase.js";
 import GetAllAlertsUseCase from "./model/domain/GetAllAlertsUseCase.js";
 import GetCurrentWeatherUseCase from "./model/domain/GetCurrentWeatherUseCase.js";
 import SearchLocationUseCase from "./model/domain/SearchLocationUseCase.js";
+import GetLocationNameUseCase from "./model/domain/GetLocationNameUseCase.js";
 
 //ViewModel og View
 import useForecastPageViewModel from "./ui/viewmodel/ForecastPageViewModel.js";
@@ -76,6 +77,7 @@ const getForecastUseCase = new GetForecastUseCase(locationRepo, sunriseRepo, ale
 const getAllAlertsUseCase = new GetAllAlertsUseCase(alertsRepo);
 const getCurrentWeatherUseCase = new GetCurrentWeatherUseCase(locationRepo);
 const searchLocationUseCase = new SearchLocationUseCase(geoRepo);
+const getLocationNameUseCase = new GetLocationNameUseCase(geoRepo);
 
 export default function App() {
 	const hoursAhead = 120;
@@ -87,7 +89,7 @@ export default function App() {
 
 	//ViewModel får nå usecase istedenfor repositories
 	//Initialiser ViewModel med dependancy injection av useCasees og repositories
-	const forecastPageViewModel = useForecastPageViewModel(getForecastUseCase, getCurrentWeatherUseCase, searchLocationUseCase, coords?.lat, coords?.lon, hoursAhead);
+	const forecastPageViewModel = useForecastPageViewModel(getForecastUseCase, getCurrentWeatherUseCase, searchLocationUseCase, getLocationNameUseCase, coords?.lat, coords?.lon, hoursAhead);
 	const graphScreenViewModel = useGraphScreenViewModel(forecastPageViewModel);
 	const alertPageViewModel = useAlertPageViewModel(getAllAlertsUseCase);
 	if (loading) {
