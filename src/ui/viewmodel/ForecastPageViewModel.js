@@ -1,16 +1,17 @@
-//src/ui/viewmodel/ForecastPageViewModel.js
+// src/ui/viewmodel/ForecastPageViewModel.js
+
 import { useEffect, useState, useRef, useMemo } from "react";
 import { fetchInitialLocationName } from "../utils/LocationUtils/fetchInitialLocationName.js";
 import { resolveTimezone, formatToLocalTime, formatToLocalDateLabel, formatLocalDate, formatLocalDateTime, getLocalHour } from "../utils/TimeZoneUtils/timeFormatters.js";
 import useSearchViewModel from "./SearchViewModel.js";
 
-export default function useForecastPageViewModel(getForecastUseCase, geocodingRepository, initialLat, initialLon, hoursAhead) {
+export default function useForecastPageViewModel(getForecastUseCase, getCurrentWeatherUseCase, geocodingRepository, initialLat, initialLon, hoursAhead) {
+	
+	//Statevariabler og consts
 	const DATA_FETCH_STABILIZATION_MS = 50;
-
 	const initialLocation = { lat: initialLat, lon: initialLon, name: null, timezone: null };
 	const [location, setLocation] = useState(initialLocation);
 	const [prevInitial, setPrevInitial] = useState({ lat: initialLat, lon: initialLon });
-	
 	const [forecast, setForecast] = useState({});
 	const [sunTimesByDate, setSunTimesByDate] = useState({});
 	const [dailySummaryByDate, setDailySummaryByDate] = useState({});
@@ -38,32 +39,14 @@ export default function useForecastPageViewModel(getForecastUseCase, geocodingRe
 		resolveTimezone(location.timezone),
 	[location.timezone]);
 
-	//Henter stedsnavn (Dette må fortsatt være en Effect fordi det er et asynkront nettverkskall)
 	useEffect(() => {
 		if (!location.lat || !location.lon) {
 			return;
 		}
+
 		fetchInitialLocationName(setLocation, geocodingRepository, location.lat, location.lon);
 	},
 	[location.lat, location.lon, geocodingRepository]);
-
-	//Ny liten mapper (display-model for NowCard)
-	function mapHourlyToCurrent(hour) {
-		if (!hour) {
-			return null;
-		}
-
-		return {
-			weatherSymbol: hour.weatherSymbol,
-			temp: hour.temp,
-			feelsLike: hour.details?.apparent_temperature ?? hour.temp,
-			precip: hour.precipitation?.amount ?? 0,
-			wind: hour.wind,
-			gust: hour.details?.wind_speed_of_gust ?? hour.wind,
-			windDir: hour.details?.wind_from_direction ?? 0,
-			uv: hour.uv ?? 0
-		};
-	}
 
 	//Hovedeffekt for datalasting (forblir asynkron i useEffect)
 	useEffect(() => {
@@ -75,7 +58,6 @@ export default function useForecastPageViewModel(getForecastUseCase, geocodingRe
 
 		//Inkludert tz i fetchKey for SSOT
 		async function loadData() {
-
 			const fetchKey = `${location.lat},${location.lon},${hoursAhead},${tz}`;
 			if (lastFetchedRef.current === fetchKey) {
 				return;
@@ -85,6 +67,7 @@ export default function useForecastPageViewModel(getForecastUseCase, geocodingRe
 
 			try {
 				setLoading(true);
+				setError(null);
 
 				const result = await getForecastUseCase.execute({ lat: location.lat, lon: location.lon, hoursAhead, timeZone: tz, formatToLocalTime });
 
@@ -92,27 +75,26 @@ export default function useForecastPageViewModel(getForecastUseCase, geocodingRe
 					return;
 				}
 
-				const initialGrouped = {};
+				const grouped = {};
 				Object.entries(result.hourlyByDate).forEach(([dateISO, data]) => {
 					const firstHour = data.hours[0];
-					initialGrouped[dateISO] = {
+					grouped[dateISO] = {
 						label: firstHour ? formatToLocalDateLabel(firstHour.timeISO, tz) : "",
 						hours: data.hours
 					};
 				});
 
-				setForecast(initialGrouped);
+				setForecast(grouped);
 				setDailySummaryByDate(result.dailySummaryByDate);
 				setSunTimesByDate(result.sunTimesByDate);
 				setAlerts(result.alerts ?? []);
 				setAlertsByDate(result.alertsByDate ?? {});
 
-				const firstDateKey = Object.keys(initialGrouped)[0];
-				const firstHour = firstDateKey
-					? initialGrouped[firstDateKey].hours[0]
-					: null;
+				const current = await getCurrentWeatherUseCase.execute({ lat: location.lat, lon: location.lon, timeZone: tz });
 
-				setCurrentWeather(mapHourlyToCurrent(firstHour)); //Bruker mapperen her
+				if (!cancelled) {
+					setCurrentWeather(current);
+				}
 
 				setLoading(false);
 			}
@@ -131,8 +113,8 @@ export default function useForecastPageViewModel(getForecastUseCase, geocodingRe
 			cancelled = true;
 			clearTimeout(timer);
 		};
-	},
-	[location.lat, location.lon, hoursAhead, tz, getForecastUseCase]);
+	}, 
+	[location.lat, location.lon, hoursAhead, tz, getForecastUseCase, getCurrentWeatherUseCase]);
 
 	return {
 		forecast,
