@@ -33,7 +33,8 @@ export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREE
 					lat={mapCenter.lat}
 					lon={mapCenter.lon}
 					zoom={zoom}
-					currentWeather={viewModel.currentWeather}
+					//currentWeather={viewModel.currentWeather}
+					weatherPoints={viewModel.weatherPoints} // Pass på at navnet matcher
 				/>
 			</main>
 		</div>

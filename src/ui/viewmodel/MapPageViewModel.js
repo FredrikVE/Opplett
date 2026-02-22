@@ -1,143 +1,84 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import useSearchViewModel from "./SearchViewModel.js";
 import { resolveTimezone } from "../utils/TimeZoneUtils/timeFormatters.js";
+import { getGridPoints } from "../utils/MapForecastUtils/gridCalculator.js";
 
-// Vi legger til getWeatherForecastUseCase som parameter
-export default function useMapPageViewModel(getMapConfigUseCase, searchLocationUseCase, getLocationNameUseCase, getWeatherForecastUseCase, initialLat, initialLon) {
+export default function useMapPageViewModel(getMapConfigUseCase, searchLocationUseCase, getLocationNameUseCase, getCurrentWeatherUseCase, initialLat, initialLon) {
 
-    const baseConfig = useMemo(() =>
-        getMapConfigUseCase.execute(),
-        [getMapConfigUseCase]
-    );
+    const baseConfig = useMemo(() => getMapConfigUseCase.execute(), [getMapConfigUseCase]);
+    const { defaultZoom, apiKey, style, defaultCenter } = baseConfig;
 
-    const initialLocation = {
-        lat: initialLat ?? baseConfig.defaultCenter.lat,
-        lon: initialLon ?? baseConfig.defaultCenter.lon,
+    const [location, setLocation] = useState({
+        lat: initialLat ?? defaultCenter.lat,
+        lon: initialLon ?? defaultCenter.lon,
         name: null,
         timezone: null
-    };
+    });
 
-    const [location, setLocation] = useState(initialLocation);
-    const [prevInitial, setPrevInitial] = useState({lat: initialLat, lon: initialLon});
+    const [weatherPoints, setWeatherPoints] = useState([]);
+    const weatherCache = useRef({});
+
+    const searchViewModel = useSearchViewModel(searchLocationUseCase, setLocation);
     
-    // NYTT: State for værdata
-    const [currentWeather, setCurrentWeather] = useState(null);
-    const [loadingWeather, setLoadingWeather] = useState(false);
+    // Fikset: tz brukes nå i return-objektet
+    const tz = useMemo(() => resolveTimezone(location.timezone), [location.timezone]);
 
-    if (initialLat !== prevInitial.lat || initialLon !== prevInitial.lon) {
-        setPrevInitial({ lat: initialLat, lon: initialLon });
-        setLocation(prev => ({
-            ...prev,
-            lat: initialLat ?? baseConfig.defaultCenter.lat,
-            lon: initialLon ?? baseConfig.defaultCenter.lon
-        }));
-    }
-
-    const searchViewModel = useSearchViewModel(
-        searchLocationUseCase,
-        setLocation
-    );
-
-    const tz = useMemo(
-        () => resolveTimezone(location.timezone),
-        [location.timezone]
-    );
-
-    //Effekt for Reverse Geocoding (Stedsnavn)
     useEffect(() => {
         if (!location.lat || !location.lon) return;
-        let cancelled = false;
-
-        async function loadLocationName() {
-            try {
-                const result = await getLocationNameUseCase.execute({
-                    lat: location.lat,
-                    lon: location.lon
-                });
-                if (cancelled || !result?.name) return;
-
-                setLocation(prev => {
-                    if (prev.name === result.name && prev.timezone === result.timezone) return prev;
-                    return { ...prev, name: result.name, timezone: result.timezone };
-                });
-            } catch (error) {
-                console.warn("Kunne ikke hente stedsnavn (MapPage)", error);
-            }
-        }
-
-        loadLocationName();
-        return () => { cancelled = true; };
-    }, 
-	[location.lat, location.lon, getLocationNameUseCase]);
-
-
-    // 2. NY EFFEKT: Hente værdata for kartet
-    useEffect(() => {
-        if (!location.lat || !location.lon) {
-			return;
-		}
 
         let cancelled = false;
 
-        async function fetchWeather() {
-            setLoadingWeather(true);
+        async function updateMapWeather() {
+            // Simulert utsnitt basert på posisjon
+            const bounds = {
+                south: location.lat - 2,
+                north: location.lat + 2,
+                west: location.lon - 3,
+                east: location.lon + 3
+            };
+
+            // Fikset: Bruker defaultZoom her
+            const grid = getGridPoints(bounds, defaultZoom);
+
+            const pointsToFetch = grid.filter(p => !weatherCache.current[`${p.lat},${p.lon}`]);
+
+            if (pointsToFetch.length === 0) {
+                if (!cancelled) setWeatherPoints(Object.values(weatherCache.current));
+                return;
+            }
+
             try {
-                const forecastData = await getWeatherForecastUseCase.execute({
-                    lat: location.lat,
-                    lon: location.lon
+                const requests = pointsToFetch.slice(0, 15).map(async (p) => {
+                    const data = await getCurrentWeatherUseCase.execute({ lat: p.lat, lon: p.lon });
+                    if (data) {
+                        weatherCache.current[`${p.lat},${p.lon}`] = { ...data, lat: p.lat, lon: p.lon };
+                    }
                 });
 
-                if (cancelled) {
-					return;
-				}
+                await Promise.all(requests);
 
-                //Henter være fra currentWeather
-                if (forecastData) {
-					setCurrentWeather(forecastData);
-				}
-            }
-
-			catch (error) {
-                console.error("Kunne ikke hente vær til kart:", error);
-            }
-			
-			finally {
                 if (!cancelled) {
-					setLoadingWeather(false);
-				}
+                    setWeatherPoints(Object.values(weatherCache.current));
+                }
+            } catch (error) {
+                console.error("Feil ved henting av rutenett-vær:", error);
             }
         }
 
-        fetchWeather();
-        return () => { 
-			cancelled = true; 
-		};
-
-    }, 
-	[location.lat, location.lon, getWeatherForecastUseCase]);
-
-
-    const mapCenter = useMemo(() => ({
-            lat: location.lat ?? baseConfig.defaultCenter.lat,
-            lon: location.lon ?? baseConfig.defaultCenter.lon
-        }),
-        [location.lat, location.lon, baseConfig.defaultCenter.lat, baseConfig.defaultCenter.lon]
-    );
+        updateMapWeather();
+        return () => { cancelled = true; };
+        
+        // Fikset: Lagt til alle nødvendige avhengigheter
+    }, [location.lat, location.lon, getCurrentWeatherUseCase, defaultZoom]); 
 
     return {
-        // Kart-config
-        apiKey: baseConfig.apiKey,
-        style: baseConfig.style,
-        zoom: baseConfig.defaultZoom,
-
-        // Lokasjon & Vær (Nye variabler her)
+        apiKey,
+        style,
+        zoom: defaultZoom,
         location,
-        mapCenter,
-        currentWeather, 
-        loadingWeather,
         timezone: tz,
-
-        // Søk
+        mapCenter: { lat: location.lat, lon: location.lon },
+        weatherPoints,
         query: searchViewModel.query,
         suggestions: searchViewModel.suggestions,
         onSearchChange: searchViewModel.onSearchChange,
