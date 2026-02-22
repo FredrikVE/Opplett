@@ -40,6 +40,7 @@ import SunriseRepository from "./model/repositories/SunriseRepository.js";
 import GetForecastUseCase from "./model/domain/GetForecastUseCase.js";
 import GetAllAlertsUseCase from "./model/domain/GetAllAlertsUseCase.js";
 import GetCurrentWeatherUseCase from "./model/domain/GetCurrentWeatherUseCase.js";
+import SearchLocationUseCase from "./model/domain/SearchLocationUseCase.js";
 
 //ViewModel og View
 import useForecastPageViewModel from "./ui/viewmodel/ForecastPageViewModel.js";
@@ -74,6 +75,7 @@ const geoRepo = new OpenCageGeocodingRepository(new OpenCageGeocodingDataSource(
 const getForecastUseCase = new GetForecastUseCase(locationRepo, sunriseRepo, alertsRepo);
 const getAllAlertsUseCase = new GetAllAlertsUseCase(alertsRepo);
 const getCurrentWeatherUseCase = new GetCurrentWeatherUseCase(locationRepo);
+const searchLocationUseCase = new SearchLocationUseCase(geoRepo);
 
 export default function App() {
 	const hoursAhead = 120;
@@ -85,7 +87,7 @@ export default function App() {
 
 	//ViewModel får nå usecase istedenfor repositories
 	//Initialiser ViewModel med dependancy injection av useCasees og repositories
-	const forecastPageViewModel = useForecastPageViewModel(getForecastUseCase, getCurrentWeatherUseCase, geoRepo, coords?.lat, coords?.lon, hoursAhead);
+	const forecastPageViewModel = useForecastPageViewModel(getForecastUseCase, getCurrentWeatherUseCase, searchLocationUseCase, coords?.lat, coords?.lon, hoursAhead);
 	const graphScreenViewModel = useGraphScreenViewModel(forecastPageViewModel);
 	const alertPageViewModel = useAlertPageViewModel(getAllAlertsUseCase);
 	if (loading) {

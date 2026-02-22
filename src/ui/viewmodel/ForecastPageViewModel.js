@@ -5,7 +5,7 @@ import { fetchInitialLocationName } from "../utils/LocationUtils/fetchInitialLoc
 import { resolveTimezone, formatToLocalTime, formatToLocalDateLabel, formatLocalDate, formatLocalDateTime, getLocalHour } from "../utils/TimeZoneUtils/timeFormatters.js";
 import useSearchViewModel from "./SearchViewModel.js";
 
-export default function useForecastPageViewModel(getForecastUseCase, getCurrentWeatherUseCase, geocodingRepository, initialLat, initialLon, hoursAhead) {
+export default function useForecastPageViewModel(getForecastUseCase, getCurrentWeatherUseCase, searchLocationUseCase, initialLat, initialLon, hoursAhead) {
 	
 	//Statevariabler og consts
 	const DATA_FETCH_STABILIZATION_MS = 50;
@@ -31,7 +31,7 @@ export default function useForecastPageViewModel(getForecastUseCase, getCurrentW
 	}
 
 	const lastFetchedRef = useRef("");
-	const searchViewModel = useSearchViewModel(geocodingRepository, setLocation);
+	const searchViewModel = useSearchViewModel(searchLocationUseCase, setLocation);
 
 	//SSOT for tidshåndtering
 	//Bruk useMemo for å unngå unødvendig re-evaluering av tidssone
@@ -44,9 +44,9 @@ export default function useForecastPageViewModel(getForecastUseCase, getCurrentW
 			return;
 		}
 
-		fetchInitialLocationName(setLocation, geocodingRepository, location.lat, location.lon);
+		fetchInitialLocationName(setLocation, searchLocationUseCase, location.lat, location.lon);
 	},
-	[location.lat, location.lon, geocodingRepository]);
+	[location.lat, location.lon, searchLocationUseCase]);
 
 	//Hovedeffekt for datalasting (forblir asynkron i useEffect)
 	useEffect(() => {
