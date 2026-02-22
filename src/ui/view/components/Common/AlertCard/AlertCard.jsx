@@ -87,9 +87,7 @@ export default function AlertCard({ alert, isOpen, onToggle, formatLocalDateTime
 						onClick={onToggle}
 						role="button"
 					>   
-						{/* FJERN INLINE STYLING HER!!!
-						<span style={{fontSize: '14px', marginRight: '8px'}}>Lukk</span>
-						* */}
+
 						<ChevronIcon isOpen={true} size={18} />
 					</div>
 				</div>
