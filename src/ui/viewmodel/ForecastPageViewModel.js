@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import { resolveTimezone, formatToLocalTime, formatToLocalDateLabel, formatLocalDate, formatLocalDateTime, getLocalHour } from "../utils/TimeZoneUtils/timeFormatters.js";
 import useSearchViewModel from "./SearchViewModel.js";
 
-export default function useForecastPageViewModel(getForecastUseCase, getCurrentWeatherUseCase, searchLocationUseCase, getLocationNameUseCase, initialLat, initialLon, hoursAhead) {
+export default function useForecastPageViewModel(getForecastUseCase, getCurrentWeatherUseCase, searchLocationUseCase, getLocationNameUseCase, getSunTimesUseCase, initialLat, initialLon, hoursAhead) {
 
 	//Statevariabler og consts
 	const DATA_FETCH_STABILIZATION_MS = 50;
@@ -47,7 +47,6 @@ export default function useForecastPageViewModel(getForecastUseCase, getCurrentW
 
 		let cancelled = false;
 
-		//Funksjon som hetner loakasjonsnavn fra UseCase i dommenelag
 		async function loadLocationName() {
 			try {
 				const result = await getLocationNameUseCase.execute({ lat: location.lat, lon: location.lon });
@@ -60,7 +59,6 @@ export default function useForecastPageViewModel(getForecastUseCase, getCurrentW
 					if (prev.name === result.name && prev.timezone === result.timezone) {
 						return prev;
 					}
-
 					return { ...prev, name: result.name, timezone: result.timezone };
 				});
 			}
@@ -79,15 +77,15 @@ export default function useForecastPageViewModel(getForecastUseCase, getCurrentW
 	}, 
 	[location.lat, location.lon, getLocationNameUseCase]);
 
-	
-	//UseEffek for å laste inn data fra UseCases i Domene-lag
+	// =========================
+	// LOAD FORECAST + SUN
+	// =========================
 	useEffect(() => {
 		if (!location.lat || !location.lon) {
 			return;
 		}
 		let cancelled = false;
 
-		//Inkludert tz i fetchKey for SSOT
 		async function loadData() {
 			const fetchKey = `${location.lat},${location.lon},${hoursAhead},${tz}`;
 			
@@ -101,13 +99,12 @@ export default function useForecastPageViewModel(getForecastUseCase, getCurrentW
 				setLoading(true);
 				setError(null);
 
-				//Påkaller værmelingsdata fra useCase i Domene-lag
-				const result = await getForecastUseCase.execute({ 
-					lat: location.lat, 
-					lon: location.lon, 
-					hoursAhead, 
-					timeZone: tz, 
-					formatToLocalTime 
+				//Henter forecast fra UseCase i Dommenelaget
+				const result = await getForecastUseCase.execute({
+					lat: location.lat,
+					lon: location.lon,
+					hoursAhead,
+					timeZone: tz
 				});
 
 				if (cancelled) {
@@ -125,12 +122,26 @@ export default function useForecastPageViewModel(getForecastUseCase, getCurrentW
 
 				setForecast(grouped);
 				setDailySummaryByDate(result.dailySummaryByDate);
-				setSunTimesByDate(result.sunTimesByDate);
 				setAlerts(result.alerts ?? []);
 				setAlertsByDate(result.alertsByDate ?? {});
 
-				//Henter værmelding NÅ fra useCase i domenelag
-				const current = await getCurrentWeatherUseCase.execute({ 
+				//Henter sunTimes som separat use case fra dommene lag
+				const isoDates = Object.keys(grouped);
+
+				const sunTimes = await getSunTimesUseCase.execute({
+					lat: location.lat,
+					lon: location.lon,
+					isoDates,
+					timeZone: tz,
+					formatToLocalTime
+				});
+
+				if (!cancelled) {
+					setSunTimesByDate(sunTimes);
+				}
+
+				//Current current weather fra eget UseCase til NowCard
+				const current = await getCurrentWeatherUseCase.execute({
 					lat: location.lat,
 					lon: location.lon,
 					timeZone: tz
@@ -158,9 +169,8 @@ export default function useForecastPageViewModel(getForecastUseCase, getCurrentW
 			cancelled = true;
 			clearTimeout(timer);
 		};
-	},
-	
-	[location.lat, location.lon, hoursAhead, tz, getForecastUseCase, getCurrentWeatherUseCase]);
+	}, 
+	[location.lat, location.lon, hoursAhead, tz, getForecastUseCase, getSunTimesUseCase, getCurrentWeatherUseCase]);
 
 	return {
 		forecast,

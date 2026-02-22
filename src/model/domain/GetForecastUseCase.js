@@ -2,19 +2,21 @@
 export default class GetForecastUseCase {
 
 	//Konstruktør for å ta inn repositories i App.jsx
-	constructor(forecastRepository, sunriseRepository, alertsRepository) {
+	constructor(forecastRepository, alertsRepository) {
 		this.forecastRepository = forecastRepository;
-		this.sunriseRepository = sunriseRepository;
 		this.alertsRepository = alertsRepository;
 	}
 
-	async execute({ lat, lon, hoursAhead, timeZone, formatToLocalTime }) {
+	async execute({ lat, lon, hoursAhead, timeZone }) {
+
 		if (!lat || !lon) {
 			throw new Error("Latitude and longitude are required");
 		}
 
+		// Henter time-for-time værdata
 		const hourly = await this.forecastRepository.getHourlyForecast(lat, lon, hoursAhead, timeZone);
 
+		//Grupperer timer per dato
 		const hourlyByDate = {};
 		for (const hour of hourly) {
 			if (!hourlyByDate[hour.dateISO]) {
@@ -23,15 +25,15 @@ export default class GetForecastUseCase {
 			hourlyByDate[hour.dateISO].hours.push(hour);
 		}
 
+		//Henter dagsoppsummering
 		const dailySummaryByDate = await this.forecastRepository.getDailySummary(lat, lon, hoursAhead, timeZone);
+
+		//Henter varsler
 		const { alerts, alertsByDate } = await this.alertsRepository.findAlerts(lat, lon);
-		const isoDates = Object.keys(hourlyByDate);
-		const sunTimesByDate = await this.sunriseRepository.getFullSolarReport(lat, lon, isoDates, timeZone, formatToLocalTime);
 
 		return {
 			hourlyByDate,
 			dailySummaryByDate,
-			sunTimesByDate,
 			alerts,
 			alertsByDate
 		};
