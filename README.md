@@ -70,15 +70,18 @@ Dette er ikke full Domain-Driven Design, men et bevisst og pragmatisk valg for �
 ├── public
 ├── src
 │   ├── geolocation
-│   ├── model
-│   │   ├── datasource
-│   │   └── repositories
 │   ├── navigation
+│   ├── model                               <- Model    (M)
+│   │   ├── datasource
+│   │   ├── domain
+│   │   └── repositories
 │   └── ui
 │       ├── style
 │       ├── utils
-│       ├── view
-│       └── viewmodel
+│       ├── view                           <- View      (V)
+│       │   ├── components
+│       │   └── pages
+│       └── viewmodel                      <- ViewModel (VM)
 └── test
     ├── model
     │   ├── datasource
@@ -91,18 +94,12 @@ Dette er ikke full Domain-Driven Design, men et bevisst og pragmatisk valg for �
 ```bash
 TestMVVMReact
 │
-├── ARCHITECTURE.md
-├── README.md
-├── vite.config.js
-├── yarn.lock
-│
+├── images
 ├── public
 │   ├── alert_symbols
 │   ├── credit_icons
 │   ├── sun_rise
 │   └── weather_icons
-│       ├── 100
-│       └── 200
 │
 ├── src
 │   ├── App.jsx
@@ -124,6 +121,15 @@ TestMVVMReact
 │   │   │   ├── OpenCageGeocodingDataSource.js
 │   │   │   └── SunriseDataSource.js
 │   │   │
+│   │   ├── domain
+│   │   │   ├── GetAlertsUseCase.js
+│   │   │   ├── GetAllAlertsUseCase.js
+│   │   │   ├── GetCurrentWeatherUseCase.js
+│   │   │   ├── GetForecastUseCase.js
+│   │   │   ├── GetLocationNameUseCase.js
+│   │   │   ├── GetSunTimesUseCase.js
+│   │   │   └── SearchLocationUseCase.js
+│   │   │
 │   │   └── repositories
 │   │       ├── LocationForecastRepository.js
 │   │       ├── MetAlertsRepository.js
@@ -133,33 +139,40 @@ TestMVVMReact
 │   └── ui
 │       ├── style
 │       │   ├── AlertCard.css
-│       │   ├── AlertPage.css
-│       │   ├── ForecastPage.css
-│       │   ├── GraphPage.css
-│       │   └── ...
+│       │   ....
+│       │   ....
 │       │
 │       ├── utils
 │       │   ├── AlertPageUtils
+│       │   │   ├── alertFilterUtils.js
+│       │   │   ├── counties.js
+│       │   │   └── marineAreas.js
 │       │   ├── CommonUtils
-│       │   ├── LocationUtils
+│       │   │   ├── getAlertIconFileName.js
+│       │   │   ├── getRiskLevelText.js
+│       │   │   └── weatherIcons.js
+│       │   ├── ForecastUtils
+│       │   │   ├── formatPrecipitationUtil.js
+│       │   │   └── windDescriptionUtil.js
 │       │   └── TimeZoneUtils
+│       │       └── timeFormatters.js
 │       │
 │       ├── view
-│       │   ├── pages
-│       │   │   ├── ForecastPage.jsx
-│       │   │   ├── GraphPage.jsx
-│       │   │   └── AlertPage.jsx
+│       │   ├── components
+│       │   │   ├── AlertPage
+│       │   │   ├── Common
+│       │   │   ├── ForecastPage
+│       │   │   └── GraphPage
 │       │   │
-│       │   └── components
-│       │       ├── HomePage
-│       │       ├── GraphPage
-│       │       ├── AlertPage
-│       │       └── Common
+│       │   └── pages
+│       │       ├── AlertPage.jsx
+│       │       ├── ForecastPage.jsx
+│       │       └── GraphPage.jsx
 │       │
 │       └── viewmodel
+│           ├── AlertPageViewModel.js
 │           ├── ForecastPageViewModel.js
 │           ├── GraphScreenViewModel.js
-│           ├── AlertPageViewModel.js
 │           └── SearchViewModel.js
 │
 └── test
