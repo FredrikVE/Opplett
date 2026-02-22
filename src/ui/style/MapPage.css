@@ -1,0 +1,21 @@
+/*src/ui/style/MapPage.css*/
+
+.map-page-wrap {
+  position: relative;
+  width: 100%;
+  /* Juster høyde etter hvordan header/footer ser ut hos deg */
+  height: calc(100vh - 120px);
+}
+
+.map {
+  position: absolute;
+  inset: 0;
+}
+
+/* Geocoding-control plassert oppe til venstre */
+.geocoding {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+}

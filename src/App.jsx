@@ -20,6 +20,7 @@ import "./ui/style/NowCard.css";
 import "./ui/style/UVNowBar.css";
 import "./ui/style/WindArrow.css";
 import "./ui/style/FilterDropDown.css";
+import "./ui/style/MapPage.css";
 
 //Navigation
 import { NAV_SCREENS } from "./navigation/navGraph.js";
@@ -29,13 +30,14 @@ import OpenCageGeocodingDataSource from "./model/datasource/OpenCageGeocodingDat
 import LocationForecastDataSource from "./model/datasource/LocationForecastDataSource.js";
 import MetAlertsDataSource from "./model/datasource/MetAlertsDataSource.js";
 import SunriseDataSource from "./model/datasource/SunriseDataSource.js";
+import MapTilerDataSource from "./model/datasource/MapTilerDataSource.js";
 
 //Repositories
 import OpenCageGeocodingRepository from "./model/repositories/OpenCageGeocodingRepository.js";
 import LocationForecastRepository from "./model/repositories/LocationForecastRepository.js";
 import MetAlertsRepository from "./model/repositories/MetAlertsRepository.js";
 import SunriseRepository from "./model/repositories/SunriseRepository.js";
-
+import MapTilerRepository from "./model/repositories/MapTilerRepository.js"
 //UseCases fra domain-layer
 import GetForecastUseCase from "./model/domain/GetForecastUseCase.js";
 import GetAllAlertsUseCase from "./model/domain/GetAllAlertsUseCase.js";
@@ -44,15 +46,18 @@ import SearchLocationUseCase from "./model/domain/SearchLocationUseCase.js";
 import GetLocationNameUseCase from "./model/domain/GetLocationNameUseCase.js";
 import GetSunTimesUseCase from "./model/domain/GetSunTimesUseCase.js";
 import GetAlertsUseCase from "./model/domain/GetAlertsUseCase.js";
+import GetMapConfigUseCase from "./model/domain/GetMapConfigUseCase.js"
 
 //ViewModel og View
 import useForecastPageViewModel from "./ui/viewmodel/ForecastPageViewModel.js";
 import useGraphScreenViewModel from "./ui/viewmodel/GraphScreenViewModel.js";
 import useAlertPageViewModel from "./ui/viewmodel/AlertPageViewModel.js";
+import useMapPageViewModel from "./ui/viewmodel/MapPageViewModel.js";
 
 import ForecastPage from "./ui/view/pages/ForecastPage.jsx";
 import GraphPage from "./ui/view/pages/GraphPage.jsx";
 import AlertPage from "./ui/view/pages/AlertPage.jsx";
+import MapPage from "./ui/view/pages/MapPage.jsx";
 
 //Header og footer
 import Header from "./ui/view/components/Common/Layout/Header.jsx";
@@ -73,6 +78,7 @@ const locationRepo = new LocationForecastRepository(new LocationForecastDataSour
 const sunriseRepo = new SunriseRepository(new SunriseDataSource());
 const alertsRepo = new MetAlertsRepository(new MetAlertsDataSource());
 const geoRepo = new OpenCageGeocodingRepository(new OpenCageGeocodingDataSource(), formatLocation);
+const mapTilerRepo = new MapTilerRepository(new MapTilerDataSource());
 
 //Oppretter instanser av UseCasees fra domain-layer
 const getForecastUseCase = new GetForecastUseCase(locationRepo, alertsRepo);
@@ -82,6 +88,7 @@ const getAllAlertsUseCase = new GetAllAlertsUseCase(alertsRepo);
 const getCurrentWeatherUseCase = new GetCurrentWeatherUseCase(locationRepo);
 const searchLocationUseCase = new SearchLocationUseCase(geoRepo);
 const getLocationNameUseCase = new GetLocationNameUseCase(geoRepo);
+const getMapConfigUseCase = new GetMapConfigUseCase(mapTilerRepo);
 
 export default function App() {
 	const hoursAhead = 120;
@@ -104,9 +111,18 @@ export default function App() {
 		coords?.lon, 
 		hoursAhead
 	);
+
+	const mapPageViewModel = useMapPageViewModel(
+		getMapConfigUseCase,
+		searchLocationUseCase,
+		getLocationNameUseCase,
+		coords?.lat,
+		coords?.lon
+	);
 	
 	const graphScreenViewModel = useGraphScreenViewModel(forecastPageViewModel);
 	const alertPageViewModel = useAlertPageViewModel(getAllAlertsUseCase);
+
 	if (loading) {
 		return (
 			<LoadingSpinner />
@@ -153,6 +169,14 @@ export default function App() {
 				/>
 			)}
 
+			{activeScreen === NAV_SCREENS.MAP && (
+				<MapPage
+					viewModel={mapPageViewModel}
+					activeScreen={activeScreen}
+					onChangeScreen={setActiveScreen}
+					SCREENS={NAV_SCREENS}
+				/>
+			)}
 			<Footer />
 		</>
 	);
