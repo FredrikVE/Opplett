@@ -27,7 +27,7 @@ export default class GetMapWeatherUseCase {
 							lon: place.lon,
 							timeZone: timeZone
 						})
-						
+
 						.then(weather => {
 
 							if (!weather) {
@@ -55,24 +55,20 @@ export default class GetMapWeatherUseCase {
 	}
 
 	#filterTooClose(places, minDist) {
-
+		const seen = new Set();
 		const filtered = [];
 
 		for (const place of places) {
 
-			const isTooClose = filtered.some(existing => {
+			const latBucket = Math.floor(place.lat / minDist);
+			const lonBucket = Math.floor(place.lon / minDist);
+			const key = latBucket + ":" + lonBucket;
 
-				const latDiff = Math.abs(existing.lat - place.lat);
-				const lonDiff = Math.abs(existing.lon - place.lon);
-
-				return latDiff < minDist && lonDiff < minDist;
-			});
-
-			if (!isTooClose) {
+			if (!seen.has(key)) {
+				seen.add(key);
 				filtered.push(place);
 			}
 		}
-
 		return filtered;
 	}
 }
