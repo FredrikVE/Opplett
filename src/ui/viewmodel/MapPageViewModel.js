@@ -29,7 +29,6 @@ export default function useMapPageViewModel( getMapConfigUseCase, searchLocation
 		return getMapConfigUseCase.execute();
 	}, [getMapConfigUseCase]);
 
-
 	const tz = useMemo(() => {
 		return resolveTimezone(location.timezone);
 	}, [location.timezone]);
@@ -55,11 +54,16 @@ export default function useMapPageViewModel( getMapConfigUseCase, searchLocation
 			bbox,
 			zoom: currentZoom
 		});
-	}, []);
+	}, 
+	[]);
 
 	useEffect(() => {
 
 		if (location.lat == null || location.lon == null) {
+			return;
+		}
+
+		if (!mapView.bbox) {
 			return;
 		}
 
@@ -87,18 +91,15 @@ export default function useMapPageViewModel( getMapConfigUseCase, searchLocation
 			} 
 
 			catch (error) {
-
 				console.error("Feil ved henting av kartvær:", error);
 
 			} 
 
 			finally {
-
 				if (!cancelled) {
 					setIsLoading(false);
 				}
 			}
-
 		}, DEBOUNCE_DELAY_MS);
 
 		return () => {
