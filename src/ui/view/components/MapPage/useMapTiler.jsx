@@ -1,5 +1,4 @@
 // src/ui/view/components/MapPage/useMapTiler.js
-
 import { useEffect, useRef } from "react";
 import * as maptilersdk from "@maptiler/sdk";
 import { createRoot } from "react-dom/client";
