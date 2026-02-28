@@ -1,104 +1,109 @@
+// src/ui/viewmodel/MapPageViewModel.js
 import { useEffect, useState, useMemo, useCallback } from "react";
 import useSearchViewModel from "./SearchViewModel.js";
 import { resolveTimezone } from "../utils/TimeZoneUtils/timeFormatters.js";
 
-export default function useMapPageViewModel(
-    getMapConfigUseCase, 
-    searchLocationUseCase, 
-    getMapWeatherUseCase, 
-    initialLat, 
-    initialLon
-) {
-    const baseConfig = useMemo(() => getMapConfigUseCase.execute(), [getMapConfigUseCase]);
-    const { defaultZoom, apiKey, style, defaultCenter } = baseConfig;
+export default function useMapPageViewModel(getMapConfigUseCase, searchLocationUseCase, getMapWeatherUseCase, initialLat, initialLon) {
+    const INIT_ZOOM = 12;
+    // 1. Grunnconfig - Lagt til RETURN og fallback objekt
+    const config = useMemo(() => {
+        return getMapConfigUseCase.execute() || {};
+    }, [getMapConfigUseCase]);
 
-    // Lokasjon styres av søkefeltet eller GPS ved oppstart
+    const { apiKey, style } = config;
+
+    // 2. State for lokasjon (Søk/GPS)
     const [location, setLocation] = useState({
-        lat: initialLat ?? defaultCenter.lat,
-        lon: initialLon ?? defaultCenter.lon,
+        lat: initialLat,
+        lon: initialLon,
         name: null,
         timezone: null
     });
 
-    // Denne staten holder styr på hva brukeren faktisk ser på kartet
+    // 3. State for kartutsnitt
     const [mapView, setMapView] = useState({
-        lat: location.lat,
-        lon: location.lon,
-        bbox: null, // [vest, sør, øst, nord]
-        zoom: defaultZoom // Lagrer zoom-nivået her
+        lat: initialLat,
+        lon: initialLon,
+        bbox: null,
+        zoom: INIT_ZOOM 
     });
 
     const [weatherPoints, setWeatherPoints] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-
+    
     const searchViewModel = useSearchViewModel(searchLocationUseCase, setLocation);
     const tz = useMemo(() => resolveTimezone(location.timezone), [location.timezone]);
 
-    /**
-     * Callback som WeatherMap kaller på hver 'moveend'.
-     * Vi inkluderer nå currentZoom for å styre tettheten av værikoner.
-     */
-    const onMapChange = useCallback((lat, lon, bbox, currentZoom) => {
-        setMapView({ 
-            lat, 
-            lon, 
-            bbox, 
-            zoom: currentZoom 
-        });
+    //SYNKRONISERING: Oppdaterer staten når GPS-koordinater lander
+    useEffect(() => {
+        if (initialLat && initialLon) {
+            setLocation(prev => ({ ...prev, lat: initialLat, lon: initialLon }));
+            setMapView(prev => ({ ...prev, lat: initialLat, lon: initialLon }));
+        }
+    }, [initialLat, initialLon]);
+
+    // View-logikk: Oversetter zoom til geografisk avstand (minDist)
+    const calculateMinDist = useCallback((zoom) => {
+        if (zoom <= 5)  return 1.2;
+        if (zoom <= 7)  return 0.5;
+        if (zoom <= 9)  return 0.15;
+        if (zoom <= 11) return 0.04;
+        if (zoom <= 13) return 0.01;
+        return 0.001;
     }, []);
 
-    useEffect(() => {
-        const targetLat = mapView.lat || location.lat;
-        const targetLon = mapView.lon || location.lon;
+    const onMapChange = useCallback((lat, lon, bbox, currentZoom) => {
+        setMapView({ lat, lon, bbox, zoom: currentZoom });
+    }, []);
 
-        if (!targetLat || !targetLon) return;
+    // 4. Effekt for datahenting ved bevegelse på kartet
+    useEffect(() => {
+        if (mapView.lat === null || mapView.lon === null) {
+            return;
+        }
 
         let cancelled = false;
+        const minDist = calculateMinDist(mapView.zoom);
 
-        // DEBOUNCE: Venter 500ms før vi henter data for å unngå API-stress ved panorering.
         const timer = setTimeout(async () => {
             setIsLoading(true);
             try {
-                // Vi sender nå med mapView.zoom til UseCase
                 const points = await getMapWeatherUseCase.execute(
-                    targetLat, 
-                    targetLon, 
-                    tz,
-                    mapView.bbox,
-                    mapView.zoom 
+                    mapView.lat, 
+                    mapView.lon, 
+                    tz, 
+                    mapView.bbox, 
+                    minDist // Sender minDist i stedet for zoom
                 );
-
-                if (!cancelled) {
-                    setWeatherPoints(points);
-                }
-            } catch (error) {
-                console.error("Feil ved oppdatering av kart-vær:", error);
-            } finally {
+                if (!cancelled) setWeatherPoints(points);
+            } 
+            
+            catch (e) {
+                console.error("Feil ved henting av kartvær", e);
+            } 
+            
+            finally {
                 if (!cancelled) setIsLoading(false);
             }
-        }, 500); 
+        }, 500);
 
         return () => { 
-            cancelled = true;
-            clearTimeout(timer);
+            cancelled = true; 
+            clearTimeout(timer); 
         };
-    }, [mapView, tz, getMapWeatherUseCase, location.lat, location.lon]); 
+    }, [mapView, tz, getMapWeatherUseCase, calculateMinDist]);
 
     return {
-        // Kart-konfigurasjon
         apiKey,
         style,
-        zoom: defaultZoom,
-
-        // Vær-punkter og tilstand
+        zoom: mapView.zoom,
         location,
-        timezone: tz,
         mapCenter: { lat: location.lat, lon: location.lon },
         weatherPoints,
         isLoading,
         onMapChange,
 
-        // Søke-logikk
+        // Søkefelt-logikk
         query: searchViewModel.query,
         suggestions: searchViewModel.suggestions,
         onSearchChange: searchViewModel.onSearchChange,

@@ -3,15 +3,7 @@ import * as maptilersdk from "@maptiler/sdk";
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 import { getWeatherIconFileName } from "../../../utils/CommonUtils/weatherIcons.js";
 
-export default function WeatherMap({
-    apiKey,
-    style,
-    lat,
-    lon,
-    zoom,
-    weatherPoints,
-    onMapChange
-}) {
+export default function WeatherMap({ apiKey, style, lat, lon, zoom, weatherPoints, onMapChange }) {
     const mapContainerRef = useRef(null);
     const mapRef = useRef(null);
     const markersRef = useRef([]);
@@ -26,7 +18,7 @@ export default function WeatherMap({
             container: mapContainerRef.current,
             style: style,
             center: [Number(lon), Number(lat)],
-            zoom: Number(zoom) || 6,
+            zoom: Number(zoom),
             attributionControl: false
         });
 
@@ -60,7 +52,9 @@ export default function WeatherMap({
     // 2. Oppdater markører når weatherPoints endres
     useEffect(() => {
         const map = mapRef.current;
-        if (!map || !weatherPoints) return;
+        if (!map || !weatherPoints) {
+            return;
+        }
 
         // Rydd opp gamle markører
         markersRef.current.forEach(m => m.remove());
