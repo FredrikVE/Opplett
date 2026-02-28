@@ -3,11 +3,13 @@ import { useEffect, useRef } from "react";
 import * as maptilersdk from "@maptiler/sdk";
 import { getWeatherIconFileName } from "../../../utils/CommonUtils/weatherIcons.js";
 
+const MOVE_THRESHOLD = 0.0001;
 
 export function useMapTiler({ apiKey, style, lat, lon, zoom, weatherPoints, onMapChange }) {
-    const mapContainerRef = useRef(null);
-    const mapInstanceRef = useRef(null);
-    const markersRef = useRef([]);
+
+	const mapContainerRef = useRef(null);
+	const mapInstanceRef = useRef(null);
+	const markersRef = useRef([]);
 
     //Initialiserer selve kartet i oppstarten
     useEffect(() => {
@@ -19,13 +21,13 @@ export function useMapTiler({ apiKey, style, lat, lon, zoom, weatherPoints, onMa
 
         maptilersdk.config.apiKey = apiKey;
 
-        const map = new maptilersdk.Map({
-            container: mapContainerRef.current,
-            style: style,
-            center: [Number(lon), Number(lat)],
-            zoom: Number(zoom),
-            attributionControl: false
-        });
+		const map = new maptilersdk.Map({
+			container: mapContainerRef.current,
+			style: style,
+			center: [Number(lon), Number(lat)],
+			zoom: Number(zoom),
+			attributionControl: false
+		});
 
         // Lytt på bevegelser og send data tilbake til ViewModel
         map.on("moveend", () => {
@@ -40,10 +42,10 @@ export function useMapTiler({ apiKey, style, lat, lon, zoom, weatherPoints, onMa
                 bounds.getNorth()
             ];
 
-            onMapChange?.(center.lat, center.lng, bbox, map.getZoom());
+            onMapChange(center.lat, center.lng, bbox, map.getZoom());
         });
 
-        mapInstanceRef.current = map;
+		mapInstanceRef.current = map;
 
         // Cleanup: Fjern kartet fra minnet når komponenten unmountes
         return () => {
@@ -54,7 +56,7 @@ export function useMapTiler({ apiKey, style, lat, lon, zoom, weatherPoints, onMa
         };
     }, 
     //[apiKey, style, lat, lon, zoom, onMapChange]);        //Gir masse warnings i konsollen, men ikke i VS code.
-    [apiKey, style]);   //Gir warning i VS code om at useEffect ikke lytter til alt og bryter best practice
+    [apiKey, style, onMapChange]);   //Gir warning i VS code om at useEffect ikke lytter til alt og bryter best practice
 
 
     //Synkronisering ved flyttting av kartet VM-staten endres ved for eks søk
@@ -68,8 +70,8 @@ export function useMapTiler({ apiKey, style, lat, lon, zoom, weatherPoints, onMa
         
         //Sjekk om avviket mellom kartet og staten er stort nok til å flytte (unngår loop)
         const hasMovedSignificantly = 
-            Math.abs(currentCenter.lat - lat) > 0.0001 || 
-            Math.abs(currentCenter.lng - lon) > 0.0001;
+            Math.abs(currentCenter.lat - lat) > MOVE_THRESHOLD || 
+            Math.abs(currentCenter.lng - lon) > MOVE_THRESHOLD;
 
         if (hasMovedSignificantly) {
             map.flyTo({ 
