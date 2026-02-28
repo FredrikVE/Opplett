@@ -15,12 +15,12 @@ function calculateMinDist(zoom) {
 	return 0.001;
 }
 
-export default function useMapPageViewModel( getMapConfigUseCase, searchLocationUseCase, getMapWeatherUseCase, initialLat, initialLon) {
+export default function useMapPageViewModel(getMapConfigUseCase, searchLocationUseCase, getMapWeatherUseCase, initialLat, initialLon) {
 
 	const INIT_ZOOM = 12;
 	const DEBOUNCE_DELAY_MS = 500;
-	const [location, setLocation] = useState({ lat: initialLat, lon: initialLon, name: null, timezone: null });
-	const [mapView, setMapView] = useState({ bbox: null, zoom: INIT_ZOOM });
+	const [mapView, setMapView] = useState({bbox: null, zoom: INIT_ZOOM});
+	const [location, setLocation] = useState({lat: initialLat, lon: initialLon, name: null, timezone: null});
 	const [weatherPoints, setWeatherPoints] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const searchViewModel = useSearchViewModel(searchLocationUseCase, setLocation);
@@ -33,6 +33,7 @@ export default function useMapPageViewModel( getMapConfigUseCase, searchLocation
 		return resolveTimezone(location.timezone);
 	}, [location.timezone]);
 
+	//Oppdater location når GPS lander første gang
 	useEffect(() => {
 		if (initialLat != null && initialLon != null) {
 			setLocation(prev => ({
@@ -43,25 +44,26 @@ export default function useMapPageViewModel( getMapConfigUseCase, searchLocation
 		}
 	}, [initialLat, initialLon]);
 
+	//Callback fra kartet – eneste kilde til viewport-endring
 	const onMapChange = useCallback((lat, lon, bbox, currentZoom) => {
+
+		//Oppdaterer UI-location (header, search etc.)
 		setLocation(prev => ({
 			...prev,
 			lat,
 			lon
 		}));
 
+		//Oppdaterer viewport (SSOT for weather)
 		setMapView({
 			bbox,
 			zoom: currentZoom
 		});
-	}, 
-	[]);
 
+	}, []);
+
+	//Weather-fetch (viewport-drevet)
 	useEffect(() => {
-
-		if (location.lat == null || location.lon == null) {
-			return;
-		}
 
 		if (!mapView.bbox) {
 			return;
@@ -76,11 +78,10 @@ export default function useMapPageViewModel( getMapConfigUseCase, searchLocation
 
 			try {
 
+				//Kun viewport brukes her
 				const points = await getMapWeatherUseCase.execute(
-					location.lat,
-					location.lon,
-					tz,
 					mapView.bbox,
+					tz,
 					minDist
 				);
 
@@ -89,17 +90,19 @@ export default function useMapPageViewModel( getMapConfigUseCase, searchLocation
 				}
 
 			} 
-
+			
 			catch (error) {
 				console.error("Feil ved henting av kartvær:", error);
 
 			} 
-
+			
 			finally {
+
 				if (!cancelled) {
 					setIsLoading(false);
 				}
 			}
+
 		}, DEBOUNCE_DELAY_MS);
 
 		return () => {
@@ -107,7 +110,9 @@ export default function useMapPageViewModel( getMapConfigUseCase, searchLocation
 			clearTimeout(timer);
 		};
 
-	}, [location.lat, location.lon, mapView.bbox, mapView.zoom, tz, getMapWeatherUseCase]);
+	}, 
+	[mapView.bbox, mapView.zoom, tz, getMapWeatherUseCase]);
+
 
 	return {
 		apiKey,
@@ -119,6 +124,7 @@ export default function useMapPageViewModel( getMapConfigUseCase, searchLocation
 		isLoading,
 		onMapChange,
 
+		// Search
 		query: searchViewModel.query,
 		suggestions: searchViewModel.suggestions,
 		onSearchChange: searchViewModel.onSearchChange,

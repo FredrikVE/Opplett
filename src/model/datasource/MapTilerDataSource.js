@@ -1,4 +1,4 @@
-// src/model/datasource/MapTilerDataSource.js
+//src/model/datasource/MapTilerDataSource.js
 const API_KEY = import.meta.env.VITE_MAPTILER_API_KEY;
 
 export default class MapTilerDataSource {
@@ -16,25 +16,24 @@ export default class MapTilerDataSource {
             style: this.style
         };
     }
+   
+    async getNearbyPlaces(bbox) {
+        const limit = 10;
 
-    async getNearbyPlaces(lat, lon, bbox) {
-        const limit = 10; 
-        let url = "";
-
-        if (bbox && Array.isArray(bbox)) {
-            const bboxString = bbox.join(',');
-            url = `https://api.maptiler.com/geocoding/place.json?key=${this.apiKey}&bbox=${bboxString}&limit=${limit}&proximity=${lon},${lat}`;
-        } 
-        
-        else {
-            url = `https://api.maptiler.com/geocoding/${lon},${lat}.json?key=${this.apiKey}&types=place&limit=1`;
+        if (!bbox || !Array.isArray(bbox)) {
+            throw new Error("bbox mangler i getNearbyPlaces()");
         }
 
+        const bboxString = bbox.join(',');
+
+        const url = `https://api.maptiler.com/geocoding/place.json?key=${this.apiKey}&bbox=${bboxString}&limit=${limit}`;
+
         const response = await fetch(url);
+
         if (!response.ok) {
             throw new Error(`MapTiler API feil: ${response.status}`);
         }
-        
+
         return await response.json();
     }
 }

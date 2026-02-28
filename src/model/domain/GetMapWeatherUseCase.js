@@ -1,4 +1,4 @@
-// src/model/domain/GetMapWeatherUseCase.js
+//src/model/domain/GetMapWeatherUseCase.js
 export default class GetMapWeatherUseCase {
 
 	constructor(mapTilerRepository, getCurrentWeatherUseCase) {
@@ -6,12 +6,11 @@ export default class GetMapWeatherUseCase {
 		this.getCurrentWeatherUseCase = getCurrentWeatherUseCase;
 	}
 
-	async execute(lat, lon, timeZone, bbox, minDist) {
+	async execute(bbox, timeZone, minDist) {
 
 		try {
 
-			const places = await this.mapTilerRepository
-				.getNearbySignificantPlaces(lat, lon, bbox);
+			const places = await this.mapTilerRepository.getNearbySignificantPlaces(bbox);
 
 			if (!places || places.length === 0) {
 				return [];
@@ -20,8 +19,11 @@ export default class GetMapWeatherUseCase {
 			const uniquePlaces = this.#filterTooClose(places, minDist);
 
 			const results = await Promise.all(
+				
 				uniquePlaces.map(place => {
+
 					return this.getCurrentWeatherUseCase
+					
 						.execute({
 							lat: place.lat,
 							lon: place.lon,
@@ -29,7 +31,6 @@ export default class GetMapWeatherUseCase {
 						})
 
 						.then(weather => {
-
 							if (!weather) {
 								return null;
 							}
@@ -39,6 +40,7 @@ export default class GetMapWeatherUseCase {
 								...place
 							};
 						})
+
 						.catch(() => {
 							return null;
 						});
@@ -47,7 +49,9 @@ export default class GetMapWeatherUseCase {
 
 			return results.filter(Boolean);
 
-		} catch (error) {
+		} 
+		
+		catch (error) {
 
 			console.error("Feil i GetMapWeatherUseCase:", error);
 			return [];
@@ -55,6 +59,7 @@ export default class GetMapWeatherUseCase {
 	}
 
 	#filterTooClose(places, minDist) {
+
 		const seen = new Set();
 		const filtered = [];
 
@@ -69,6 +74,7 @@ export default class GetMapWeatherUseCase {
 				filtered.push(place);
 			}
 		}
+
 		return filtered;
 	}
 }
