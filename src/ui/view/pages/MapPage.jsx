@@ -29,6 +29,7 @@ export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREE
 			/>
 
 			<main className="map-content">
+				
 				{/* Viser spinner over kartet når vi laster inn nye vær-punkter */}
 				{isLoading && (
 					<div className="map-loading-overlay">

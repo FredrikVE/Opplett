@@ -2,38 +2,54 @@
 const API_KEY = import.meta.env.VITE_MAPTILER_API_KEY;
 
 export default class MapTilerDataSource {
-    constructor() {
-        this.apiKey = API_KEY;
-        this.style = `https://api.maptiler.com/maps/streets-v2/style.json?key=${this.apiKey}`;
-    }
 
-    getBaseConfig() {
-        if (!this.apiKey) {
-            throw new Error("Mangler VITE_MAPTILER_API_KEY i .env");
-        }
-        return {
-            apiKey: this.apiKey,
-            style: this.style
-        };
-    }
-   
-    async getNearbyPlaces(bbox) {
-        const limit = 10;
+	constructor() {
 
-        if (!bbox || !Array.isArray(bbox)) {
-            throw new Error("bbox mangler i getNearbyPlaces()");
-        }
+		if (!API_KEY) {
+			throw new Error("Mangler VITE_MAPTILER_API_KEY i .env");
+		}
+		
+		this._baseUrl = "https://api.maptiler.com";
+		this._mapsPath = "/maps";
+		this._geocodingPath = "/geocoding";
+		this._apiKey = API_KEY;
 
-        const bboxString = bbox.join(',');
+		this._mapsBaseUrl = `${this._baseUrl}${this._mapsPath}`;
+		this._geocodingBaseUrl = `${this._baseUrl}${this._geocodingPath}`;
 
-        const url = `https://api.maptiler.com/geocoding/place.json?key=${this.apiKey}&bbox=${bboxString}&limit=${limit}`;
+		this._style = `${this._mapsBaseUrl}/streets-v2/style.json?key=${this._apiKey}`;
+	}
 
-        const response = await fetch(url);
+	getBaseConfig() {
+		return {
+			apiKey: this._apiKey,
+			style: this._style
+		};
+	}
 
-        if (!response.ok) {
-            throw new Error(`MapTiler API feil: ${response.status}`);
-        }
+	async getNearbyPlaces(bbox) {
 
-        return await response.json();
-    }
+		const limit = 10;
+
+		if (!bbox || !Array.isArray(bbox)) {
+			throw new Error("bbox mangler i getNearbyPlaces()");
+		}
+
+		const bboxString = bbox.join(",");
+
+		//Bygger query string
+		const url =
+			`${this._geocodingBaseUrl}/place.json` +
+			`?key=${this._apiKey}` +
+			`&bbox=${bboxString}` +
+			`&limit=${limit}`;
+
+		const response = await fetch(url);
+
+		if (!response.ok) {
+			throw new Error(`MapTiler API feil: ${response.status}`);
+		}
+
+		return await response.json();
+	}
 }
