@@ -36,6 +36,10 @@ export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREE
 					</div>
 				)}
 
+				<div className="zoom-indicator">
+					Zoom: {Math.round(zoom)}
+				</div>
+
 				<WeatherMap
 					apiKey={apiKey}
 					style={style}
