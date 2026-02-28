@@ -5,14 +5,14 @@ import { resolveTimezone } from "../utils/TimeZoneUtils/timeFormatters.js";
 
 export default function useMapPageViewModel(getMapConfigUseCase, searchLocationUseCase, getMapWeatherUseCase, initialLat, initialLon) {
     const INIT_ZOOM = 12;
-    // 1. Grunnconfig - Lagt til RETURN og fallback objekt
+    //Grunnconfig. Lagt til RETURN og fallback objekt (trengs denne??)
     const config = useMemo(() => {
         return getMapConfigUseCase.execute() || {};
     }, [getMapConfigUseCase]);
 
     const { apiKey, style } = config;
 
-    // 2. State for lokasjon (Søk/GPS)
+    //State for lokasjon (Søk/GPS)
     const [location, setLocation] = useState({
         lat: initialLat,
         lon: initialLon,
@@ -20,7 +20,7 @@ export default function useMapPageViewModel(getMapConfigUseCase, searchLocationU
         timezone: null
     });
 
-    // 3. State for kartutsnitt
+    //State for kartutsnitt
     const [mapView, setMapView] = useState({
         lat: initialLat,
         lon: initialLon,
@@ -34,7 +34,7 @@ export default function useMapPageViewModel(getMapConfigUseCase, searchLocationU
     const searchViewModel = useSearchViewModel(searchLocationUseCase, setLocation);
     const tz = useMemo(() => resolveTimezone(location.timezone), [location.timezone]);
 
-    //SYNKRONISERING: Oppdaterer staten når GPS-koordinater lander
+    //Oppdaterer og synkroniserer når staten når GPS-koordinater lander
     useEffect(() => {
         if (initialLat && initialLon) {
             setLocation(prev => ({ ...prev, lat: initialLat, lon: initialLon }));
@@ -42,13 +42,13 @@ export default function useMapPageViewModel(getMapConfigUseCase, searchLocationU
         }
     }, [initialLat, initialLon]);
 
-    // View-logikk: Oversetter zoom til geografisk avstand (minDist)
+    //View-logikk for å justere avstand mellom værikoner etter zoom-nivå
     const calculateMinDist = useCallback((zoom) => {
-        if (zoom <= 5)  return 1.2;
-        if (zoom <= 7)  return 0.5;
-        if (zoom <= 9)  return 0.15;
-        if (zoom <= 11) return 0.04;
-        if (zoom <= 13) return 0.01;
+        if (zoom <= 5)  return 1.2;     //langt ute (Land nivå) [burde jeg legge til kontinentnivå?]
+        if (zoom <= 7)  return 0.5;     //Fylkes nivå
+        if (zoom <= 9)  return 0.15;    //kommunenivå
+        if (zoom <= 11) return 0.04;   //Mindre nært bydelsnivå
+        if (zoom <= 13) return 0.01; //Nært på bydelsnivå
         return 0.001;
     }, []);
 
@@ -56,7 +56,7 @@ export default function useMapPageViewModel(getMapConfigUseCase, searchLocationU
         setMapView({ lat, lon, bbox, zoom: currentZoom });
     }, []);
 
-    // 4. Effekt for datahenting ved bevegelse på kartet
+    //Effekt for datahenting ved bevegelse på kartet
     useEffect(() => {
         if (mapView.lat === null || mapView.lon === null) {
             return;
