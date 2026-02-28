@@ -34,7 +34,7 @@ export default class GetMapWeatherUseCase {
 			const uniquePlaces = this.#filterTooClose(places, minDist);
 
 			//Begrens antall API-kall
-			const MAX_POINTS = 25;
+			const MAX_POINTS = 10;
 			const limitedPlaces = uniquePlaces.slice(0, MAX_POINTS);
 
 			//Hent vær parallelt
@@ -64,7 +64,9 @@ export default class GetMapWeatherUseCase {
 
 			return results.filter(Boolean);
 
-		} catch (error) {
+		} 
+		
+		catch (error) {
 
 			console.error("Feil i GetMapWeatherUseCase:", error);
 			return [];

@@ -1,4 +1,4 @@
-// src/ui/view/components/MapPage/useMapTiler.js
+// src/ui/view/components/MapPage/useMapTiler.jsx
 import { useEffect, useRef } from "react";
 import * as maptilersdk from "@maptiler/sdk";
 import { createRoot } from "react-dom/client";
@@ -10,10 +10,11 @@ export function useMapTiler({ apiKey, style, lat, lon, zoom, weatherPoints, onMa
 	const mapInstanceRef = useRef(null);
 	const markersRef = useRef([]);
 
+
 	//Init kart
 	useEffect(() => {
 
-		if (!mapContainerRef.current || !apiKey || mapInstanceRef.current) {
+		if (!mapContainerRef.current || mapInstanceRef.current) {
 			return;
 		}
 
@@ -49,25 +50,28 @@ export function useMapTiler({ apiKey, style, lat, lon, zoom, weatherPoints, onMa
 			mapInstanceRef.current = null;
 		};
 
-	}, [apiKey, style, onMapChange]);
+	}, []); //tom dependency array siden dette skal laste kartet én gang ved init
+
 
 
 	//Programmatisk flytting
 	useEffect(() => {
 
 		const map = mapInstanceRef.current;
-		if (!map || lat == null || lon == null) return;
+		if (!map || lat == null || lon == null) {
+			return;
+		}
 
-		map.flyTo({
+		map.jumpTo({
 			center: [lon, lat],
-			zoom: zoom,
-			essential: true
+			zoom: zoom
 		});
 
 	}, [lat, lon, zoom]);
 
 
-	// 3. Render vær-symboler
+
+	//Render vær-symboler
 	useEffect(() => {
 
 		const map = mapInstanceRef.current;
@@ -75,15 +79,15 @@ export function useMapTiler({ apiKey, style, lat, lon, zoom, weatherPoints, onMa
 			return;
 		}
 
-		//Fjern gamle vær-markører
+		//Fjern gamle værikoner
 		markersRef.current.forEach(marker => marker.remove());
+		markersRef.current = [];
 
-		//Lag nye værkort
+		//Lag nye værikoner
 		markersRef.current = weatherPoints.map(point => {
 
 			const container = document.createElement("div");
 
-			//Render React-komponent inn i container
 			const root = createRoot(container);
 			root.render(<WeatherSymbolLabel point={point} />);
 
@@ -93,6 +97,7 @@ export function useMapTiler({ apiKey, style, lat, lon, zoom, weatherPoints, onMa
 		});
 
 	}, [weatherPoints]);
+
 
 	return mapContainerRef;
 }
