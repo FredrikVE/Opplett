@@ -105,45 +105,47 @@ export default class GetMapWeatherUseCase {
 		}
 	}
 
+	
+    //Sjekker avstand og stopper tidlig hvis maxCount er nådd.
+    #filterTooClose(places, minDist, maxCount) {
+        const filtered = [];
+        const minDistSquared = minDist * minDist;
+        
+        let placeIndex = 0;
 
-	//Sjekker avstand mellom punkter ved bruk av Pythagoras.
-	#filterTooClose(places, minDist, maxCount) {
-		const filtered = [];
-		const minDistSquared = minDist * minDist;
+        //Kjører så lenge vi har flere steder å sjekke OG vi ikke har fylt opp listen
+        while (placeIndex < places.length && filtered.length < maxCount) {
+            const currentPoint = places[placeIndex];
 
-		for (const currentPoint of places) {
+            //Sjekker om punktet er trygt å legge til
+            if (this.#isDistanceSafe(currentPoint, filtered, minDistSquared)) {
+                filtered.push(currentPoint);
+            }
 
-			let pointsAreTooClose = false;
+            placeIndex++;
+        }
 
-			for (const existingPoint of filtered) {
-				const a = existingPoint.lat - currentPoint.lat;
-				const b = existingPoint.lon - currentPoint.lon;
+        return filtered;
+    }
 
-				//Unngår Math.sqrt for bedre ytelse
-				const distanceSquared = a * a + b * b;
 
-				if (distanceSquared < minDistSquared) {
-					pointsAreTooClose = true;
-					break;
-				}
-			}
+    //Returnerer true hvis punktet har god nok avstand til alle eksisterende punkter.
+    #isDistanceSafe(currentPoint, existingPoints, minDistSquared) {
+        for (const existing of existingPoints) {
+            const a = existing.lat - currentPoint.lat;
+            const b = existing.lon - currentPoint.lon;
+            
+            //Beregner avstand mellom punktene med Pytagoras a² + b² < c²
+            const distanceSquared = a * a + b * b;
 
-			if (!pointsAreTooClose) {
-				filtered.push(currentPoint);
-			}
+            if (distanceSquared < minDistSquared) {
+                return false; //Avbryter sjekken tidlig hvis avstanden er for kort
+            }
+        }
+        return true;
+    }
 
-			//Tidlig stopp når vi har nok
-			if (filtered.length >= maxCount) {
-				break;
-			}
-		}
-
-		return filtered;
-	}
-
-	/**
-	 * Bruker instansvariabler for å beregne spredte punkter i viewporten
-	 */
+	//Bruker instansvariabler for å beregne spredte punkter i viewporten
 	#generateScatteredPoints(bbox) {
 		const [west, south, east, north] = bbox;
 
