@@ -4,7 +4,7 @@ import useSearchViewModel from "./SearchViewModel.js";
 import { resolveTimezone } from "../utils/TimeZoneUtils/timeFormatters.js";
 
 
-// UI-logikk: Beregner tetthet av værikoner basert på zoom
+//UI-logikk for å beregne tetthet av værikoner etter zoom-nivå
 function calculateMinDist(zoom) {
 	if (zoom <= 3) return 2.5;
 	if (zoom <= 5) return 1.2;
