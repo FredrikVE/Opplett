@@ -1,4 +1,4 @@
-// src/model/domain/GetMapWeatherUseCase.js
+//src/model/domain/GetMapWeatherUseCase.js
 export default class GetMapWeatherUseCase {
 
 	constructor(mapTilerRepository, getCurrentWeatherUseCase) {

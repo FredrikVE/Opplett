@@ -33,16 +33,18 @@ export default function useMapPageViewModel(getMapConfigUseCase, searchLocationU
 		return resolveTimezone(location.timezone);
 	}, [location.timezone]);
 
-	//Oppdater location når GPS lander første gang
-	useEffect(() => {
-		if (initialLat != null && initialLon != null) {
-			setLocation(prev => ({
-				...prev,
-				lat: initialLat,
-				lon: initialLon
-			}));
-		}
-	}, [initialLat, initialLon]);
+    //Oppdater location når GPS lander første gang
+    useEffect(() => {
+        if (initialLat != null && initialLon != null) {
+            setLocation(prev => ({
+                ...prev,
+                lat: initialLat,
+                lon: initialLon
+            }));
+            //Setter kart-zoom til 12 ved første ved init
+            setMapView(prev => ({ ...prev, zoom: INIT_ZOOM }));
+        }
+    }, [initialLat, initialLon]);
 
 	//Callback fra kartet – eneste kilde til viewport-endring
 	const onMapChange = useCallback((lat, lon, bbox, currentZoom) => {
@@ -124,11 +126,17 @@ export default function useMapPageViewModel(getMapConfigUseCase, searchLocationU
 		isLoading,
 		onMapChange,
 
-		// Search
-		query: searchViewModel.query,
-		suggestions: searchViewModel.suggestions,
-		onSearchChange: searchViewModel.onSearchChange,
-		onSuggestionSelected: searchViewModel.onSuggestionSelected,
-		onResetToDeviceLocation: () => searchViewModel.onResetLocation(initialLat, initialLon)
-	};
+        // Search
+        query: searchViewModel.query,
+        suggestions: searchViewModel.suggestions,
+        onSearchChange: searchViewModel.onSearchChange,
+        onSuggestionSelected: (selected) => {
+            setMapView(prev => ({ ...prev, zoom: INIT_ZOOM }));
+            searchViewModel.onSuggestionSelected(selected);
+        },
+        onResetToDeviceLocation: () => {
+            setMapView(prev => ({ ...prev, zoom: INIT_ZOOM }));
+            searchViewModel.onResetLocation(initialLat, initialLon);
+        }
+    };
 }
