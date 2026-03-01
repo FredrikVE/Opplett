@@ -1,4 +1,4 @@
-// src/model/domain/GetMapConfigUseCase.js
+//src/model/domain/GetMapConfigUseCase.js
 export default class GetMapConfigUseCase {
 	
 	constructor(mapTilerRepository) {

@@ -1,153 +1,155 @@
 // src/model/domain/GetMapWeatherUseCase.js
 export default class GetMapWeatherUseCase {
 
-	constructor(mapTilerRepository, getCurrentWeatherUseCase) {
-		this.mapTilerRepository = mapTilerRepository;
-		this.getCurrentWeatherUseCase = getCurrentWeatherUseCase;
-	}
+    constructor(mapTilerRepository, getCurrentWeatherUseCase) {
+        this.mapTilerRepository = mapTilerRepository;
+        this.getCurrentWeatherUseCase = getCurrentWeatherUseCase;
 
-	async execute(bbox, timeZone, minDist) {
+        //Kapasitet og begrensninger
+        this.maxWeatherLocations = 10;
+        this.shuffleBias = 0.5;
 
-		try {
+        //Definerer skjermposisjoner (fra 0.0 som er helt til venstre/bunn til 1.0 som er høyre/topp)
+        const EDGE_OFFSET_NEAR = 0.2;  // Sikrer dekning nær venstre/nederste kant
+        const CENTER_POSITION = 0.5;   // Dekker midten av kartet
+        const EDGE_OFFSET_FAR = 0.8;   // Sikrer dekning nær høyre/øverste kant
 
-			if (!bbox || !Array.isArray(bbox)) {
-				return [];
-			}
+        this.gridDistributionSteps = [
+            EDGE_OFFSET_NEAR, 
+            CENTER_POSITION, 
+            EDGE_OFFSET_FAR
+        ]; 
 
-			// Hent places fra MapTiler
-			let places = await this.mapTilerRepository
-				.getNearbySignificantPlaces(bbox);
+        //Styrken på den tilfeldige spredningen
+        this.randomSpreadFactor = 0.2;
+        this.randomCenterOffset = 0.5;
+    }
 
-			if (!places) {
-				places = [];
-			}
+    async execute(bbox, timeZone, minDist) {
+        try {
+            if (!bbox || !Array.isArray(bbox)) {
+                return [];
+            }
 
-			//Hvis for få steder → bruk radial fallback
-			const MIN_PLACE_COUNT = 5;
+            //Hent faktiske steder fra MapTiler (byer, tettsteder)
+            let places = await this.mapTilerRepository.getNearbySignificantPlaces(bbox);
+            if (!places) places = [];
 
-			if (places.length < MIN_PLACE_COUNT) {
-				const radialPoints = this.#generateRadialPoints(bbox);
-				places = [...places, ...radialPoints];
-			}
-
-			//Fjern punkter som er for tett (ekte avstand, ikke bucket)
-			const uniquePlaces = this.#filterTooClose(places, minDist);
-
-			//Begrens antall API-kall
-			const MAX_POINTS = 10;
-			const limitedPlaces = uniquePlaces.slice(0, MAX_POINTS);
-
-			//Hent vær parallelt
-			const results = await Promise.all(
-				limitedPlaces.map(async (place) => {
-
-					try {
-
-						const weather = await this.getCurrentWeatherUseCase.execute({
-							lat: place.lat,
-							lon: place.lon,
-							timeZone
-						});
-
-						if (!weather) return null;
-
-						return {
-							...weather,
-							...place
-						};
-
-					} catch {
-						return null;
-					}
-				})
+            //Generer koordinater med naturlig spredning
+            const scatteredPoints = this.#generateScatteredPoints(bbox);
+            
+            //Kombiner og stokk rekkefølgen tilfeldig
+            let combinedPlaces = [...places, ...scatteredPoints];
+			
+			//Stokker listen tilfeldig slik at både ekte steder og utkantpunkter 
+			//får lik sjanse til å bli vist på kartet.
+            combinedPlaces = combinedPlaces.sort(() => 
+				Math.random() - this.shuffleBias
 			);
 
-			return results.filter(Boolean);
+            //Fjern punkter som ligger for tett
+            const uniquePlaces = this.#filterTooClose(combinedPlaces, minDist);
 
-		} 
+            //Begrens til kapasiteten definert i instansen
+            const limitedPlaces = uniquePlaces.slice(0, this.maxWeatherLocations);
+
+            //Hent værdata i parallell
+            const results = await Promise.all(
+                limitedPlaces.map(async (place) => {
+                    try {
+                        const weather = await this.getCurrentWeatherUseCase.execute({
+                            lat: place.lat,
+                            lon: place.lon,
+                            timeZone
+                        });
+
+                        if (!weather) {
+							return null;
+						}
+
+                        return {
+                            ...weather,
+                            ...place
+                        };
+                    } 
+
+					catch {
+                        return null;
+                    }
+                })
+            );
+
+            return results.filter(Boolean);
+
+        } 
 		
 		catch (error) {
+            console.error("Feil i GetMapWeatherUseCase:", error);
+            return [];
+        }
+    }
 
-			console.error("Feil i GetMapWeatherUseCase:", error);
-			return [];
-		}
-	}
-
-	//xBedre avstandsfilter (unngår horisontale belter)
+    
+    //Privat hjelpemetode som sjekker avstand mellom punkter ved bruk av Pythagoras
 	#filterTooClose(places, minDist) {
+        const filtered = [];
 
-		const filtered = [];
+        for (const currentPoint of places) {
+            let pointsAreTooClose = false;
 
-		for (const p of places) {
+            for (const existingPoint of filtered) {
+                const a = existingPoint.lat - currentPoint.lat;
+                const b = existingPoint.lon - currentPoint.lon;
+                const distance = Math.sqrt(a**2 + b**2);
 
-			const isTooClose = filtered.some(f => {
+                if (distance < minDist) {
+                    pointsAreTooClose = true;
+                    break; 
+                }
+            }
 
-				const dLat = f.lat - p.lat;
-				const dLon = f.lon - p.lon;
+            if (pointsAreTooClose === false) {
+                filtered.push(currentPoint);
+            }
+        }
 
-				const distance = Math.sqrt(dLat * dLat + dLon * dLon);
-
-				return distance < minDist;
-			});
-
-			if (!isTooClose) {
-				filtered.push(p);
-			}
-		}
-
-		return filtered;
-	}
+        return filtered;
+    }
 
 
-	#generateRadialPoints(bbox) {
-		const [west, south, east, north] = bbox;
+    /**
+     * Bruker instansvariabler for å beregne spredte punkter i viewporten
+     */
+    #generateScatteredPoints(bbox) {
+        const [west, south, east, north] = bbox;
 
-		//Geometriske konstanter
-		const CENTER_DIVISOR = 2;
-		const FULL_CIRCLE_RADIANS = 2 * Math.PI;
+        const latitudeSpan = north - south;
+        const longitudeSpan = east - west;
 
-		//Radius / ring-konfig
-		const RING_COUNT = 2;                   // Antall ringer
-		const RADIUS_EXPONENT = 2;     // Hvor aggressivt ringene spres 1.5 er mye, 2 er masse og 3 er ekstrem
-		const MAX_RADIUS_DIVISOR = 0.4;           // Bruk halvparten av bbox
+        const points = [];
 
-		//Punkter per ring-konfig
-		const BASE_POINTS_PER_RING = 6;         // Minimum antall
-		const POINT_INCREMENT_PER_RING = 3;     // Økning per ring
+        this.gridDistributionSteps.forEach(latStep => {
+            this.gridDistributionSteps.forEach(lonStep => {
+                
+                //Finn utgangspunktet i rutenettet (gridPosition)
+                const gridPositionLat = south + (latitudeSpan * latStep);
+                const gridPositionLon = west + (longitudeSpan * lonStep);
 
-		const centerLat = (south + north) / CENTER_DIVISOR;
-		const centerLon = (west + east) / CENTER_DIVISOR;
+                //Beregn et tilfeldig avvik (randomOffset)
+                const randomOffsetLat = (Math.random() - this.randomCenterOffset) 
+                                        * (latitudeSpan * this.randomSpreadFactor);
+                                        
+                const randomOffsetLon = (Math.random() - this.randomCenterOffset) 
+                                        * (longitudeSpan * this.randomSpreadFactor);
 
-		const latSpan = north - south;
-		const lonSpan = east - west;
+                points.push({
+                    lat: gridPositionLat + randomOffsetLat,
+                    lon: gridPositionLon + randomOffsetLon,
+                    name: "" 
+                });
+            });
+        });
 
-		const maxRadius = Math.min(latSpan, lonSpan) / MAX_RADIUS_DIVISOR;
-
-		const points = [];
-
-		for (let ringIndex = 1; ringIndex <= RING_COUNT; ringIndex++) {
-
-			const normalizedRingPosition = ringIndex / RING_COUNT;
-
-			//Ikke-lineær radius-spredning
-			const radius = maxRadius * Math.pow(normalizedRingPosition, RADIUS_EXPONENT);
-
-			const pointsInRing = BASE_POINTS_PER_RING + (ringIndex * POINT_INCREMENT_PER_RING);
-
-			for (let pointIndex = 0; pointIndex < pointsInRing; pointIndex++) {
-
-				const angle = (FULL_CIRCLE_RADIANS * pointIndex) / pointsInRing;
-				const lat = centerLat + radius * Math.sin(angle);
-				const lon = centerLon + radius * Math.cos(angle);
-
-				points.push({
-					lat,
-					lon,
-					name: ""
-				});
-			}
-		}
-
-		return points;
-	}
+        return points;
+    }
 }
