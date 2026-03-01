@@ -10,7 +10,6 @@ export function useMapTiler({ apiKey, style, lat, lon, zoom, weatherPoints, onMa
 	const mapInstanceRef = useRef(null);
 	const markersRef = useRef([]);
 
-
 	//Init kart
 	useEffect(() => {
 
@@ -56,8 +55,8 @@ export function useMapTiler({ apiKey, style, lat, lon, zoom, weatherPoints, onMa
 
 	//Programmatisk flytting
 	useEffect(() => {
-
 		const map = mapInstanceRef.current;
+
 		if (!map || lat == null || lon == null) {
 			return;
 		}
@@ -80,7 +79,10 @@ export function useMapTiler({ apiKey, style, lat, lon, zoom, weatherPoints, onMa
 		}
 
 		//Fjern gamle værikoner
-		markersRef.current.forEach(marker => marker.remove());
+		markersRef.current.forEach(marker => 
+			marker.remove()
+		);
+
 		markersRef.current = [];
 
 		//Lag nye værikoner
