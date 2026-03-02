@@ -80,118 +80,118 @@ const getLocationNameUseCase = new GetLocationNameUseCase(mapTilerRepo);
 const getMapWeatherUseCase = new GetMapWeatherUseCase(mapTilerRepo, getCurrentWeatherUseCase);
 
 export default function App() {
-    const hoursAhead = 120;
-    const [activeScreen, setActiveScreen] = useState(NAV_SCREENS.TABLE);
+	const hoursAhead = 120;
+	const [activeScreen, setActiveScreen] = useState(NAV_SCREENS.TABLE);
 
-    // 1. Henter ferske GPS-koordinater
-    const { loading, error, coords } = useGeolocation();
+	// 1. Henter ferske GPS-koordinater
+	const { loading, error, coords } = useGeolocation();
 
-    // 2. SSOT FOR LOKASJON - Lagrer kun manuelle valg (søk/klikk)
-    const [manualLocation, setManualLocation] = useState(null);
+	// 2. SSOT FOR LOKASJON - Lagrer kun manuelle valg (søk/klikk)
+	const [manualLocation, setManualLocation] = useState(null);
 
-    // 3. UTLEDET TILSTAND (Derived State)
-    // Hvis bruker har søkt -> bruk det. Ellers bruk GPS.
-    // Dette fjerner behovet for useEffect-synkronisering og løser race conditions.
-    const activeLat = manualLocation?.lat ?? coords?.lat;
-    const activeLon = manualLocation?.lon ?? coords?.lon;
+	// 3. UTLEDET TILSTAND (Derived State)
+	const activeLat = manualLocation?.lat ?? coords?.lat;
+	const activeLon = manualLocation?.lon ?? coords?.lon;
+	const activeTimezone = manualLocation?.timezone ?? null;
 
-    // Funksjon for å bytte sted
-    const handleLocationChange = (newLocation) => {
-        setManualLocation(newLocation);
-    };
+	// Funksjon for å bytte sted
+	const handleLocationChange = (newLocation) => {
+		setManualLocation(newLocation);
+	};
 
-    // Funksjon for å nullstille til GPS-posisjon (fikser "min posisjon"-knappen)
-    const handleResetToDeviceLocation = () => {
-        setManualLocation(null); // Ved å tømme denne, faller activeLat/Lon tilbake på coords
-    };
+	// Funksjon for å nullstille til GPS-posisjon
+	const handleResetToDeviceLocation = () => {
+		setManualLocation(null);
+	};
 
-    // 4. ViewModel-instanser kobles til de aktive koordinatene
-    const forecastPageViewModel = useForecastPageViewModel(
-        getForecastUseCase, 
-        getAlertsUseCase, 
-        getCurrentWeatherUseCase, 
-        searchLocationUseCase,
-        getLocationNameUseCase,
-        getSunTimesUseCase, 
-        activeLat, 
-        activeLon, 
-        hoursAhead,
-        handleLocationChange,
-        handleResetToDeviceLocation 
-    );
+	// 4. ViewModel-instanser kobles til de aktive koordinatene og tidssonen
+	const forecastPageViewModel = useForecastPageViewModel(
+		getForecastUseCase, 
+		getAlertsUseCase, 
+		getCurrentWeatherUseCase, 
+		searchLocationUseCase,
+		getLocationNameUseCase,
+		getSunTimesUseCase, 
+		activeLat, 
+		activeLon, 
+		hoursAhead,
+		handleLocationChange,
+		handleResetToDeviceLocation,
+		activeTimezone
+	);
 
-    const mapPageViewModel = useMapPageViewModel(
-        mapTilerRepo,
-        searchLocationUseCase,
-        getMapWeatherUseCase,
-        activeLat,
-        activeLon,
-        handleLocationChange,
-        handleResetToDeviceLocation 
-    );
-    
-    const graphScreenViewModel = useGraphScreenViewModel(forecastPageViewModel);
-    const alertPageViewModel = useAlertPageViewModel(getAllAlertsUseCase);
+	const mapPageViewModel = useMapPageViewModel(
+		mapTilerRepo,
+		searchLocationUseCase,
+		getMapWeatherUseCase,
+		activeLat,
+		activeLon,
+		handleLocationChange,
+		handleResetToDeviceLocation 
+	);
+	
+	const graphScreenViewModel = useGraphScreenViewModel(forecastPageViewModel);
+	const alertPageViewModel = useAlertPageViewModel(getAllAlertsUseCase);
 
-    // Handler for klikk på markører i kartet
-    const handleMapIconClick = (locationFromMap) => {
-        handleLocationChange(locationFromMap);
-        setActiveScreen(NAV_SCREENS.TABLE);
-    };
+	// Handler for klikk på markører i kartet
+	const handleMapIconClick = (locationFromMap) => {
+		handleLocationChange(locationFromMap);
+		setActiveScreen(NAV_SCREENS.TABLE);
+	};
 
-    if (loading) return <LoadingSpinner />;
+	if (loading) return <LoadingSpinner />;
 
-    if (error) {
-        return (
-            <div className="error-screen">
-                <h2>Posisjon ikke tilgjengelig</h2>
-                <button onClick={() => window.location.reload()}>Prøv GPS på nytt</button>
-            </div>
-        );
-    }
+	if (error) {
+		return (
+			<div className="error-screen">
+				<h2>Posisjon ikke tilgjengelig</h2>
+				<button onClick={() => window.location.reload()}>Prøv GPS på nytt</button>
+			</div>
+		);
+	}
 
-    return (
-        <>
-            <Header />
+	return (
+		<>
+			<Header />
 
-            {activeScreen === NAV_SCREENS.ALERTS && (
-                <AlertPage
-                    viewModel={alertPageViewModel}
-                    activeScreen={activeScreen}
-                    onChangeScreen={setActiveScreen}
-                    SCREENS={NAV_SCREENS}
-                />
-            )}
+			{activeScreen === NAV_SCREENS.ALERTS && (
+				<AlertPage
+					viewModel={alertPageViewModel}
+					activeScreen={activeScreen}
+					onChangeScreen={setActiveScreen}
+					SCREENS={NAV_SCREENS}
+				/>
+			)}
 
-            {activeScreen === NAV_SCREENS.TABLE && (
-                <ForecastPage
-                    viewModel={forecastPageViewModel}
-                    activeScreen={activeScreen}
-                    onChangeScreen={setActiveScreen}
-                    SCREENS={NAV_SCREENS}
-                />
-            )}
+			{activeScreen === NAV_SCREENS.TABLE && (
+				<ForecastPage
+					viewModel={forecastPageViewModel}
+					activeScreen={activeScreen}
+					onChangeScreen={setActiveScreen}
+					SCREENS={NAV_SCREENS}
+				/>
+			)}
 
-            {activeScreen === NAV_SCREENS.GRAPH && (
-                <GraphPage
-                    viewModel={graphScreenViewModel}
-                    activeScreen={activeScreen}
-                    onChangeScreen={setActiveScreen}
-                    SCREENS={NAV_SCREENS}
-                />
-            )}
+			{activeScreen === NAV_SCREENS.GRAPH && (
+				<GraphPage
+					viewModel={graphScreenViewModel}
+					activeScreen={activeScreen}
+					onChangeScreen={setActiveScreen}
+					SCREENS={NAV_SCREENS}
+				/>
+			)}
 
-            {activeScreen === NAV_SCREENS.MAP && (
-                <MapPage
-                    viewModel={mapPageViewModel}
-                    activeScreen={activeScreen}
-                    onChangeScreen={setActiveScreen}
-                    SCREENS={NAV_SCREENS}
-                    onLocationClick={handleMapIconClick}
-                />
-            )}
-            
-            <Footer />
-        </>
-    );
+			{activeScreen === NAV_SCREENS.MAP && (
+				<MapPage
+					viewModel={mapPageViewModel}
+					activeScreen={activeScreen}
+					onChangeScreen={setActiveScreen}
+					SCREENS={NAV_SCREENS}
+					onLocationClick={handleMapIconClick}
+				/>
+			)}
+			
+			<Footer />
+		</>
+	);
 }

@@ -3,13 +3,13 @@ const UI_LOCALE = "nb-NO";
 
 //Finn aktiv tidssone med fallback
 export function resolveTimezone(explicitTz) {
-    return (
-        explicitTz ??
-        Intl.DateTimeFormat().resolvedOptions().timeZone ??
-        "UTC"
-    );
-}
+    if (explicitTz) {
+        return explicitTz;
+    }
 
+    //return null; // ingen magisk fallback her
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
 
 //HH:mm i lokal tid
 export function formatToLocalTime(isoString, tz) {
