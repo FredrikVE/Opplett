@@ -13,7 +13,7 @@ function calculateMinDist(zoom) {
     return 0.001;
 }
 
-export default function useMapPageViewModel(mapTilerRepository, searchLocationUseCase, getMapWeatherUseCase, initialLat, initialLon) {
+export default function useMapPageViewModel(mapTilerRepository, searchLocationUseCase, getMapWeatherUseCase, initialLat, initialLon, onLocationChange, onResetToDeviceLocation) {
 
     const INIT_ZOOM = 12;
     const COUNTRY_ZOOM = 3; 
@@ -25,10 +25,24 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
     const [weatherPoints, setWeatherPoints] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     
-    // Initialiserer søk med proximity-støtte
+    // 1. Synkronisering under rendering (erstatter useEffect for å unngå cascading renders)
+    const [prevProps, setPrevProps] = useState({ lat: initialLat, lon: initialLon });
+
+    if (initialLat !== prevProps.lat || initialLon !== prevProps.lon) {
+        setPrevProps({ lat: initialLat, lon: initialLon });
+        setLocation(prev => ({
+            ...prev,
+            lat: initialLat,
+            lon: initialLon
+        }));
+        // Nullstiller bboxToFit slik at kartet flytter seg programmatisk til det nye stedet
+        setBboxToFit(null);
+    }
+
+    // 2. Initialiserer søk med proximity-støtte
     const searchViewModel = useSearchViewModel(
         searchLocationUseCase, 
-        setLocation, 
+        onLocationChange, 
         { lat: initialLat, lon: initialLon }
     );
 
@@ -41,26 +55,12 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
         return resolveTimezone(location.timezone);
     }, [location.timezone]);
 
-    // GPS init: Setter startposisjon når koordinater er tilgjengelige
-    useEffect(() => {
-        if (initialLat != null && initialLon != null) {
-            setLocation(prev => ({
-                ...prev,
-                lat: initialLat,
-                lon: initialLon
-            }));
-
-            setMapView(prev => ({ ...prev, zoom: INIT_ZOOM }));
-        }
-    }, [initialLat, initialLon]);
-
     /**
      * Håndterer endringer i kartet (panorering/zooming).
-     * Ved å sette bboxToFit til null her, "slipper" vi taket på tvunget utsnitt
-     * slik at brukeren kan zoome fritt etter et søk.
      */
     const onMapChange = useCallback((lat, lon, bbox, currentZoom) => {
-        setBboxToFit(null); // VIKTIG: Stopper "låsing" til søkeresultat
+        // Stopper "auto-zoom" med en gang brukeren rører kartet manuelt
+        setBboxToFit(null); 
 
         setLocation(prev => ({
             ...prev,
@@ -74,7 +74,7 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
         });
     }, []);
 
-    // Henting av værdata basert på nåværende kartutsnitt (med debounce)
+    // 3. Henting av værdata basert på nåværende kartutsnitt (med debounce)
     useEffect(() => {
         if (!mapView.bbox) return;
 
@@ -126,6 +126,10 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
         onSearchChange: searchViewModel.onSearchChange,
 
         onSuggestionSelected: (selected) => {
+            // Oppdater global state i App.jsx
+            onLocationChange(selected);
+            
+            // Oppdater lokal søke-state
             searchViewModel.onSuggestionSelected(selected);
             
             // Logikk for utsnitt basert på trefftype
@@ -151,6 +155,10 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
         onResetToDeviceLocation: () => {
             setBboxToFit(null);
             setMapView(prev => ({ ...prev, zoom: INIT_ZOOM }));
+            
+            // Kaller den globale reset-funksjonen i App.jsx
+            onResetToDeviceLocation();
+            
             searchViewModel.onResetLocation(initialLat, initialLon);
         }
     };

@@ -45,7 +45,6 @@ import SearchLocationUseCase from "./model/domain/SearchLocationUseCase.js";
 import GetLocationNameUseCase from "./model/domain/GetLocationNameUseCase.js";
 import GetSunTimesUseCase from "./model/domain/GetSunTimesUseCase.js";
 import GetAlertsUseCase from "./model/domain/GetAlertsUseCase.js";
-//import GetMapConfigUseCase from "./model/domain/GetMapConfigUseCase.js"
 import GetMapWeatherUseCase from "./model/domain/GetMapWeatherUseCase.js";
 
 //ViewModel og View
@@ -68,33 +67,45 @@ import LoadingSpinner from "./ui/view/components/Common/LoadingSpinner/LoadingSp
 const locationRepo = new LocationForecastRepository(new LocationForecastDataSource());
 const sunriseRepo = new SunriseRepository(new SunriseDataSource());
 const alertsRepo = new MetAlertsRepository(new MetAlertsDataSource());
-
-// Her bruker vi MapTiler som SSOT for all geografi i stedet for OpenCage
 const mapTilerRepo = new MapTilerRepository(new MapTilerDataSource());
 
-//Oppretter instanser av UseCasees fra domain-layer
+// UseCases
 const getForecastUseCase = new GetForecastUseCase(locationRepo, alertsRepo);
 const getSunTimesUseCase = new GetSunTimesUseCase(sunriseRepo);
 const getAlertsUseCase = new GetAlertsUseCase(alertsRepo);
 const getAllAlertsUseCase = new GetAllAlertsUseCase(alertsRepo);
 const getCurrentWeatherUseCase = new GetCurrentWeatherUseCase(locationRepo);
-
-// Alle disse peker nå på mapTilerRepo for konsistent data
 const searchLocationUseCase = new SearchLocationUseCase(mapTilerRepo);
 const getLocationNameUseCase = new GetLocationNameUseCase(mapTilerRepo);
-//const getMapConfigUseCase = new GetMapConfigUseCase(mapTilerRepo);
 const getMapWeatherUseCase = new GetMapWeatherUseCase(mapTilerRepo, getCurrentWeatherUseCase);
 
 export default function App() {
     const hoursAhead = 120;
-
     const [activeScreen, setActiveScreen] = useState(NAV_SCREENS.TABLE);
 
-    //Henter koordinater fra enheten (starter som null)
+    // 1. Henter ferske GPS-koordinater
     const { loading, error, coords } = useGeolocation();
 
-    //ViewModel får nå usecase istedenfor repositories
-    //Initialiser ViewModel med dependancy injection av useCasees og repositories
+    // 2. SSOT FOR LOKASJON - Lagrer kun manuelle valg (søk/klikk)
+    const [manualLocation, setManualLocation] = useState(null);
+
+    // 3. UTLEDET TILSTAND (Derived State)
+    // Hvis bruker har søkt -> bruk det. Ellers bruk GPS.
+    // Dette fjerner behovet for useEffect-synkronisering og løser race conditions.
+    const activeLat = manualLocation?.lat ?? coords?.lat;
+    const activeLon = manualLocation?.lon ?? coords?.lon;
+
+    // Funksjon for å bytte sted
+    const handleLocationChange = (newLocation) => {
+        setManualLocation(newLocation);
+    };
+
+    // Funksjon for å nullstille til GPS-posisjon (fikser "min posisjon"-knappen)
+    const handleResetToDeviceLocation = () => {
+        setManualLocation(null); // Ved å tømme denne, faller activeLat/Lon tilbake på coords
+    };
+
+    // 4. ViewModel-instanser kobles til de aktive koordinatene
     const forecastPageViewModel = useForecastPageViewModel(
         getForecastUseCase, 
         getAlertsUseCase, 
@@ -102,43 +113,40 @@ export default function App() {
         searchLocationUseCase,
         getLocationNameUseCase,
         getSunTimesUseCase, 
-        coords?.lat, 
-        coords?.lon, 
-        hoursAhead
+        activeLat, 
+        activeLon, 
+        hoursAhead,
+        handleLocationChange,
+        handleResetToDeviceLocation 
     );
 
     const mapPageViewModel = useMapPageViewModel(
         mapTilerRepo,
-        //getMapConfigUseCase,
         searchLocationUseCase,
         getMapWeatherUseCase,
-        coords?.lat,
-        coords?.lon
+        activeLat,
+        activeLon,
+        handleLocationChange,
+        handleResetToDeviceLocation 
     );
     
     const graphScreenViewModel = useGraphScreenViewModel(forecastPageViewModel);
     const alertPageViewModel = useAlertPageViewModel(getAllAlertsUseCase);
 
-    // Funksjon for å håndtere valg av lokasjon fra kartet
-    const handleMapLocationSelect = (selectedLocation) => {
-        // Oppdaterer lokasjonen i hoved-viewmodellen (ForecastPage)
-        forecastPageViewModel.onSuggestionSelected(selectedLocation);
-        // Bytter automatisk til tabell-visning (værvarsel)
+    // Handler for klikk på markører i kartet
+    const handleMapIconClick = (locationFromMap) => {
+        handleLocationChange(locationFromMap);
         setActiveScreen(NAV_SCREENS.TABLE);
     };
 
-    if (loading) {
-        return (
-            <LoadingSpinner />
-        );
-    }
+    if (loading) return <LoadingSpinner />;
 
     if (error) {
         return (
             <div className="error-screen">
                 <h2>Posisjon ikke tilgjengelig</h2>
                 <button onClick={() => window.location.reload()}>Prøv GPS på nytt</button>
-        </div>
+            </div>
         );
     }
 
@@ -179,7 +187,7 @@ export default function App() {
                     activeScreen={activeScreen}
                     onChangeScreen={setActiveScreen}
                     SCREENS={NAV_SCREENS}
-                    onLocationClick={handleMapLocationSelect}
+                    onLocationClick={handleMapIconClick}
                 />
             )}
             

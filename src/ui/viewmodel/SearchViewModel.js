@@ -1,19 +1,21 @@
 // src/ui/viewmodel/SearchViewModel.js
 import { useRef, useState } from "react";
 
-export default function useSearchViewModel(searchLocationUseCase, onLocationSelected, currentLocation) {
+export default function useSearchViewModel(searchLocationUseCase, onLocationSelected, currentLocation, onReset) {
     const SEARCH_DEBOUNCE_DELAY_MS = 350;
-
     const [query, setQuery] = useState("");
     const [suggestions, setSuggestions] = useState([]);
-
     const debounceRef = useRef(null);
     const abortRef = useRef(null);
     const requestIdRef = useRef(0);
 
+    /**
+     * Håndterer tekstendring i søkefeltet med debounce og avbrytingsstøtte (AbortController).
+     */
     const onSearchChange = (text) => {
         setQuery(text);
 
+        // Vi krever minst 3 tegn før vi starter API-kall
         if (text.length < 3) {
             if (debounceRef.current) clearTimeout(debounceRef.current);
             if (abortRef.current) abortRef.current.abort();
@@ -24,6 +26,7 @@ export default function useSearchViewModel(searchLocationUseCase, onLocationSele
         if (debounceRef.current) clearTimeout(debounceRef.current);
 
         debounceRef.current = setTimeout(async () => {
+            // Avbryter eventuelle pågående forespørsler
             if (abortRef.current) abortRef.current.abort();
 
             const controller = new AbortController();
@@ -31,13 +34,14 @@ export default function useSearchViewModel(searchLocationUseCase, onLocationSele
             const requestId = ++requestIdRef.current;
 
             try {
-                // HER SKJER MAGIEN: Vi sender med currentLocation ({lat, lon})
+                // Sender med currentLocation for å prioritere treff i nærheten av brukeren
                 const results = await searchLocationUseCase.getSuggestions(
                     text, 
                     controller.signal, 
                     currentLocation 
                 );
 
+                // Sjekker requestId for å unngå "out of order" oppdateringer hvis flere kall er aktive
                 if (requestId === requestIdRef.current) {
                     setSuggestions(results);
                 }
@@ -55,17 +59,25 @@ export default function useSearchViewModel(searchLocationUseCase, onLocationSele
         }, SEARCH_DEBOUNCE_DELAY_MS);
     };
 
-    // ... resten av metodene (onSuggestionSelected, onResetLocation) forblir helt like
+    /**
+     * Kalles når brukeren klikker på et forslag i listen.
+     */
     const onSuggestionSelected = (suggestion) => {
-        onLocationSelected(suggestion);
-        setQuery(suggestion.name);
-        setSuggestions([]);
+        onLocationSelected(suggestion); // Oppdaterer SSOT i App.jsx
+        setQuery(suggestion.name);      // Oppdaterer tekstfeltet med valgt navn
+        setSuggestions([]);             // Skjuler forslagslisten
     };
 
-    const onResetLocation = (lat, lon) => {
-        setQuery("");
-        setSuggestions([]);
-        onLocationSelected({ lat, lon, name: null, timezone: null, bounds: null, type: null });
+    /**
+     * Nullstiller søket og kaller den globale reset-funksjonen.
+     */
+    const onResetLocation = () => {
+        setQuery("");                   // Tømmer tekstfeltet
+        setSuggestions([]);             // Skjuler forslagslisten
+        
+        if (onReset) {
+            onReset(); // Tømmer manualLocation i App.jsx slik at GPS tar over
+        }
     };
 
     return {

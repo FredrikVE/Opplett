@@ -3,14 +3,11 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import { resolveTimezone, formatToLocalTime, formatToLocalDateLabel, formatLocalDate, formatLocalDateTime, getLocalHour } from "../utils/TimeZoneUtils/timeFormatters.js";
 import useSearchViewModel from "./SearchViewModel.js";
 
-export default function useForecastPageViewModel(getForecastUseCase, getAlertsUseCase, getCurrentWeatherUseCase, searchLocationUseCase, getLocationNameUseCase, getSunTimesUseCase, initialLat, initialLon, hoursAhead) {
+export default function useForecastPageViewModel(getForecastUseCase, getAlertsUseCase, getCurrentWeatherUseCase, searchLocationUseCase, getLocationNameUseCase, getSunTimesUseCase, initialLat, initialLon, hoursAhead, onLocationChange, onResetToDeviceLocation) {
 
-    //Statevariabler og consts
+    //Statevariabler
     const DATA_FETCH_STABILIZATION_MS = 50;
-    // Inkluderer bounds og type i location-objektet for å støtte MapTiler-metadata
-    const initialLocation = { lat: initialLat, lon: initialLon, name: null, timezone: null, bounds: null, type: null };
-    const [location, setLocation] = useState(initialLocation);
-    const [prevInitial, setPrevInitial] = useState({ lat: initialLat, lon: initialLon });
+    const [location, setLocation] = useState({ lat: initialLat, lon: initialLon, name: null, timezone: null, bounds: null, type: null });
     const [forecast, setForecast] = useState({});
     const [sunTimesByDate, setSunTimesByDate] = useState({});
     const [dailySummaryByDate, setDailySummaryByDate] = useState({});
@@ -20,27 +17,40 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    // Synkroniserer med GPS-koordinater hvis de endres
-    if (initialLat !== prevInitial.lat || initialLon !== prevInitial.lon) {
-        setPrevInitial({ lat: initialLat, lon: initialLon });
-        setLocation(prev => ({
-            ...prev,
+    // Synkronisering under rendering (SSOT-kobling til App.jsx)
+    // Dette fjerner "cascading renders" og race-conditions mellom GPS og manuelt søk.
+    const [prevProps, setPrevProps] = useState({ lat: initialLat, lon: initialLon });
+
+    if (initialLat !== prevProps.lat || initialLon !== prevProps.lon) {
+        setPrevProps({ lat: initialLat, lon: initialLon });
+        setLocation({
             lat: initialLat,
-            lon: initialLon
-        }));
+            lon: initialLon,
+            name: null, 
+            timezone: null,
+            bounds: null,
+            type: null
+        });
     }
 
     const lastFetchedRef = useRef("");
     
-    // searchViewModel bruker nå SearchLocationUseCase som internt peker på MapTilerRepository
-    const searchViewModel = useSearchViewModel(searchLocationUseCase, setLocation);
+    // SearchViewModel-integrasjon
+    // Vi sender med nåværende posisjon (location) for proximity-søk og 
+    // den sentrale reset-funksjonen for å tømme 'manualLocation' i App.jsx.
+    const searchViewModel = useSearchViewModel(
+        searchLocationUseCase, 
+        onLocationChange, 
+        { lat: location.lat, lon: location.lon },
+        onResetToDeviceLocation
+    );
 
-    // SSOT for tidshåndtering - Bruker resolveTimezone med fallback
+    // Tidshåndtering (Memoized)
     const tz = useMemo(() =>
         resolveTimezone(location.timezone),
     [location.timezone]);
 
-    // Reverse geocoding for å finne navn på GPS-posisjon eller koordinater
+    //Reverse geocoding (Navneoppslag for koordinater)
     useEffect(() => {
         if (!location.lat || !location.lon) return;
 
@@ -53,7 +63,6 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
                 if (cancelled || !result?.name) return;
 
                 setLocation(prev => {
-                    // Sjekker om vi faktisk trenger å oppdatere for å unngå unødvendig re-render
                     if (prev.name === result.name && prev.timezone === result.timezone) {
                         return prev;
                     }
@@ -65,19 +74,17 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
                         type: result.type || null
                     };
                 });
-            }
-            catch (error) {
+            } catch (error) {
                 console.warn("Kunne ikke hente stedsnavn fra MapTiler", error);
             }
         }
 
         loadLocationName();
-
         return () => { cancelled = true; };
     }, [location.lat, location.lon, getLocationNameUseCase]);
 
 
-    // Hovedeffekt for å laste værdata, soltider og farevarsler
+    //Hovedeffekt for å laste værdata (Foreast, Alerts, SunTimes, Current)
     useEffect(() => {
         if (!location.lat || !location.lon) return;
         
@@ -93,7 +100,7 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
                 setLoading(true);
                 setError(null);
 
-                // 1. Hent værvarsel
+                //Værvarsel
                 const forecastResult = await getForecastUseCase.execute({
                     lat: location.lat,
                     lon: location.lon,
@@ -107,7 +114,6 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
                 Object.entries(forecastResult.hourlyByDate).forEach(([dateISO, data]) => {
                     const firstHour = data.hours[0];
                     grouped[dateISO] = {
-                        // Bruker SSOT tidssone for etiketter
                         label: firstHour ? formatToLocalDateLabel(firstHour.timeISO, tz) : "",
                         hours: data.hours
                     };
@@ -116,7 +122,7 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
                 setForecast(grouped);
                 setDailySummaryByDate(forecastResult.dailySummaryByDate);
 
-                // 2. Hent farevarsler (MET)
+                //Farevarsler
                 const alertsResult = await getAlertsUseCase.execute({
                     lat: location.lat,
                     lon: location.lon
@@ -127,7 +133,7 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
                     setAlertsByDate(alertsResult.alertsByDate ?? {});
                 }
 
-                // 3. Hent soltider (SSOT tidssone her er kritisk)
+                //Soltider
                 const isoDates = Object.keys(grouped);
                 const sunTimes = await getSunTimesUseCase.execute({
                     lat: location.lat,
@@ -141,7 +147,7 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
                     setSunTimesByDate(sunTimes);
                 }
 
-                // 4. Hent nå-vær (MET)
+                //Nå-vær
                 const current = await getCurrentWeatherUseCase.execute({
                     lat: location.lat,
                     lon: location.lon,
@@ -153,7 +159,8 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
                 }
 
                 setLoading(false);
-            }
+            } 
+            
             catch (error) {
                 if (!cancelled) {
                     setError(error?.message ?? "Feil ved henting av data");
@@ -170,6 +177,7 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
         };
     }, [location.lat, location.lon, hoursAhead, tz, getForecastUseCase, getAlertsUseCase, getSunTimesUseCase, getCurrentWeatherUseCase]);
 
+    //Eksponert grensesnitt
     return {
         forecast,
         currentWeather,
@@ -181,7 +189,6 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
         error,
         location,
 
-        // Eksponerer formateringsfunksjoner som alltid bruker SSOT tidssone (tz)
         getLocalHour: (zuluTime) => getLocalHour(zuluTime, tz),
         formatLocalDateTime: (zuluTime) => formatLocalDateTime(zuluTime, tz),
         formatLocalDate: (zuluTime) => formatLocalDate(zuluTime, tz),
@@ -190,6 +197,10 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
         suggestions: searchViewModel.suggestions,
         onSearchChange: searchViewModel.onSearchChange,
         onSuggestionSelected: searchViewModel.onSuggestionSelected,
-        onResetToDeviceLocation: () => searchViewModel.onResetLocation(initialLat, initialLon)
+
+        // Bruker nå SearchViewModel sin interne reset-logikk som er koblet til App.jsx
+        onResetToDeviceLocation: () => {
+            searchViewModel.onResetLocation();
+        }
     };
 }
