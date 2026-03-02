@@ -9,9 +9,8 @@ export default function useSearchViewModel(searchLocationUseCase, onLocationSele
     const abortRef = useRef(null);
     const requestIdRef = useRef(0);
 
-    /**
-     * Håndterer tekstendring i søkefeltet med debounce og avbrytingsstøtte (AbortController).
-     */
+
+    //Håndterer tekstendring i søkefeltet med debounce og avbrytingsstøtte (AbortController).
     const onSearchChange = (text) => {
         setQuery(text);
 
@@ -27,7 +26,9 @@ export default function useSearchViewModel(searchLocationUseCase, onLocationSele
 
         debounceRef.current = setTimeout(async () => {
             // Avbryter eventuelle pågående forespørsler
-            if (abortRef.current) abortRef.current.abort();
+            if (abortRef.current) {
+                abortRef.current.abort();
+            }
 
             const controller = new AbortController();
             abortRef.current = controller;
@@ -46,11 +47,13 @@ export default function useSearchViewModel(searchLocationUseCase, onLocationSele
                     setSuggestions(results);
                 }
             }
+
             catch (error) {
                 if (error?.name !== "AbortError") {
                     console.warn("Søk feilet:", error);
                 }
             }
+
             finally {
                 if (requestId === requestIdRef.current) {
                     abortRef.current = null;
@@ -59,18 +62,18 @@ export default function useSearchViewModel(searchLocationUseCase, onLocationSele
         }, SEARCH_DEBOUNCE_DELAY_MS);
     };
 
-    /**
-     * Kalles når brukeren klikker på et forslag i listen.
-     */
+
+    //Kalles når brukeren klikker på et forslag i listen eller trykker Enter.
     const onSuggestionSelected = (suggestion) => {
         onLocationSelected(suggestion); // Oppdaterer SSOT i App.jsx
-        setQuery(suggestion.name);      // Oppdaterer tekstfeltet med valgt navn
+        
+        //Tømmer søkefeltet i stedet for å sette navnet inn i det
+        setQuery("");      
+        
         setSuggestions([]);             // Skjuler forslagslisten
     };
 
-    /**
-     * Nullstiller søket og kaller den globale reset-funksjonen.
-     */
+    //Nullstiller søket og kaller den globale reset-funksjonen.
     const onResetLocation = () => {
         setQuery("");                   // Tømmer tekstfeltet
         setSuggestions([]);             // Skjuler forslagslisten
