@@ -25,11 +25,18 @@ export default class MapTilerRepository {
 	/**
 	 * Henter søkeforslag og injiserer tidssone lokalt.
 	 */
-	async getSuggestions(query, signal, proximity = null) {
+	async getSuggestions(query, signal, proximity) {
 		const raw = await this.dataSource.search(query, signal, proximity);
 		
 		return raw.map(item => {
 			const sanitized = this.#sanitize(item.lat, item.lon);
+
+			const lookupTz = tzLookup(sanitized.lat, sanitized.lon);
+
+			console.log("TZ DEBUG:", {
+				mapTilerTz: item.timezone,
+				lookupTz
+			});
 			
 			return {
 				...item,

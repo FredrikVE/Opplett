@@ -5,16 +5,19 @@ export default class LocationForecastRepository {
         this.cache = new Map();
     }
 
-    // LOGIKK FOR TID
-    // Lokal time (0–23) i gitt tidssone
     #getLocalHour(isoString, timeZone) {
-        return Number(
-            new Date(isoString).toLocaleTimeString("en-GB", {       //Tidsfomatering til dd/mm/yyyy
-                hour: "2-digit",
-                hour12: false,
-                timeZone
-            })
+        const formatter = new Intl.DateTimeFormat("en-GB", {
+            timeZone,
+            hour: "numeric",
+            hour12: false
+        });
+
+        const parts = formatter.formatToParts(new Date(isoString));
+        const hourPart = parts.find(
+            p => p.type === "hour"
         );
+
+        return hourPart ? Number(hourPart.value) : 0;
     }
 
     // Lokal dato-nøkkel: YYYY-MM-DD (stabil sortering)
@@ -80,6 +83,17 @@ export default class LocationForecastRepository {
             const dateISO = this.#getLocalDateKey(timeISO, timeZone);
             const localTime = this.#getLocalHour(timeISO, timeZone);
             const utcHour = new Date(timeISO).getUTCHours();
+
+            // 🔎 DEBUG HER
+            console.log("TIME DEBUG", {
+                nowLocal: new Date().toLocaleString("en-GB", { timeZone }),
+                rawUTC: timeISO,
+                utcHour,
+                localFull: new Date(timeISO).toLocaleString("en-GB", { timeZone }),
+                localTime,
+                dateISO
+            });
+
 
             const weatherSymbol =
                 entry.data.next_1_hours?.summary?.symbol_code ??

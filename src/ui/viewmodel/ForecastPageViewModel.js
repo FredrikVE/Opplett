@@ -74,7 +74,8 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
 					return {
 						...prev,
 						name: result.name,
-						timezone: result.timezone,
+						timezone: result.timezone ?? prev.timezone,   // ← FIX
+						//timezone: result.timezone,
 						bounds: result.bounds || null,
 						type: result.type || null
 					};
@@ -92,11 +93,12 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
 			cancelled = true; 
 		};
 
-	}, [location.lat, location.lon, getLocationNameUseCase]);
+	}, 
+	[location.lat, location.lon, getLocationNameUseCase]);
 
 	// Hovedeffekt for datainnhenting
 	useEffect(() => {
-		if (!location.lat || !location.lon) {
+		if (!location.lat || !location.lon || !tz) { //legg inn sjekk for å vente til ny tidsone oppdaters
 			return;
 		}
 

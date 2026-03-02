@@ -32,6 +32,186 @@ Hver og en av disse initieres i `App.jsx`, som er programmets `main`.
 
 Applikasjonen bruker **Highcharts** (via `highcharts` og `highcharts-react-official`) for å visualisere værdata i grafvisningen. Highcharts brukes til å generere dynamiske og interaktive grafer for blant annet temperatur, vind, UV-indeks og solforhold. Grafkonfigurasjonene er strukturert og organisert i egne konfigurasjons- og hjelpefiler for å holde View-komponentene rene og fokusert på presentasjon.
 
+Her er en mer datastruktur-fokusert versjon av teksten din, uten fluff.
+
+
+## Bruk av `tz-lookup` for å styre tidssone etter søk
+
+All værdata fra MET leveres i UTC (`...Z`).
+UTC beholdes uendret i hele datastrømmen.
+Konvertering til lokal tid skjer først når data struktureres eller vises.
+
+
+### Datastrøm og datastruktur
+
+#### 1. Rådata fra MET
+
+MET returnerer timeserie slik:
+
+```js
+{
+  properties: {
+    timeseries: [
+      {
+        time: "2026-03-02T17:00:00Z",
+        data: { ... }
+      }
+    ]
+  }
+}
+```
+
+`time` er alltid UTC.
+
+Repository lagrer dette som `timeISO` uten modifikasjon.
+
+
+
+#### 2. Lokasjon og tidssone
+
+Ved søk returnerer `MapTilerRepository`:
+
+```js
+{
+  name,
+  lat,
+  lon,
+  bounds,
+  type,
+  timezone
+}
+```
+
+Hvis `timezone` mangler brukes:
+
+```js
+tzLookup(lat, lon)
+```
+
+Denne tidssonen lagres i `manualLocation` i `App.jsx` og blir derfra systemets aktive tidssone.
+
+Ingen beregning av offset gjøres manuelt.
+
+
+#### 3. Intern struktur i `getHourlyForecast`
+
+Hver timeserie-entry transformeres til:
+
+```js
+{
+  timeISO,        // UTC (uendret)
+  dateISO,        // Lokal dato (YYYY-MM-DD)
+  localTime,      // 0–23 (lokal time)
+  utcHour,        // 0–23 (UTC)
+  weatherSymbol,
+  precipitation,
+  temp,
+  wind,
+  uv,
+  details
+}
+```
+
+Viktig:
+
+* `timeISO` forblir UTC
+* `localTime` er derivert verdi
+* `dateISO` er derivert verdi
+
+UTC beholdes alltid som primær kilde.
+
+
+**getLocalHour**
+
+```js
+getLocalHour(isoString, timeZone)
+```
+
+Input:
+
+* `isoString` (UTC)
+* `timeZone` (IANA string, f.eks `Asia/Kathmandu`)
+
+Output:
+
+* Lokalt timetall (0–23)
+
+Eksempel:
+
+```
+UTC: 17:00Z
+Asia/Kathmandu → 22:45 lokal
+localTime = 22
+```
+
+Minutter påvirker konverteringen, men lagres ikke i strukturen.
+
+
+**getLocalDateKey**
+
+Brukes før grouping:
+
+```
+UTC → lokal dato → YYYY-MM-DD
+```
+
+Dette er avgjørende for korrekt dagsskifte i:
+
+* DST
+* Halvtimers tidssoner
+* 45-minutters tidssoner
+
+Grouping skjer alltid på lokal dato, aldri på UTC-dato.
+
+
+**Forecast vs nå-tid**
+
+Forecast-strukturen representerer starttidspunktet for hver slot.
+
+Hvis MET leverer:
+
+```
+17:00Z
+```
+
+og lokal tid er:
+
+```
+22:45
+```
+
+så lagres:
+
+```
+localTime: 22
+```
+
+**Dette betyr:**
+Forecast gjelder intervallet som starter 22:45 lokal tid.
+
+Appen viser ikke faktisk nå-tid i forecast-tabellen.
+
+## Designvalg på datastrukturnivå
+
+* UTC lagres uendret i alle domeneobjekter
+* Tidssone er en eksplisitt parameter
+* Lokal tid er alltid derivert verdi
+* Ingen mutasjon av rå MET-data
+* Ingen manuell offset-logikk
+
+Dette gjør modellen deterministisk og stabil ved:
+
+* DST-endringer
+* Ikke-hele-timers tidssoner
+* Geografisk bytte av lokasjon
+
+
+## Installasjon med følgende kommando
+
+```bash
+npm install tz-lookup
+```
+
 
 ## Installere Highcharts
 
