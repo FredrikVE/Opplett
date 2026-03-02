@@ -15,26 +15,16 @@ export default function useSearchViewModel(searchLocationUseCase, onLocationSele
 		setQuery(text);
 
 		if (text.length < 3) {
-			if (debounceRef.current) {
-				clearTimeout(debounceRef.current);
-			}
-
-			if (abortRef.current) {
-				abortRef.current.abort();
-			}
-
+			if (debounceRef.current) clearTimeout(debounceRef.current);
+			if (abortRef.current) abortRef.current.abort();
 			setSuggestions([]);
 			return;
 		}
 
-		if (debounceRef.current) {
-			clearTimeout(debounceRef.current);
-		}
+		if (debounceRef.current) clearTimeout(debounceRef.current);
 
 		debounceRef.current = setTimeout(async () => {
-			if (abortRef.current) {
-				abortRef.current.abort();
-			}
+			if (abortRef.current) abortRef.current.abort();
 
 			const controller = new AbortController();
 			abortRef.current = controller;
@@ -61,12 +51,9 @@ export default function useSearchViewModel(searchLocationUseCase, onLocationSele
 	};
 
 	const onSuggestionSelected = (suggestion) => {
-		onLocationSelected({
-			lat: suggestion.lat,
-			lon: suggestion.lon,
-			name: suggestion.name,
-			timezone: suggestion.timezone,
-		});
+
+		//Send HELE objektet videre
+		onLocationSelected(suggestion);
 
 		setQuery(suggestion.name);
 		setSuggestions([]);
@@ -75,14 +62,14 @@ export default function useSearchViewModel(searchLocationUseCase, onLocationSele
 	const onResetLocation = (lat, lon) => {
 		setQuery("");
 		setSuggestions([]);
-		
-		//Vi setter name til null. 
-		//Dette trigger useEffect i ForecastPageViewModel til å hente navnet på nytt via reverse geocoding.
+
 		onLocationSelected({
 			lat,
 			lon,
 			name: null,
-			timezone: null
+			timezone: null,
+			bounds: null,
+			type: null
 		});
 	};
 

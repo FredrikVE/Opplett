@@ -1,105 +1,116 @@
-// src/ui/view/components/MapPage/useMapTiler.jsx
 import { useEffect, useRef } from "react";
 import * as maptilersdk from "@maptiler/sdk";
 import { createRoot } from "react-dom/client";
 import WeatherSymbolLabel from "./WeatherSymbolLabel.jsx";
 
-export function useMapTiler({ apiKey, style, lat, lon, zoom, weatherPoints, onMapChange }) {
+export function useMapTiler({ apiKey, style, lat, lon, zoom, bboxToFit, weatherPoints, onMapChange }) {
 
-	const mapContainerRef = useRef(null);
-	const mapInstanceRef = useRef(null);
-	const markersRef = useRef([]);
+    const mapContainerRef = useRef(null);
+    const mapInstanceRef = useRef(null);
+    const markersRef = useRef([]);
 
-	//Init kart
-	useEffect(() => {
+    // 1. Initialisering av kartet
+    useEffect(() => {
+        if (!mapContainerRef.current || mapInstanceRef.current) return;
 
-		if (!mapContainerRef.current || mapInstanceRef.current) {
-			return;
-		}
+        maptilersdk.config.apiKey = apiKey;
 
-		maptilersdk.config.apiKey = apiKey;
+        const map = new maptilersdk.Map({
+            container: mapContainerRef.current,
+            style,
+            center: [Number(lon), Number(lat)],
+            zoom: Number(zoom),
+            attributionControl: false
+        });
 
-		const map = new maptilersdk.Map({
-			container: mapContainerRef.current,
-			style: style,
-			center: [Number(lon), Number(lat)],
-			zoom: Number(zoom),
-			attributionControl: false
-		});
+        map.on("moveend", () => {
+            const center = map.getCenter();
+            const bounds = map.getBounds();
 
-		map.on("moveend", () => {
+            // Normaliserer Lng slik at den alltid er mellom -180 og 180
+            // Dette fikser 400 Bad Request når man panorerer rundt jorda.
+            const wrappedLng = center.lng.valueOf(); 
+            const normalizedLng = ((wrappedLng + 180) % 360 + 360) % 360 - 180;
 
-			const center = map.getCenter();
-			const bounds = map.getBounds();
+            onMapChange(
+                center.lat,
+                normalizedLng,
+                [
+                    bounds.getWest(),
+                    bounds.getSouth(),
+                    bounds.getEast(),
+                    bounds.getNorth()
+                ],
+                map.getZoom()
+            );
+        });
 
-			const bbox = [
-				bounds.getWest(),
-				bounds.getSouth(),
-				bounds.getEast(),
-				bounds.getNorth()
-			];
+        mapInstanceRef.current = map;
 
-			onMapChange(center.lat, center.lng, bbox, map.getZoom());
-		});
+        return () => {
+            if (mapInstanceRef.current) {
+                mapInstanceRef.current.remove();
+                mapInstanceRef.current = null;
+            }
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
-		mapInstanceRef.current = map;
+    // 2. Håndtering av Bounding Box (Byer/Regioner)
+    useEffect(() => {
+        const map = mapInstanceRef.current;
+        // Vi hopper over fitBounds hvis zoom er 3 (land-søk) for å unngå loop
+        if (!map || !bboxToFit || zoom === 3) return;
 
-		return () => {
-			map.remove();
-			mapInstanceRef.current = null;
-		};
+        map.fitBounds(
+            [
+                [bboxToFit[0], bboxToFit[1]],
+                [bboxToFit[2], bboxToFit[3]]
+            ],
+            {
+                padding: 60,
+                duration: 1000,
+                maxZoom: 12 
+            }
+        );
 
-	}, []); //tom dependency array siden dette skal laste kartet én gang ved init
+    }, [bboxToFit, zoom]);
 
+    // 3. Programmatisk flytting (Land-søk / Reset)
+    useEffect(() => {
+        const map = mapInstanceRef.current;
+        if (!map || lat == null || lon == null) return;
+        
+        if (!bboxToFit) {
+            map.flyTo({
+                center: [lon, lat],
+                zoom: zoom,
+                speed: 1.2,
+                essential: true
+            });
+        }
 
+    }, [lat, lon, zoom, bboxToFit]);
 
-	//Programmatisk flytting
-	useEffect(() => {
-		const map = mapInstanceRef.current;
+    // 4. Oppdatering av værmarkører
+    useEffect(() => {
+        const map = mapInstanceRef.current;
+        if (!map) return;
 
-		if (!map || lat == null || lon == null) {
-			return;
-		}
+        markersRef.current.forEach(m => m.remove());
+        markersRef.current = [];
 
-		map.jumpTo({
-			center: [lon, lat],
-			zoom: zoom
-		});
+        markersRef.current = weatherPoints.map(point => {
+            const container = document.createElement("div");
+            const root = createRoot(container);
+            root.render(<WeatherSymbolLabel point={point} />);
 
-	}, [lat, lon, zoom]);
+            return new maptilersdk.Marker({ element: container })
+                .setLngLat([point.lon, point.lat])
+                .addTo(map);
+        });
 
+    }, [weatherPoints]);
 
-
-	//Render vær-symboler
-	useEffect(() => {
-
-		const map = mapInstanceRef.current;
-		if (!map) {
-			return;
-		}
-
-		//Fjern gamle værikoner
-		markersRef.current.forEach(marker => 
-			marker.remove()
-		);
-
-		markersRef.current = [];
-
-		//Lag nye værikoner
-		markersRef.current = weatherPoints.map(point => {
-
-			const container = document.createElement("div");
-
-			const root = createRoot(container);
-			root.render(<WeatherSymbolLabel point={point} />);
-
-			return new maptilersdk.Marker({ element: container })
-				.setLngLat([point.lon, point.lat])
-				.addTo(map);
-		});
-
-	}, [weatherPoints]);
-
-
-	return mapContainerRef;
+    return mapContainerRef;
 }

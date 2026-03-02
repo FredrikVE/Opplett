@@ -4,7 +4,7 @@ export default class GetAllAlertsUseCase {
 		this.alertsRepository = alertsRepository;
 	}
 
-	async execute({ countyId = null } = {}) {
+	async execute({ countyId } = {}) {
 		// Delegér rett videre til repository.
 		// Vi kan senere legge på ekstra domenelogikk her hvis vi vil.
 		return this.alertsRepository.getAllAlerts(countyId);

@@ -2,12 +2,13 @@
 import { useMapTiler } from "./useMapTiler.jsx";
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 
-export default function WeatherMap({ apiKey, style, lat, lon, zoom, weatherPoints, onMapChange }) {
-    const mapContainerRef = useMapTiler({ apiKey, style, lat, lon, zoom, weatherPoints, onMapChange });
+export default function WeatherMap({ apiKey, style, lat, lon, zoom, bboxToFit, weatherPoints, onMapChange }) {
 
-    return (
-        <div className="map-page-wrap">
-            <div ref={mapContainerRef} className="map" />
-        </div>
-    );
+	const mapContainerRef = useMapTiler({ apiKey, style, lat, lon, zoom, bboxToFit, weatherPoints, onMapChange });
+
+	return (
+		<div className="map-page-wrap">
+			<div ref={mapContainerRef} className="map" />
+		</div>
+	);
 }

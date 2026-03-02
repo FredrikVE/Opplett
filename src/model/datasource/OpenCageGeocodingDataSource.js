@@ -15,34 +15,57 @@ export default class OpenCageGeocodingDataSource {
 
 		console.log(`[OpenCage] API-kall #${this.apiCallCount} -> ${url}`);
 
-		const response = await fetch(url, { headers: { 
-			Accept: "application/json" 
-		},
-		signal
+		const response = await fetch(url, { 
+			headers: { Accept: "application/json" },
+			signal
 		});
 		
 		const ms = Math.round(performance.now() - startedAt);
 
 		if (!response.ok) {
-			console.warn(`[OpenCage] API-kall #${this.apiCallCount} FEIL (${response.status}) etter ${ms}ms -> ${url}`);
+			console.warn(
+				`[OpenCage] API-kall #${this.apiCallCount} FEIL (${response.status}) etter ${ms}ms -> ${url}`
+			);
 			throw new Error(`HTTP ${response.status}`);
 		}
 
-		console.log(`[OpenCage] API-kall #${this.apiCallCount} OK (${response.status}) etter ${ms}ms`);
+		console.log(
+			`[OpenCage] API-kall #${this.apiCallCount} OK (${response.status}) etter ${ms}ms`
+		);
 
 		return response.json();
 	}
 	
 	// Returnerer liste over forslag
   	async fetchGeocodeData(placeName, signal) {
+
 		const path = `json?q=${encodeURIComponent(placeName)}&key=${API_KEY}&language=no`;
 		const data = await this.get(path, signal);
 
 		return data.results.map((r) => ({
+
 			name: r.formatted,
 			lat: r.geometry.lat,
 			lon: r.geometry.lng,
 			timezone: r.annotations?.timezone?.name ?? null,
+
+			// 🆕 LEGG TIL BOUNDS
+			bounds: r.bounds
+				? {
+					southwest: {
+						lat: r.bounds.southwest.lat,
+						lng: r.bounds.southwest.lng
+					},
+					northeast: {
+						lat: r.bounds.northeast.lat,
+						lng: r.bounds.northeast.lng
+					}
+				}
+				: null,
+
+			// 🆕 Valgfritt men smart: type
+			type: r.components?._type ?? null
+
 		}));
 	}
 }

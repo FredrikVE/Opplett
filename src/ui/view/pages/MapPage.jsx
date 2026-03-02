@@ -5,8 +5,8 @@ import WeatherMap from "../components/MapPage/WeatherMap.jsx";
 import LoadingSpinner from "../components/Common/LoadingSpinner/LoadingSpinner.jsx";
 
 export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREENS }) {
-	// Destructer og pakker ut nødvendige variabler fra viewModel
-	const { location, mapCenter, zoom, apiKey, style, weatherPoints, isLoading, onMapChange } = viewModel;
+
+	const { location, mapCenter, zoom, bboxToFit, apiKey, style, weatherPoints, isLoading, onMapChange } = viewModel;
 
 	return (
 		<div className="map-screen">
@@ -29,8 +29,8 @@ export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREE
 			/>
 
 			<main className="map-content">
-				
-				{/* Viser spinner over kartet når vi laster inn nye vær-punkter */}
+
+				{/* Spinner over kart ved lasting */}
 				{isLoading && (
 					<div className="map-loading-overlay">
 						<LoadingSpinner />
@@ -47,8 +47,9 @@ export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREE
 					lat={mapCenter.lat}
 					lon={mapCenter.lon}
 					zoom={zoom}
+					bboxToFit={bboxToFit}
 					weatherPoints={weatherPoints}
-					onMapChange={onMapChange} 
+					onMapChange={onMapChange}
 				/>
 			</main>
 		</div>
