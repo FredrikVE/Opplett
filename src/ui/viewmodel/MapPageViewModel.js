@@ -25,7 +25,7 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
     const [weatherPoints, setWeatherPoints] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     
-    // 1. Synkronisering under rendering (erstatter useEffect for å unngå cascading renders)
+    //Synkronisering under rendering (erstatter useEffect for å unngå cascading renders)
     const [prevProps, setPrevProps] = useState({ lat: initialLat, lon: initialLon });
 
     if (initialLat !== prevProps.lat || initialLon !== prevProps.lon) {
@@ -35,18 +35,19 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
             lat: initialLat,
             lon: initialLon
         }));
-        // Nullstiller bboxToFit slik at kartet flytter seg programmatisk til det nye stedet
+
+        //Nullstiller bboxToFit slik at kartet flytter seg programmatisk til det nye stedet
         setBboxToFit(null);
     }
 
-    // 2. Initialiserer søk med proximity-støtte
+    //Initialiserer søk med proximity-støtte
     const searchViewModel = useSearchViewModel(
         searchLocationUseCase, 
         onLocationChange, 
         { lat: initialLat, lon: initialLon }
     );
 
-    // Henter kart-konfigurasjon direkte fra repository
+    //Henter kart-konfigurasjon direkte fra repository
     const { apiKey, style } = useMemo(() => {
         return mapTilerRepository.getMapConfig();
     }, [mapTilerRepository]);
@@ -55,9 +56,8 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
         return resolveTimezone(location.timezone);
     }, [location.timezone]);
 
-    /**
-     * Håndterer endringer i kartet (panorering/zooming).
-     */
+
+    //Håndterer endringer i kartet (panorering/zooming).
     const onMapChange = useCallback((lat, lon, bbox, currentZoom) => {
         // Stopper "auto-zoom" med en gang brukeren rører kartet manuelt
         setBboxToFit(null); 
@@ -74,9 +74,11 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
         });
     }, []);
 
-    // 3. Henting av værdata basert på nåværende kartutsnitt (med debounce)
+    // Henting av værdata basert på nåværende kartutsnitt (med debounce)
     useEffect(() => {
-        if (!mapView.bbox) return;
+        if (!mapView.bbox) {
+            return;
+        }
 
         let cancelled = false;
         const minDist = calculateMinDist(mapView.zoom);
@@ -93,10 +95,16 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
                 if (!cancelled) {
                     setWeatherPoints(points);
                 }
-            } catch (error) {
+            } 
+            
+            catch (error) {
                 console.error("Feil ved henting av kartvær:", error);
-            } finally {
-                if (!cancelled) setIsLoading(false);
+            } 
+            
+            finally {
+                if (!cancelled) {
+                    setIsLoading(false);
+                }
             }
         }, DEBOUNCE_DELAY_MS);
 
@@ -104,7 +112,9 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
             cancelled = true;
             clearTimeout(timer);
         };
-    }, [mapView.bbox, mapView.zoom, tz, getMapWeatherUseCase]);
+
+    }, 
+    [mapView.bbox, mapView.zoom, tz, getMapWeatherUseCase]);
 
     return {
         apiKey,
@@ -137,6 +147,7 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
                 setBboxToFit(null);
                 setMapView(prev => ({ ...prev, zoom: COUNTRY_ZOOM }));
             } 
+
             else if (selected.bounds) {
                 const bbox = [
                     selected.bounds.southwest.lng,
@@ -146,6 +157,7 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
                 ];
                 setBboxToFit(bbox);
             } 
+
             else {
                 setBboxToFit(null);
                 setMapView(prev => ({ ...prev, zoom: INIT_ZOOM }));

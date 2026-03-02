@@ -14,15 +14,23 @@ export default function useSearchViewModel(searchLocationUseCase, onLocationSele
     const onSearchChange = (text) => {
         setQuery(text);
 
-        // Vi krever minst 3 tegn før vi starter API-kall
+        //Vi krever minst 3 tegn før vi starter API-kall
         if (text.length < 3) {
-            if (debounceRef.current) clearTimeout(debounceRef.current);
-            if (abortRef.current) abortRef.current.abort();
+            if (debounceRef.current) {
+                clearTimeout(debounceRef.current);
+            }
+
+            if (abortRef.current) {
+                abortRef.current.abort();
+            }
+
             setSuggestions([]);
             return;
         }
 
-        if (debounceRef.current) clearTimeout(debounceRef.current);
+        if (debounceRef.current) {
+            clearTimeout(debounceRef.current);
+        }
 
         debounceRef.current = setTimeout(async () => {
             // Avbryter eventuelle pågående forespørsler
