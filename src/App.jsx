@@ -26,14 +26,12 @@ import "./ui/style/MapPage.css";
 import { NAV_SCREENS } from "./navigation/navGraph.js";
 
 //DataSources
-import OpenCageGeocodingDataSource from "./model/datasource/OpenCageGeocodingDataSource.js";
 import LocationForecastDataSource from "./model/datasource/LocationForecastDataSource.js";
 import MetAlertsDataSource from "./model/datasource/MetAlertsDataSource.js";
 import SunriseDataSource from "./model/datasource/SunriseDataSource.js";
 import MapTilerDataSource from "./model/datasource/MapTilerDataSource.js";
 
 //Repositories
-import OpenCageGeocodingRepository from "./model/repositories/OpenCageGeocodingRepository.js";
 import LocationForecastRepository from "./model/repositories/LocationForecastRepository.js";
 import MetAlertsRepository from "./model/repositories/MetAlertsRepository.js";
 import SunriseRepository from "./model/repositories/SunriseRepository.js";
@@ -47,7 +45,7 @@ import SearchLocationUseCase from "./model/domain/SearchLocationUseCase.js";
 import GetLocationNameUseCase from "./model/domain/GetLocationNameUseCase.js";
 import GetSunTimesUseCase from "./model/domain/GetSunTimesUseCase.js";
 import GetAlertsUseCase from "./model/domain/GetAlertsUseCase.js";
-import GetMapConfigUseCase from "./model/domain/GetMapConfigUseCase.js"
+//import GetMapConfigUseCase from "./model/domain/GetMapConfigUseCase.js"
 import GetMapWeatherUseCase from "./model/domain/GetMapWeatherUseCase.js";
 
 //ViewModel og View
@@ -66,20 +64,12 @@ import Header from "./ui/view/components/Common/Layout/Header.jsx";
 import Footer from "./ui/view/components/Common/Layout/Footer.jsx";
 import LoadingSpinner from "./ui/view/components/Common/LoadingSpinner/LoadingSpinner.jsx";
 
-//Importerer klasse for vasking og forenkling av stedsnavn fra OpenCage
-import LocationNameFormatter from "./geolocation/LocationNameFormatter.js";
-
-//Instansierer LocationFormatter of penere formatering av stedsnavn
-const locationNameFormatter = new LocationNameFormatter();
-const formatLocation = (locationData) => {
-	return locationNameFormatter.format(locationData);
-};
-
 // Repositories (composition root)
 const locationRepo = new LocationForecastRepository(new LocationForecastDataSource());
 const sunriseRepo = new SunriseRepository(new SunriseDataSource());
 const alertsRepo = new MetAlertsRepository(new MetAlertsDataSource());
-const geoRepo = new OpenCageGeocodingRepository(new OpenCageGeocodingDataSource(), formatLocation);
+
+// Her bruker vi MapTiler som SSOT for all geografi i stedet for OpenCage
 const mapTilerRepo = new MapTilerRepository(new MapTilerDataSource());
 
 //Oppretter instanser av UseCasees fra domain-layer
@@ -88,100 +78,112 @@ const getSunTimesUseCase = new GetSunTimesUseCase(sunriseRepo);
 const getAlertsUseCase = new GetAlertsUseCase(alertsRepo);
 const getAllAlertsUseCase = new GetAllAlertsUseCase(alertsRepo);
 const getCurrentWeatherUseCase = new GetCurrentWeatherUseCase(locationRepo);
-const searchLocationUseCase = new SearchLocationUseCase(geoRepo);
-const getLocationNameUseCase = new GetLocationNameUseCase(geoRepo);
-const getMapConfigUseCase = new GetMapConfigUseCase(mapTilerRepo);
+
+// Alle disse peker nå på mapTilerRepo for konsistent data
+const searchLocationUseCase = new SearchLocationUseCase(mapTilerRepo);
+const getLocationNameUseCase = new GetLocationNameUseCase(mapTilerRepo);
+//const getMapConfigUseCase = new GetMapConfigUseCase(mapTilerRepo);
 const getMapWeatherUseCase = new GetMapWeatherUseCase(mapTilerRepo, getCurrentWeatherUseCase);
 
 export default function App() {
-	const hoursAhead = 120;
+    const hoursAhead = 120;
 
-	const [activeScreen, setActiveScreen] = useState(NAV_SCREENS.TABLE);
+    const [activeScreen, setActiveScreen] = useState(NAV_SCREENS.TABLE);
 
-	//Henter koordinater fra enheten (starter som null)
-	const { loading, error, coords } = useGeolocation();
+    //Henter koordinater fra enheten (starter som null)
+    const { loading, error, coords } = useGeolocation();
 
-	//ViewModel får nå usecase istedenfor repositories
-	//Initialiser ViewModel med dependancy injection av useCasees og repositories
-	const forecastPageViewModel = useForecastPageViewModel(
-		getForecastUseCase, 
-		getAlertsUseCase, 
-		getCurrentWeatherUseCase, 
-		searchLocationUseCase,
-		getLocationNameUseCase,
-		getSunTimesUseCase, 
-		coords?.lat, 
-		coords?.lon, 
-		hoursAhead
-	);
+    //ViewModel får nå usecase istedenfor repositories
+    //Initialiser ViewModel med dependancy injection av useCasees og repositories
+    const forecastPageViewModel = useForecastPageViewModel(
+        getForecastUseCase, 
+        getAlertsUseCase, 
+        getCurrentWeatherUseCase, 
+        searchLocationUseCase,
+        getLocationNameUseCase,
+        getSunTimesUseCase, 
+        coords?.lat, 
+        coords?.lon, 
+        hoursAhead
+    );
 
-	const mapPageViewModel = useMapPageViewModel(
-		getMapConfigUseCase,
-		searchLocationUseCase,
-		getMapWeatherUseCase,
-		coords?.lat,
-		coords?.lon
-	);
-	
-	const graphScreenViewModel = useGraphScreenViewModel(forecastPageViewModel);
-	const alertPageViewModel = useAlertPageViewModel(getAllAlertsUseCase);
+    const mapPageViewModel = useMapPageViewModel(
+        mapTilerRepo,
+        //getMapConfigUseCase,
+        searchLocationUseCase,
+        getMapWeatherUseCase,
+        coords?.lat,
+        coords?.lon
+    );
+    
+    const graphScreenViewModel = useGraphScreenViewModel(forecastPageViewModel);
+    const alertPageViewModel = useAlertPageViewModel(getAllAlertsUseCase);
 
-	if (loading) {
-		return (
-			<LoadingSpinner />
-		);
-	}
+    // Funksjon for å håndtere valg av lokasjon fra kartet
+    const handleMapLocationSelect = (selectedLocation) => {
+        // Oppdaterer lokasjonen i hoved-viewmodellen (ForecastPage)
+        forecastPageViewModel.onSuggestionSelected(selectedLocation);
+        // Bytter automatisk til tabell-visning (værvarsel)
+        setActiveScreen(NAV_SCREENS.TABLE);
+    };
 
-	if (error) {
-		return (
-			<div className="error-screen">
-				<h2>Posisjon ikke tilgjengelig</h2>
-				<button onClick={() => window.location.reload()}>Prøv GPS på nytt</button>
-		</div>
-		);
-	}
+    if (loading) {
+        return (
+            <LoadingSpinner />
+        );
+    }
 
-	return (
-		<>
-			<Header />
+    if (error) {
+        return (
+            <div className="error-screen">
+                <h2>Posisjon ikke tilgjengelig</h2>
+                <button onClick={() => window.location.reload()}>Prøv GPS på nytt</button>
+        </div>
+        );
+    }
 
-			{activeScreen === NAV_SCREENS.ALERTS && (
-				<AlertPage
-					viewModel={alertPageViewModel}
-					activeScreen={activeScreen}
-					onChangeScreen={setActiveScreen}
-					SCREENS={NAV_SCREENS}
-				/>
-			)}
+    return (
+        <>
+            <Header />
 
-			{activeScreen === NAV_SCREENS.TABLE && (
-				<ForecastPage
-					viewModel={forecastPageViewModel}
-					activeScreen={activeScreen}
-					onChangeScreen={setActiveScreen}
-					SCREENS={NAV_SCREENS}
-				/>
-			)}
+            {activeScreen === NAV_SCREENS.ALERTS && (
+                <AlertPage
+                    viewModel={alertPageViewModel}
+                    activeScreen={activeScreen}
+                    onChangeScreen={setActiveScreen}
+                    SCREENS={NAV_SCREENS}
+                />
+            )}
 
-			{activeScreen === NAV_SCREENS.GRAPH && (
-				<GraphPage
-					viewModel={graphScreenViewModel}
-					activeScreen={activeScreen}
-					onChangeScreen={setActiveScreen}
-					SCREENS={NAV_SCREENS}
-				/>
-			)}
+            {activeScreen === NAV_SCREENS.TABLE && (
+                <ForecastPage
+                    viewModel={forecastPageViewModel}
+                    activeScreen={activeScreen}
+                    onChangeScreen={setActiveScreen}
+                    SCREENS={NAV_SCREENS}
+                />
+            )}
 
-			{activeScreen === NAV_SCREENS.MAP && (
-				<MapPage
-					viewModel={mapPageViewModel}
-					activeScreen={activeScreen}
-					onChangeScreen={setActiveScreen}
-					SCREENS={NAV_SCREENS}
-				/>
-			)}
-			
-			<Footer />
-		</>
-	);
+            {activeScreen === NAV_SCREENS.GRAPH && (
+                <GraphPage
+                    viewModel={graphScreenViewModel}
+                    activeScreen={activeScreen}
+                    onChangeScreen={setActiveScreen}
+                    SCREENS={NAV_SCREENS}
+                />
+            )}
+
+            {activeScreen === NAV_SCREENS.MAP && (
+                <MapPage
+                    viewModel={mapPageViewModel}
+                    activeScreen={activeScreen}
+                    onChangeScreen={setActiveScreen}
+                    SCREENS={NAV_SCREENS}
+                    onLocationClick={handleMapLocationSelect}
+                />
+            )}
+            
+            <Footer />
+        </>
+    );
 }

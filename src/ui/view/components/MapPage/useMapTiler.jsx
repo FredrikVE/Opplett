@@ -1,9 +1,10 @@
+// src/ui/view/components/MapPage/useMapTiler.jsx
 import { useEffect, useRef } from "react";
 import * as maptilersdk from "@maptiler/sdk";
 import { createRoot } from "react-dom/client";
 import WeatherSymbolLabel from "./WeatherSymbolLabel.jsx";
 
-export function useMapTiler({ apiKey, style, lat, lon, zoom, bboxToFit, weatherPoints, onMapChange }) {
+export function useMapTiler({ apiKey, style, lat, lon, zoom, bboxToFit, weatherPoints, onMapChange, onLocationClick }) {
 
     const mapContainerRef = useRef(null);
     const mapInstanceRef = useRef(null);
@@ -23,12 +24,12 @@ export function useMapTiler({ apiKey, style, lat, lon, zoom, bboxToFit, weatherP
             attributionControl: false
         });
 
+        // Lytter på bevegelser for å synkronisere state tilbake til ViewModel
         map.on("moveend", () => {
             const center = map.getCenter();
             const bounds = map.getBounds();
 
-            // Normaliserer Lng slik at den alltid er mellom -180 og 180
-            // Dette fikser 400 Bad Request når man panorerer rundt jorda.
+            // Normaliserer Lng slik at den alltid er mellom -180 og 180 (fikser 400 Bad Request)
             const wrappedLng = center.lng.valueOf(); 
             const normalizedLng = ((wrappedLng + 180) % 360 + 360) % 360 - 180;
 
@@ -59,8 +60,8 @@ export function useMapTiler({ apiKey, style, lat, lon, zoom, bboxToFit, weatherP
     // 2. Håndtering av Bounding Box (Byer/Regioner)
     useEffect(() => {
         const map = mapInstanceRef.current;
-        // Vi hopper over fitBounds hvis zoom er 3 (land-søk) for å unngå loop
-        if (!map || !bboxToFit || zoom === 3) return;
+        // Vi fjerner zoom fra avhengigheter for å unngå loop ved manuell zooming
+        if (!map || !bboxToFit) return;
 
         map.fitBounds(
             [
@@ -74,13 +75,14 @@ export function useMapTiler({ apiKey, style, lat, lon, zoom, bboxToFit, weatherP
             }
         );
 
-    }, [bboxToFit, zoom]);
+    }, [bboxToFit]); // Triggers kun når et nytt sted med grenser velges
 
-    // 3. Programmatisk flytting (Land-søk / Reset)
+    // 3. Programmatisk flytting (Land-søk / Reset / Enkeltpunkter)
     useEffect(() => {
         const map = mapInstanceRef.current;
         if (!map || lat == null || lon == null) return;
         
+        // Vi flyr bare hvis vi IKKE har en bounding box (unngår konflikt med useEffect #2)
         if (!bboxToFit) {
             map.flyTo({
                 center: [lon, lat],
@@ -92,25 +94,45 @@ export function useMapTiler({ apiKey, style, lat, lon, zoom, bboxToFit, weatherP
 
     }, [lat, lon, zoom, bboxToFit]);
 
-    // 4. Oppdatering av værmarkører
+    // 4. Oppdatering av værmarkører med klikk-støtte
     useEffect(() => {
         const map = mapInstanceRef.current;
         if (!map) return;
 
+        // Rens gamle markører fra kartet og minnet
         markersRef.current.forEach(m => m.remove());
         markersRef.current = [];
 
         markersRef.current = weatherPoints.map(point => {
             const container = document.createElement("div");
+            container.style.cursor = "pointer";
+            
+            // Klikkhåndtering for å navigere til værvarsel-siden
+            container.onclick = (e) => {
+                e.stopPropagation(); 
+                if (onLocationClick) {
+                    onLocationClick({
+                        lat: point.lat,
+                        lon: point.lon,
+                        name: point.name || "Valgt fra kart",
+                        timezone: point.timezone,
+                        type: point.type,
+                        bounds: point.bounds 
+                    });
+                }
+            };
+
             const root = createRoot(container);
             root.render(<WeatherSymbolLabel point={point} />);
 
-            return new maptilersdk.Marker({ element: container })
+            const marker = new maptilersdk.Marker({ element: container })
                 .setLngLat([point.lon, point.lat])
                 .addTo(map);
+
+            return marker;
         });
 
-    }, [weatherPoints]);
+    }, [weatherPoints, onLocationClick]);
 
     return mapContainerRef;
 }
