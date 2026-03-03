@@ -6,6 +6,8 @@ export default class LocationForecastRepository {
         this.cache = new Map();
     }
 
+    // --- HJELPEMETODER FOR DATAHENTING ---
+
     async #getTimeseries(lat, lon, hoursAhead) {
         const cleanLat = Math.max(-90, Math.min(90, Number(lat)));
         const cleanLon = ((Number(lon) + 180) % 360 + 360) % 360 - 180;
@@ -14,7 +16,9 @@ export default class LocationForecastRepository {
         const cacheLon = cleanLon.toFixed(2);
         const key = `${cacheLat},${cacheLon},${hoursAhead}`;
         
-        if (this.cache.has(key)) return this.cache.get(key);
+        if (this.cache.has(key)) {
+            return this.cache.get(key);
+        }
 
         const res = await this.datasource.fetchLocationForecast(cleanLat, cleanLon);
         const ts = res.properties.timeseries.slice(0, hoursAhead + 6);
@@ -41,36 +45,71 @@ export default class LocationForecastRepository {
         };
     }
 
-	async getHourlyForecast(lat, lon, hoursAhead, timeZone) {
+    // --- HOVEDMETODER FOR FORECAST ---
+
+    async getHourlyForecast(lat, lon, hoursAhead, timeZone) {
         const timeseries = await this.#getTimeseries(lat, lon, hoursAhead);
         const now = DateTime.now().setZone(timeZone);
 
-        const startIndex = timeseries.findIndex(entry => {
-            const entryTime = DateTime.fromISO(entry.time).setZone(timeZone);
-            return entryTime.plus({ minutes: 59 }) > now;
-        });
+        let startIndex = -1;
+        for (let i = 0; i < timeseries.length; i++) {
+            const entryStart = DateTime.fromISO(timeseries[i].time).setZone(timeZone);
+            
+            const nextEntry = timeseries[i + 1];
+            const entryEnd = nextEntry 
+                ? DateTime.fromISO(nextEntry.time).setZone(timeZone)
+                : entryStart.plus({ hours: 1 });
+
+            // LOGIKK: Vi beholder timen vi er inne i, 
+            // men hvis det er mindre enn 15 minutter til NESTE time starter, 
+            // så hopper vi frem slik at varselet føles oppdatert.
+            
+            if (now < entryEnd.minus({ minutes: 15 })) {
+                startIndex = i;
+                break;
+            }
+            
+            // STRAM LOGIKK: Vis nåværende time helt til den er 100% ferdig.
+            // Hvis kl er 09:59:59, viser den fortsatt 09:00-varselet.
+            /*
+           if (now < entryEnd) {
+                startIndex = i;
+                break;
+            }
+            */
+        }
+
+        // Failsafe: hvis nåtid er etter alt i lista, ta siste
+        if (startIndex === -1) startIndex = 0;
 
         // Debug-print for ekstreme offsets
         const offsetHours = now.offset / 60;
-        if (Math.abs(offsetHours) > 10 || timeZone.includes("Chatham") || timeZone.includes("Kathmandu")) {
-            console.log(`--- [TZ DEBUG] ${timeZone} (Offset: ${offsetHours}t) ---`);
+        if (Math.abs(offsetHours) > 10 || timeZone.includes("Chatham") || timeZone.includes("Kathmandu") || timeZone.includes("Kolkata")) {
+            console.log(`--- [TZ DEBUG] ${timeZone} ---`);
             console.log("Lokal tid nå:", now.toString());
-            if (startIndex > -1) {
-                console.log("Første time i liste:", DateTime.fromISO(timeseries[startIndex].time).setZone(timeZone).toString());
-            }
+            console.log("Første relevante time i liste:", DateTime.fromISO(timeseries[startIndex].time).setZone(timeZone).toString());
         }
 
-        const effectiveSeries = startIndex > -1 
-            ? timeseries.slice(startIndex, startIndex + hoursAhead) 
-            : timeseries.slice(0, hoursAhead);
+        const effectiveSeries = timeseries.slice(startIndex, startIndex + hoursAhead);
 
-        return effectiveSeries.map(entry => {
-            const dt = DateTime.fromISO(entry.time).setZone(timeZone);
+        const hourly = [];
+        for (const entry of effectiveSeries) {
+            const timeISO = entry.time;
+            const dt = DateTime.fromISO(timeISO).setZone(timeZone);
             
+            const dateISO = dt.toISODate(); 
+            const localTime = dt.hour;
+            const localMinute = dt.minute;
+            const utcHour = new Date(timeISO).getUTCHours();
+
+            const weatherSymbol = 
+                entry.data.next_1_hours?.summary?.symbol_code ?? 
+                entry.data.next_6_hours?.summary?.symbol_code ?? 
+                null;
+
             const next1h = entry.data.next_1_hours?.details;
             const next6h = entry.data.next_6_hours?.details;
 
-            // Definerer disse variablene først...
             const precipitation1h = next1h ? {
                 amount: next1h.precipitation_amount ?? 0,
                 min: next1h.precipitation_amount_min ?? next1h.precipitation_amount ?? 0,
@@ -83,30 +122,27 @@ export default class LocationForecastRepository {
                 max: next6h.precipitation_amount_max ?? 0
             } : null;
 
-            return {
-                timeISO: entry.time,
-                dateISO: dt.toISODate(), 
-                localTime: dt.hour,
-                localMinute: dt.minute,
-                utcHour: new Date(entry.time).getUTCHours(),
+            const precipitation = precipitation1h ?? precipitation6h ?? { amount: 0, min: 0, max: 0 };
 
-                weatherSymbol: entry.data.next_1_hours?.summary?.symbol_code ?? 
-                               entry.data.next_6_hours?.summary?.symbol_code ?? null,
-
-                // ...og bruker dem her!
-                precipitation: precipitation1h ?? precipitation6h ?? { amount: 0, min: 0, max: 0 },
-                precipitation1h: precipitation1h, 
-                precipitation6h: precipitation6h,
-
+            hourly.push({
+                timeISO,
+                dateISO,
+                localTime,
+                localMinute,
+                utcHour,
+                weatherSymbol,
+                precipitation, 
+                precipitation1h, 
+                precipitation6h,
                 temp: entry.data.instant.details.air_temperature,
                 wind: entry.data.instant.details.wind_speed,
                 uv: entry.data.instant.details.ultraviolet_index_clear_sky,
                 details: entry.data.instant.details
-            };
-        });
+            });
+        }
+
+        return hourly;
     }
-
-
 
     async getDailySummary(lat, lon, hoursAhead, timeZone) {
         const hourlyForecast = await this.getHourlyForecast(lat, lon, hoursAhead, timeZone);
@@ -135,6 +171,8 @@ export default class LocationForecastRepository {
         return dailySummary;
     }
 
+    // --- PRIVATE HJELPEMETODER (Main Branch Logikk) ---
+
     #groupHoursByDate(hourlyForecast) {
         const result = {};
         for (const hour of hourlyForecast) {
@@ -145,7 +183,8 @@ export default class LocationForecastRepository {
     }
 
     #calculateMinMaxTemp(hours) {
-        const temps = hours.map(h => h.temp);
+        const temps = [];
+        for (const h of hours) temps.push(h.temp);
         return {
             minTemp: Math.round(Math.min(...temps)),
             maxTemp: Math.round(Math.max(...temps))
@@ -186,7 +225,11 @@ export default class LocationForecastRepository {
                 min += p.min ?? 0;
                 max += p.max ?? 0;
             }
-            return { total: Number(total.toFixed(1)), min: Number(min.toFixed(1)), max: Number(max.toFixed(1)) };
+            return {
+                total: Number(total.toFixed(1)),
+                min: Number(min.toFixed(1)),
+                max: Number(max.toFixed(1))
+            };
         }
 
         for (const h of hours) {
@@ -198,9 +241,15 @@ export default class LocationForecastRepository {
     }
 
     #calculateAvgWind(hours) {
-        const daytime = hours.filter(h => h.localTime >= 9 && h.localTime <= 18).map(h => h.wind);
-        const winds = daytime.length > 0 ? daytime : hours.map(h => h.wind);
+        const winds = [];
+        for (const h of hours) {
+            if (h.localTime >= 9 && h.localTime <= 18) winds.push(h.wind);
+        }
+        if (winds.length === 0) {
+            for (const h of hours) winds.push(h.wind);
+        }
         if (winds.length === 0) return 0;
+
         winds.sort((a, b) => a - b);
         return Math.ceil(winds[Math.floor(winds.length * 0.75)]);
     }
