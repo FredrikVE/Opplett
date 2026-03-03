@@ -107,8 +107,8 @@ if (isAmericanSamoa && finalTz === "Pacific/Apia") {
 
 Dette sikrer at to steder som ligger geografisk nær hverandre, men på hver sin side av datolinjen, får korrekt dato. Selv om klokkeslettet er likt, vil appen korrekt vise at de befinner seg i forskjellige døgn:
 
-* **Apia, Samoa:** 02:16, Onsdag 4. mars (GMT+13)
-* **Pago Pago, Amerikansk Samoa:** 02:16, Tirsdag 3. mars (GMT-11)
+* **Apia, Samoa:** 02:16, Onsdag 4. mars `(GMT+13)`
+* **Pago Pago, Amerikansk Samoa:** 02:16, Tirsdag 3. mars `(GMT-11)`
 
 
 ## Designvalg på datastrukturnivå
