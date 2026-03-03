@@ -150,7 +150,8 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 
 		onResetToDeviceLocation: () => {
 			setBboxToFit(null);
-			setMapView(prev => ({ ...prev, zoom: INIT_ZOOM }));
+			//setMapView(prev => ({ ...prev, zoom: INIT_ZOOM }));
+			setMapView({ bbox: null, zoom: INIT_ZOOM });
 			onResetToDeviceLocation();
 			searchViewModel.onResetLocation();
 		}

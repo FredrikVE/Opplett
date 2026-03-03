@@ -1,4 +1,4 @@
-//src/ui/view/components/MapPage/useMapTiler.jsx
+// src/ui/view/components/MapPage/useMapTiler.jsx
 import { useEffect, useRef } from "react";
 import * as maptilersdk from "@maptiler/sdk";
 import { createRoot } from "react-dom/client";
@@ -9,11 +9,9 @@ export function useMapTiler(props) {
     const mapContainerRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const markersRef = useRef([]);
-    
-    //En vaktpost for å hindre uendelige løkker mellom kartet og state
-    const isProgrammaticMove = useRef(false);
+    const isProgrammaticMove = useRef(false); //En vaktpost for å hindre uendelige løkker mellom kartet og state
 
-    //Initialisering av kart én gang
+    //Initialiser karte én gang
     useEffect(() => {
         if (!mapContainerRef.current || mapInstanceRef.current) {
             return;
@@ -29,9 +27,28 @@ export function useMapTiler(props) {
             attributionControl: false
         });
 
+        //Synkroniserer kartets startposisjon med ViewModel med en gang stilen er lastet.
+        //Dette sikrer at værikonene hentes umiddelbart, uten at brukeren må flytte kartet først.
+        map.once("load", () => {
+            const bounds = map.getBounds();  //Hent ut de geografiske ytterpunktene (Bounding Box)
+            
+            //Vi pakker ut grensene i en eksplisitt liste: [Vest, Sør, Øst, Nord]
+            const currentBbox = [
+                bounds.getWest(), 
+                bounds.getSouth(), 
+                bounds.getEast(), 
+                bounds.getNorth()
+            ];
+
+            const currentZoom = map.getZoom();                  //Hent ut nåværende zoom-nivå
+            onMapChange(lat, lon, currentBbox, currentZoom);  // Rapporter tilstanden tilbake til ViewModel
+        });
+
+        
+
         map.on("moveend", () => {
-            //Hvis det var vi som flyttet kartet programmatisk, 
-            //trenger vi ikke rapportere endringen tilbake som en "ny" lokasjon.
+            // Hvis det var vi som flyttet kartet programmatisk, 
+            // trenger vi ikke rapportere endringen tilbake som en "ny" lokasjon.
             if (isProgrammaticMove.current) {
                 isProgrammaticMove.current = false;
                 return;
@@ -39,6 +56,8 @@ export function useMapTiler(props) {
 
             const center = map.getCenter();
             const bounds = map.getBounds();
+            
+            // Normaliserer Lng slik at den alltid er mellom -180 og 180
             const wrappedLng = center.lng.valueOf();
             const normalizedLng = ((wrappedLng + 180) % 360 + 360) % 360 - 180;
 
@@ -58,23 +77,40 @@ export function useMapTiler(props) {
                 mapInstanceRef.current = null;
             }
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    //HÅNDTERING AV BOUNDING BOX (BYER/REGIONER)
+
+    //Håndtering av bbox-grender for omkringliggende steder (F.eks. ved søk på byer eller regioner)
     useEffect(() => {
         const map = mapInstanceRef.current;
         if (!map || !bboxToFit) {
             return;
         }
 
+        //Vi markerer bevegelsen som programmatisk for å unngå at kartet 
+        //rapporterer små bevegelser tilbake til staten mens det animeres.
         isProgrammaticMove.current = true;
+
+        // Pakker ut BBox-arrayet [Vest, Sør, Øst, Nord] til logiske koordinat-par
+        const [west, south, east, north] = bboxToFit;
+        const southWest = [west, south];
+        const northEast = [east, north];
+
+        // Tilpasser kartvisningen slik at hele området blir synlig
         map.fitBounds(
-            [[bboxToFit[0], bboxToFit[1]], [bboxToFit[2], bboxToFit[3]]],
-            { padding: 60, duration: 1000, maxZoom: 12 }
+            [southWest, northEast],
+            { 
+                padding: 60,      // Margin til kanten av skjermen (piksler)
+                duration: 1000,    // Lengde på animasjonen (ms)
+                maxZoom: 12        // Hindrer at kartet zoomer for langt inn på små steder
+            }
         );
     }, [bboxToFit]);
 
-    // 3. PROGRAMMATISK FLYTTING (SØK / RESET)
+
+
+    //Programatisk flytting av kart ved søk, reset eller gps-lokasjon
     useEffect(() => {
         const map = mapInstanceRef.current;
         if (!map || lat == null || lon == null || bboxToFit) {
@@ -82,28 +118,45 @@ export function useMapTiler(props) {
         }
 
         const center = map.getCenter();
-        const currentLat = center.lat;
-        const currentLon = ((center.lng + 180) % 360 + 360) % 360 - 180;
-
-        //Vi flyr kun hvis avviket er merkbart (f.eks. nytt søk)
         const threshold = 0.001; 
         const hasMovedSignificantly = 
-            Math.abs(currentLat - lat) > threshold || 
-            Math.abs(currentLon - lon) > threshold;
+            Math.abs(center.lat - lat) > threshold || 
+            Math.abs(center.lng - lon) > threshold;
 
         if (hasMovedSignificantly) {
             isProgrammaticMove.current = true;
+            
             map.flyTo({
                 center: [lon, lat],
                 zoom: zoom,
                 speed: 1.2,
                 essential: true
             });
-        }
-    }, 
-    [lat, lon, zoom, bboxToFit]);
 
-    // 4. VÆRMARKØRER
+            // Når fly-to er ferdig, tvinger vi en oppdatering av bbox for å hente vær
+            map.once("moveend", () => {
+                const bounds = map.getBounds();
+                
+                //Vi pakker ut det endelige utsnittet i formatet [Vest, Sør, Øst, Nord]
+                const finalBbox = [
+                    bounds.getWest(), 
+                    bounds.getSouth(), 
+                    bounds.getEast(), 
+                    bounds.getNorth()
+                ];
+
+                // Vi henter det endelige zoom-nivået etter at animasjonen er ferdig
+                const finalZoom = map.getZoom();
+
+                // Vi sender den oppdaterte tilstanden til ViewModel.
+                // Siden ViewModel satte bbox til 'null' ved starten av flyttingen,
+                // vil denne nye verdien tvinge frem et friskt API-kall for vær.
+                onMapChange(lat, lon, finalBbox, finalZoom);
+            });
+        }
+    }, [lat, lon, zoom, bboxToFit, onMapChange]);
+
+    //Værikoner
     useEffect(() => {
         const map = mapInstanceRef.current;
         if (!map) {
@@ -114,17 +167,15 @@ export function useMapTiler(props) {
         markersRef.current.forEach(m => m.remove());
         markersRef.current = [];
 
-        // Tegn nye
+        // Tegn nye markører basert på weatherPoints
         markersRef.current = weatherPoints.map(point => {
             const container = document.createElement("div");
             container.className = "map-marker-wrapper";
+            container.style.cursor = "pointer";
             
             container.onclick = (event) => {
-
                 event.stopPropagation();
-
                 if (onLocationClick) {
-                    // Her sender vi med hele lokasjonsobjektet slik at App.jsx kan sette manualLocation
                     onLocationClick({
                         lat: point.lat,
                         lon: point.lon,
@@ -146,8 +197,7 @@ export function useMapTiler(props) {
             return marker;
         });
 
-    }, 
-    [weatherPoints, onLocationClick]);
+    }, [weatherPoints, onLocationClick]);
 
     return mapContainerRef;
 }
