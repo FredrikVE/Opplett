@@ -49,6 +49,16 @@ export default class LocationForecastRepository {
         const timeseries = await this.#getTimeseries(lat, lon, hoursAhead);
         const now = DateTime.now().setZone(timeZone);
 
+        // --- LEGG INN DENNE LOGGEN HER ---
+        if (timeZone.includes("Pago_Pago")) {
+            console.log("--- [PAGO PAGO DEBUG START] ---");
+            console.log("Lokal tid i Pago Pago nå:", now.toString());
+            console.log("Første timestamp fra API (UTC):", timeseries[0].time);
+            console.log("Første timestamp konvertert til Pago Pago:", 
+                DateTime.fromISO(timeseries[0].time).setZone(timeZone).toString());
+        }
+        // ---------------------------------
+
         let startIndex = -1;
         for (let i = 0; i < timeseries.length; i++) {
             const entryStart = DateTime.fromISO(timeseries[i].time).setZone(timeZone);
@@ -67,6 +77,23 @@ export default class LocationForecastRepository {
                 startIndex = i;
                 break;
             }
+
+            /*@@@@@@@@
+            // Finn første relevante time
+            let startIndex = 0; // Default til start hvis vi ikke finner noe bedre
+            for (let i = 0; i < timeseries.length; i++) {
+                const entryTime = DateTime.fromISO(timeseries[i].time).setZone(timeZone);
+                const nextEntryTime = timeseries[i+1] 
+                    ? DateTime.fromISO(timeseries[i+1].time).setZone(timeZone)
+                    : entryTime.plus({ hours: 1 });
+
+                // Hvis 'nå' er før slutten på denne timen, har vi funnet startpunktet vårt
+                if (now < nextEntryTime) {
+                    startIndex = i;
+                    break;
+                }
+            }
+            @@@@@@@@@@*/
         
 
             /*

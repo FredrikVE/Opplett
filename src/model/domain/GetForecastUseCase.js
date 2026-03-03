@@ -1,46 +1,58 @@
-//src/model/domain/GetForecastUseCase.js
+// src/model/domain/GetForecastUseCase.js
 export default class GetForecastUseCase {
 
-	// Konstruktør for å ta inn forecastRepository fra App.jsx
-	constructor(forecastRepository) {
-		this.forecastRepository = forecastRepository;
-	}
+    // Konstruktør for å ta inn forecastRepository fra App.jsx
+    constructor(forecastRepository) {
+        this.forecastRepository = forecastRepository;
+    }
 
-	async execute({ lat, lon, hoursAhead, timeZone }) {
+    async execute({ lat, lon, hoursAhead, timeZone }) {
 
-		if (lat == null || lon == null) {
-			throw new Error("Latitude and longitude are required");
-		}
+        if (lat == null || lon == null) {
+            throw new Error("Latitude and longitude are required");
+        }
 
-		// Henter time-for-time værdata
-		const hourly = await this.forecastRepository.getHourlyForecast(
-			lat,
-			lon,
-			hoursAhead,
-			timeZone
-		);
+        // 1. Henter time-for-time værdata fra repositoriet.
+        // Repositoriet har allerede beregnet riktig lokal dato (dateISO) 
+        // for hver time basert på timeZone.
+        const hourly = await this.forecastRepository.getHourlyForecast(
+            lat,
+            lon,
+            hoursAhead,
+            timeZone
+        );
 
-		// Grupperer timer per dato
-		const hourlyByDate = {};
-		for (const hour of hourly) {
-			if (!hourlyByDate[hour.dateISO]) {
-				hourlyByDate[hour.dateISO] = { hours: [] };
-			}
-			hourlyByDate[hour.dateISO].hours.push(hour);
-		}
+        // 2. Grupperer timer per dato
+        const unsortedGrouped = {};
+        for (const hour of hourly) {
+            const dateKey = hour.dateISO;
+            if (!unsortedGrouped[dateKey]) {
+                unsortedGrouped[dateKey] = { hours: [] };
+            }
+            unsortedGrouped[dateKey].hours.push(hour);
+        }
 
-		// Henter dagsoppsummering
-		const dailySummaryByDate =
-			await this.forecastRepository.getDailySummary(
-				lat,
-				lon,
-				hoursAhead,
-				timeZone
-			);
+        // 3. Sorterer gruppene alfabetisk etter dato-nøkkel (ISO-streng)
+        // Dette sikrer at Pago Pago (GMT-11) ikke hopper frem i tid pga. 
+        // objekt-nøkkel-oppførsel i JS.
+        const hourlyByDate = Object.keys(unsortedGrouped)
+            .sort()
+            .reduce((acc, key) => {
+                acc[key] = unsortedGrouped[key];
+                return acc;
+            }, {});
 
-		return {
-			hourlyByDate,
-			dailySummaryByDate
-		};
-	}
+        // 4. Henter dagsoppsummering (som maks/min temp, total nedbør osv.)
+        const dailySummaryByDate = await this.forecastRepository.getDailySummary(
+            lat,
+            lon,
+            hoursAhead,
+            timeZone
+        );
+
+        return {
+            hourlyByDate,
+            dailySummaryByDate
+        };
+    }
 }

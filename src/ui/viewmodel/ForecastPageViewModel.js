@@ -128,6 +128,7 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
 					return;
 				}
 
+				/*
 				const grouped = {};
 
 				Object.entries(forecastResult.hourlyByDate).forEach(([dateISO, data]) => {
@@ -137,6 +138,22 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
 						label: firstHour
 							? formatToLocalDateLabel(firstHour.timeISO, tz)
 							: "",
+						hours: data.hours
+					};
+				});
+				*/
+
+				const grouped = {};
+				const entries = Object.entries(forecastResult.hourlyByDate);
+
+				// Sorter nøklene for å være helt sikker (dato-strenger sorteres fint alfabetisk)
+				entries.sort((a, b) => a[0].localeCompare(b[0]));
+
+				entries.forEach(([dateISO, data]) => {
+					console.log(`Processing date: ${dateISO} for zone ${tz}`); // Sjekk hva som dukker opp her!
+					
+					grouped[dateISO] = {
+						label: formatToLocalDateLabel(dateISO, tz),
 						hours: data.hours
 					};
 				});
