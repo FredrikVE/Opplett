@@ -6,8 +6,7 @@ export default class LocationForecastRepository {
         this.cache = new Map();
     }
 
-    // --- HJELPEMETODER FOR DATAHENTING ---
-
+    //HJELPEMETODER FOR DATAHENTING
     async #getTimeseries(lat, lon, hoursAhead) {
         const cleanLat = Math.max(-90, Math.min(90, Number(lat)));
         const cleanLon = ((Number(lon) + 180) % 360 + 360) % 360 - 180;
@@ -45,8 +44,7 @@ export default class LocationForecastRepository {
         };
     }
 
-    // --- HOVEDMETODER FOR FORECAST ---
-
+    //HOVEDMETODER FOR FORECAST
     async getHourlyForecast(lat, lon, hoursAhead, timeZone) {
         const timeseries = await this.#getTimeseries(lat, lon, hoursAhead);
         const now = DateTime.now().setZone(timeZone);
@@ -63,11 +61,21 @@ export default class LocationForecastRepository {
             // LOGIKK: Vi beholder timen vi er inne i, 
             // men hvis det er mindre enn 15 minutter til NESTE time starter, 
             // så hopper vi frem slik at varselet føles oppdatert.
-            
+    
+            const buffer = entryStart.hour === 23 ? 0 : 15;
+            if (now < entryEnd.minus({ minutes: buffer })) {
+                startIndex = i;
+                break;
+            }
+        
+
+            /*
             if (now < entryEnd.minus({ minutes: 15 })) {
                 startIndex = i;
                 break;
             }
+            */
+        
             
             // STRAM LOGIKK: Vis nåværende time helt til den er 100% ferdig.
             // Hvis kl er 09:59:59, viser den fortsatt 09:00-varselet.
