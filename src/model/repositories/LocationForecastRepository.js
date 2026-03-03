@@ -7,21 +7,24 @@ export default class LocationForecastRepository {
         this.cache = new Map();
     }
 
-    //HJELPEMETODER FOR DATAHENTING
-    async #getTimeseries(lat, lon, hoursAhead) {
+    //Hjelpemetode for caching, koordinatvasking og henting av timeseries
+    async #getTimeseries(lat, lon) { // ENDRET: Fjernet hoursAhead som parameter her
         const cleanLat = Math.max(-90, Math.min(90, Number(lat)));
         const cleanLon = ((Number(lon) + 180) % 360 + 360) % 360 - 180;
 
         const cacheLat = cleanLat.toFixed(2);
         const cacheLon = cleanLon.toFixed(2);
-        const key = `${cacheLat},${cacheLon},${hoursAhead}`;
+        const key = `${cacheLat},${cacheLon}`; // ENDRET: Nøkkelen trenger ikke hoursAhead
         
         if (this.cache.has(key)) {
             return this.cache.get(key);
         }
 
         const res = await this.datasource.fetchLocationForecast(cleanLat, cleanLon);
-        const ts = res.properties.timeseries.slice(0, hoursAhead + 6);                   // Henter litt ekstra data (hoursAhead + 6) for å sikre nok data etter startIndex-forskyvning
+        
+        //Henter hele listen fra API-et uten å kutte noe her. 
+        //Det er tryggere å la getHourlyForecast bestemme utsnittet.
+        const ts = res.properties.timeseries; 
 
         this.cache.set(key, ts);
         return ts;
@@ -47,13 +50,12 @@ export default class LocationForecastRepository {
         };
     }
 
-    //HOVEDMETODE FOR FORECAST
+    //Metode for å finne langtidsvarsel
     async getHourlyForecast(lat, lon, hoursAhead, timeZone) {
-        const timeseries = await this.#getTimeseries(lat, lon, hoursAhead);
+        // ENDRET: Sender ikke lenger hoursAhead inn til hjelpemetoden
+        const timeseries = await this.#getTimeseries(lat, lon); 
         const now = DateTime.now().setZone(timeZone);
 
-        // FINN RIKTIG STARTPUNKT (startIndex)
-        // Vi beholder timen vi er inne i, men hopper frem hvis det er < 15 min til neste time.
         let startIndex = -1;
         for (let i = 0; i < timeseries.length; i++) {
             const entryStart = DateTime.fromISO(timeseries[i].time).setZone(timeZone);
@@ -74,19 +76,18 @@ export default class LocationForecastRepository {
             startIndex = 0;
         }
 
-        // STRUKTURER DATA (Mapping)
+        // Vi starter på startIndex (nåtid) og tar med nøyaktig så mange timer som ble forespurt.
         const effectiveSeries = timeseries.slice(startIndex, startIndex + hoursAhead);
+        
         const hourly = [];
 
         for (const entry of effectiveSeries) {
             const timeISO = entry.time;
             const dt = DateTime.fromISO(timeISO).setZone(timeZone);
-            
-            // Bruker Luxon direkte for utledede verdier (fjerner behov for Date-hacks)
             const dateISO = dt.toISODate(); 
             const localTime = dt.hour;
             const localMinute = dt.minute;
-            const utcHour = new Date(timeISO).getUTCHours();
+            const utcHour = dt.toUTC().hour; 
 
             const weatherSymbol = 
                 entry.data.next_1_hours?.summary?.symbol_code ?? 
@@ -157,7 +158,7 @@ export default class LocationForecastRepository {
         return dailySummary;
     }
 
-    //PRIVATE HJELPEMETODER FOR BEREGNING ---
+    //Private hjelpemetoder for beregning
     #groupHoursByDate(hourlyForecast) {
         const result = {};
         for (const hour of hourlyForecast) {
