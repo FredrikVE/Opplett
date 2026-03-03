@@ -1,8 +1,9 @@
-//src/App.jsx
-import { useState } from "react";
+// src/App.jsx
+import { useState, useMemo } from "react"; // Lagt til useMemo
 import { useGeolocation } from "./geolocation/useGeolocation.js";
+import { resolveTimezone } from "./ui/utils/TimeZoneUtils/timeFormatters.js"; // Viktig import for SSOT
 
-//Stilark
+// Stilark
 import "./ui/style/App.css";
 import "./ui/style/LoadingSpinner.css";
 import "./ui/style/SolarInfo.css";
@@ -35,9 +36,9 @@ import MapTilerDataSource from "./model/datasource/MapTilerDataSource.js";
 import LocationForecastRepository from "./model/repositories/LocationForecastRepository.js";
 import MetAlertsRepository from "./model/repositories/MetAlertsRepository.js";
 import SunriseRepository from "./model/repositories/SunriseRepository.js";
-import MapTilerRepository from "./model/repositories/MapTilerRepository.js"
+import MapTilerRepository from "./model/repositories/MapTilerRepository.js";
 
-//UseCases fra domain-layer
+//UseCases
 import GetForecastUseCase from "./model/domain/GetForecastUseCase.js";
 import GetAllAlertsUseCase from "./model/domain/GetAllAlertsUseCase.js";
 import GetCurrentWeatherUseCase from "./model/domain/GetCurrentWeatherUseCase.js";
@@ -63,14 +64,13 @@ import Header from "./ui/view/components/Common/Layout/Header.jsx";
 import Footer from "./ui/view/components/Common/Layout/Footer.jsx";
 import LoadingSpinner from "./ui/view/components/Common/LoadingSpinner/LoadingSpinner.jsx";
 
-// Repositories (composition root)
+//Composition Root
 const locationRepo = new LocationForecastRepository(new LocationForecastDataSource());
 const sunriseRepo = new SunriseRepository(new SunriseDataSource());
 const alertsRepo = new MetAlertsRepository(new MetAlertsDataSource());
 const mapTilerRepo = new MapTilerRepository(new MapTilerDataSource());
 
-// UseCases
-const getForecastUseCase = new GetForecastUseCase(locationRepo, alertsRepo);
+const getForecastUseCase = new GetForecastUseCase(locationRepo);
 const getSunTimesUseCase = new GetSunTimesUseCase(sunriseRepo);
 const getAlertsUseCase = new GetAlertsUseCase(alertsRepo);
 const getAllAlertsUseCase = new GetAllAlertsUseCase(alertsRepo);
@@ -80,118 +80,127 @@ const getLocationNameUseCase = new GetLocationNameUseCase(mapTilerRepo);
 const getMapWeatherUseCase = new GetMapWeatherUseCase(mapTilerRepo, getCurrentWeatherUseCase);
 
 export default function App() {
-	const hoursAhead = 120;
-	const [activeScreen, setActiveScreen] = useState(NAV_SCREENS.TABLE);
+    const hoursAhead = 120;
+    const [activeScreen, setActiveScreen] = useState(NAV_SCREENS.TABLE);
 
-	// 1. Henter ferske GPS-koordinater
-	const { loading, error, coords } = useGeolocation();
+    //Henter ferske GPS-koordinater
+    const { loading, error, coords } = useGeolocation();
 
-	// 2. SSOT FOR LOKASJON - Lagrer kun manuelle valg (søk/klikk)
-	const [manualLocation, setManualLocation] = useState(null);
+    //State for manuelle valg (søk/kart-klikk)
+    const [manualLocation, setManualLocation] = useState(null);
 
-	// 3. UTLEDET TILSTAND (Derived State)
-	const activeLat = manualLocation?.lat ?? coords?.lat;
-	const activeLon = manualLocation?.lon ?? coords?.lon;
-	const activeTimezone = manualLocation?.timezone ?? null;
+    //SSOT: LOKASJONSOBJEKTET (Den utledede sannheten)
+    const activeLocation = useMemo(() => {
+        const lat = manualLocation?.lat ?? coords?.lat ?? null;
+        const lon = manualLocation?.lon ?? coords?.lon ?? null;
+        const name = manualLocation?.name ?? (coords ? "Min posisjon" : "");
+        const explicitTz = manualLocation?.timezone ?? null;
 
-	// Funksjon for å bytte sted
-	const handleLocationChange = (newLocation) => {
-		setManualLocation(newLocation);
-	};
+        //Her valideres tidssonen via vår sentrale vaktpost
+        const timezone = resolveTimezone(lat, lon, explicitTz, name);
 
-	// Funksjon for å nullstille til GPS-posisjon
-	const handleResetToDeviceLocation = () => {
-		setManualLocation(null);
-	};
+        return { lat, lon, name, timezone,
+            bounds: manualLocation?.bounds ?? null,
+            type: manualLocation?.type ?? null
+        };
+    }, 
+	[manualLocation, coords]);
 
-	// 4. ViewModel-instanser kobles til de aktive koordinatene og tidssonen
-	const forecastPageViewModel = useForecastPageViewModel(
-		getForecastUseCase, 
-		getAlertsUseCase, 
-		getCurrentWeatherUseCase, 
-		searchLocationUseCase,
-		getLocationNameUseCase,
-		getSunTimesUseCase, 
-		activeLat, 
-		activeLon, 
-		hoursAhead,
-		handleLocationChange,
-		handleResetToDeviceLocation,
-		activeTimezone
-	);
+    //Handlere for lokasjonsendring
+    const handleLocationChange = (newLocation) => {
+        setManualLocation(newLocation);
+    };
 
-	const mapPageViewModel = useMapPageViewModel(
-		mapTilerRepo,
-		searchLocationUseCase,
-		getMapWeatherUseCase,
-		activeLat,
-		activeLon,
-		handleLocationChange,
-		handleResetToDeviceLocation 
-	);
-	
-	const graphScreenViewModel = useGraphScreenViewModel(forecastPageViewModel);
-	const alertPageViewModel = useAlertPageViewModel(getAllAlertsUseCase);
+    const handleResetToDeviceLocation = () => {
+        setManualLocation(null);
+    };
 
-	// Handler for klikk på markører i kartet
-	const handleMapIconClick = (locationFromMap) => {
-		handleLocationChange(locationFromMap);
-		setActiveScreen(NAV_SCREENS.TABLE);
-	};
+    //ViewModel-instanser (Injiserer det atomiske objektet)
+    const forecastPageViewModel = useForecastPageViewModel(
+        getForecastUseCase, 
+        getAlertsUseCase, 
+        getCurrentWeatherUseCase, 
+        searchLocationUseCase,
+        getLocationNameUseCase,
+        getSunTimesUseCase, 
+        activeLocation, 		//SSOT objektet
+        hoursAhead,
+        handleLocationChange,
+        handleResetToDeviceLocation
+    );
 
-	if (loading) return <LoadingSpinner />;
+    const mapPageViewModel = useMapPageViewModel(
+        mapTilerRepo,
+        searchLocationUseCase,
+        getMapWeatherUseCase,
+        activeLocation, 		//SSOT objektet
+        handleLocationChange,
+        handleResetToDeviceLocation 
+    );
+    
+    const graphScreenViewModel = useGraphScreenViewModel(forecastPageViewModel);
+    const alertPageViewModel = useAlertPageViewModel(getAllAlertsUseCase);
 
-	if (error) {
-		return (
-			<div className="error-screen">
-				<h2>Posisjon ikke tilgjengelig</h2>
-				<button onClick={() => window.location.reload()}>Prøv GPS på nytt</button>
-			</div>
-		);
+    const handleMapIconClick = (locationFromMap) => {
+        handleLocationChange(locationFromMap);
+        setActiveScreen(NAV_SCREENS.TABLE);
+    };
+
+    if (loading) {
+		return <LoadingSpinner />;
 	}
 
-	return (
-		<>
-			<Header />
+    if (error) {
+        return (
+            <div className="error-screen">
+                <h2>Posisjon ikke tilgjengelig</h2>
+                <button onClick={() => window.location.reload()}>Prøv GPS på nytt</button>
+            </div>
+        );
+    }
 
-			{activeScreen === NAV_SCREENS.ALERTS && (
-				<AlertPage
-					viewModel={alertPageViewModel}
-					activeScreen={activeScreen}
-					onChangeScreen={setActiveScreen}
-					SCREENS={NAV_SCREENS}
-				/>
-			)}
+    return (
+        <>
+            <Header />
 
-			{activeScreen === NAV_SCREENS.TABLE && (
-				<ForecastPage
-					viewModel={forecastPageViewModel}
-					activeScreen={activeScreen}
-					onChangeScreen={setActiveScreen}
-					SCREENS={NAV_SCREENS}
-				/>
-			)}
+            {activeScreen === NAV_SCREENS.ALERTS && (
+                <AlertPage
+                    viewModel={alertPageViewModel}
+                    activeScreen={activeScreen}
+                    onChangeScreen={setActiveScreen}
+                    SCREENS={NAV_SCREENS}
+                />
+            )}
 
-			{activeScreen === NAV_SCREENS.GRAPH && (
-				<GraphPage
-					viewModel={graphScreenViewModel}
-					activeScreen={activeScreen}
-					onChangeScreen={setActiveScreen}
-					SCREENS={NAV_SCREENS}
-				/>
-			)}
+            {activeScreen === NAV_SCREENS.TABLE && (
+                <ForecastPage
+                    viewModel={forecastPageViewModel}
+                    activeScreen={activeScreen}
+                    onChangeScreen={setActiveScreen}
+                    SCREENS={NAV_SCREENS}
+                />
+            )}
 
-			{activeScreen === NAV_SCREENS.MAP && (
-				<MapPage
-					viewModel={mapPageViewModel}
-					activeScreen={activeScreen}
-					onChangeScreen={setActiveScreen}
-					SCREENS={NAV_SCREENS}
-					onLocationClick={handleMapIconClick}
-				/>
-			)}
-			
-			<Footer />
-		</>
-	);
+            {activeScreen === NAV_SCREENS.GRAPH && (
+                <GraphPage
+                    viewModel={graphScreenViewModel}
+                    activeScreen={activeScreen}
+                    onChangeScreen={setActiveScreen}
+                    SCREENS={NAV_SCREENS}
+                />
+            )}
+
+            {activeScreen === NAV_SCREENS.MAP && (
+                <MapPage
+                    viewModel={mapPageViewModel}
+                    activeScreen={activeScreen}
+                    onChangeScreen={setActiveScreen}
+                    SCREENS={NAV_SCREENS}
+                    onLocationClick={handleMapIconClick}
+                />
+            )}
+            
+            <Footer />
+        </>
+    );
 }

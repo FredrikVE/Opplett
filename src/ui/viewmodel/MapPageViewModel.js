@@ -1,177 +1,158 @@
-// src/ui/viewmodel/MapPageViewModel.js
 import { useEffect, useState, useMemo, useCallback } from "react";
 import useSearchViewModel from "./SearchViewModel.js";
-import { resolveTimezone } from "../utils/TimeZoneUtils/timeFormatters.js";
 
 function calculateMinDist(zoom) {
-    if (zoom <= 3) return 2.5;
-    if (zoom <= 5) return 1.2;
-    if (zoom <= 7) return 0.5;
-    if (zoom <= 9) return 0.15;
-    if (zoom <= 11) return 0.04;
-    if (zoom <= 13) return 0.01;
-    return 0.001;
+	if (zoom <= 3) return 2.5;
+	if (zoom <= 5) return 1.2;
+	if (zoom <= 7) return 0.5;
+	if (zoom <= 9) return 0.15;
+	if (zoom <= 11) return 0.04;
+	if (zoom <= 13) return 0.01;
+	return 0.001;
 }
 
-export default function useMapPageViewModel(mapTilerRepository, searchLocationUseCase, getMapWeatherUseCase, initialLat, initialLon, onLocationChange, onResetToDeviceLocation) {
+export default function useMapPageViewModel(mapTilerRepository, searchLocationUseCase, getMapWeatherUseCase, activeLocation, onLocationChange, onResetToDeviceLocation) {
+	const INIT_ZOOM = 12;
+	const COUNTRY_ZOOM = 3; 
+	const DEBOUNCE_DELAY_MS = 500;
 
-    const INIT_ZOOM = 12;
-    const COUNTRY_ZOOM = 3; 
-    const DEBOUNCE_DELAY_MS = 500;
+	const [mapView, setMapView] = useState({ bbox: null, zoom: INIT_ZOOM });
+	const [bboxToFit, setBboxToFit] = useState(null);
+	
+	//Vi holder på en lokal kopi av lokasjonen for å støtte umiddelbar feedback ved panorering,
+	//men vi synkroniserer den med activeLocation når den endres eksternt.
+	const [localLocation, setLocalLocation] = useState(activeLocation);
+	const [weatherPoints, setWeatherPoints] = useState([]);
+	const [isLoading, setIsLoading] = useState(false);
 
-    const [mapView, setMapView] = useState({ bbox: null, zoom: INIT_ZOOM });
-    const [bboxToFit, setBboxToFit] = useState(null);
-    const [location, setLocation] = useState({lat: initialLat, lon: initialLon, name: null, timezone: null, bounds: null, type: null});
-    const [weatherPoints, setWeatherPoints] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
-    
-    //Synkronisering under rendering (erstatter useEffect for å unngå cascading renders)
-    const [prevProps, setPrevProps] = useState({ lat: initialLat, lon: initialLon });
+	//Synkroniser lokasjon når brukeren søker eller bytter sted i en annen tab
+	useEffect(() => {
+		setLocalLocation(activeLocation);
+		setBboxToFit(null);                 //Nullstiller bboxToFit så kartet flytter seg til det nye stedet
+	}, [activeLocation]);
 
-    if (initialLat !== prevProps.lat || initialLon !== prevProps.lon) {
-        setPrevProps({ lat: initialLat, lon: initialLon });
-        setLocation(prev => ({
-            ...prev,
-            lat: initialLat,
-            lon: initialLon
-        }));
+	// Initialiserer søk med proximity fra SSOT
+	const searchViewModel = useSearchViewModel(
+		searchLocationUseCase, 
+		onLocationChange, 
+		{ lat: activeLocation.lat, lon: activeLocation.lon },
+		onResetToDeviceLocation
+	);
 
-        //Nullstiller bboxToFit slik at kartet flytter seg programmatisk til det nye stedet
-        setBboxToFit(null);
-    }
+	const { apiKey, style } = useMemo(() => {
+		return mapTilerRepository.getMapConfig();
+	}, 
+	[mapTilerRepository]);
 
-    //Initialiserer søk med proximity-støtte
-    const searchViewModel = useSearchViewModel(
-        searchLocationUseCase, 
-        onLocationChange, 
-        { lat: initialLat, lon: initialLon }
-    );
+	//Tidssonen kommer ferdig vasket fra activeLocation
+	const tz = activeLocation.timezone;
 
-    //Henter kart-konfigurasjon direkte fra repository
-    const { apiKey, style } = useMemo(() => {
-        return mapTilerRepository.getMapConfig();
-    }, [mapTilerRepository]);
+	//Håndterer endringer i kartet (panorering/zooming)
+	const onMapChange = useCallback((lat, lon, bbox, currentZoom) => {
+		setBboxToFit(null); 
 
-    const tz = useMemo(() => {
-        return resolveTimezone(location.timezone);
-    }, [location.timezone]);
+		setLocalLocation(prev => ({
+			...prev,
+			lat,
+			lon
+		}));
 
+		setMapView({
+			bbox,
+			zoom: currentZoom
+		});
+	}, []);
 
-    //Håndterer endringer i kartet (panorering/zooming).
-    const onMapChange = useCallback((lat, lon, bbox, currentZoom) => {
-        // Stopper "auto-zoom" med en gang brukeren rører kartet manuelt
-        setBboxToFit(null); 
+	//Henting av værdata for kartutsnitt
+	useEffect(() => {
+		if (!mapView.bbox || !tz) {
+			return;
+		}
 
-        setLocation(prev => ({
-            ...prev,
-            lat,
-            lon
-        }));
+		let cancelled = false;
+		const minDist = calculateMinDist(mapView.zoom);
 
-        setMapView({
-            bbox,
-            zoom: currentZoom
-        });
-    }, []);
+		const timer = setTimeout(async () => {
 
-    // Henting av værdata basert på nåværende kartutsnitt (med debounce)
-    useEffect(() => {
-        if (!mapView.bbox) {
-            return;
-        }
+			setIsLoading(true);
+			try {
+				const points = await getMapWeatherUseCase.execute(
+					mapView.bbox,
+					tz,
+					minDist
+				);
 
-        let cancelled = false;
-        const minDist = calculateMinDist(mapView.zoom);
+				if (!cancelled) {
+					setWeatherPoints(points);
+				}
+			} 
+			
+			catch (error) {
+				console.error("Feil ved henting av kartvær:", error);
+			} 
+			
+			finally {
+				if (!cancelled) {
+					setIsLoading(false);
+				}
+			}
+		}, DEBOUNCE_DELAY_MS);
 
-        const timer = setTimeout(async () => {
-            setIsLoading(true);
-            try {
-                const points = await getMapWeatherUseCase.execute(
-                    mapView.bbox,
-                    tz,
-                    minDist
-                );
+		return () => {
+			cancelled = true;
+			clearTimeout(timer);
+		};
+	}, 
 
-                if (!cancelled) {
-                    setWeatherPoints(points);
-                }
-            } 
-            
-            catch (error) {
-                console.error("Feil ved henting av kartvær:", error);
-            } 
-            
-            finally {
-                if (!cancelled) {
-                    setIsLoading(false);
-                }
-            }
-        }, DEBOUNCE_DELAY_MS);
+	[mapView.bbox, mapView.zoom, tz, getMapWeatherUseCase]);
 
-        return () => {
-            cancelled = true;
-            clearTimeout(timer);
-        };
+	return {
+		apiKey,
+		style,
+		zoom: mapView.zoom,
+		bboxToFit,
+		location: localLocation,
+		mapCenter: { lat: localLocation.lat, lon: localLocation.lon },
+		weatherPoints,
+		isLoading,
+		onMapChange,
 
-    }, 
-    [mapView.bbox, mapView.zoom, tz, getMapWeatherUseCase]);
+		query: searchViewModel.query,
+		suggestions: searchViewModel.suggestions,
+		onSearchChange: searchViewModel.onSearchChange,
 
-    return {
-        apiKey,
-        style,
+		onSuggestionSelected: (selected) => {
+			onLocationChange(selected);
+			searchViewModel.onSuggestionSelected(selected);
+			
+			if (selected.type === "country") {
+				setBboxToFit(null);
+				setMapView(prev => ({ 
+					...prev, zoom: COUNTRY_ZOOM
+				}));
+			} 
+			
+			else if (selected.bounds) {
+				const bbox = [
+					selected.bounds.southwest.lng,
+					selected.bounds.southwest.lat,
+					selected.bounds.northeast.lng,
+					selected.bounds.northeast.lat
+				];
+				setBboxToFit(bbox);
+			} 
+			
+			else {
+				setBboxToFit(null);
+				setMapView(prev => ({ ...prev, zoom: INIT_ZOOM }));
+			}
+		},
 
-        zoom: mapView.zoom,
-        bboxToFit,
-
-        location,
-        mapCenter: { lat: location.lat, lon: location.lon },
-
-        weatherPoints,
-        isLoading,
-        onMapChange,
-
-        // Search-stafett til View
-        query: searchViewModel.query,
-        suggestions: searchViewModel.suggestions,
-        onSearchChange: searchViewModel.onSearchChange,
-
-        onSuggestionSelected: (selected) => {
-            // Oppdater global state i App.jsx
-            onLocationChange(selected);
-            
-            // Oppdater lokal søke-state
-            searchViewModel.onSuggestionSelected(selected);
-            
-            // Logikk for utsnitt basert på trefftype
-            if (selected.type === "country") {
-                setBboxToFit(null);
-                setMapView(prev => ({ ...prev, zoom: COUNTRY_ZOOM }));
-            } 
-
-            else if (selected.bounds) {
-                const bbox = [
-                    selected.bounds.southwest.lng,
-                    selected.bounds.southwest.lat,
-                    selected.bounds.northeast.lng,
-                    selected.bounds.northeast.lat
-                ];
-                setBboxToFit(bbox);
-            } 
-
-            else {
-                setBboxToFit(null);
-                setMapView(prev => ({ ...prev, zoom: INIT_ZOOM }));
-            }
-        },
-
-        onResetToDeviceLocation: () => {
-            setBboxToFit(null);
-            setMapView(prev => ({ ...prev, zoom: INIT_ZOOM }));
-            
-            // Kaller den globale reset-funksjonen i App.jsx
-            onResetToDeviceLocation();
-            
-            searchViewModel.onResetLocation(initialLat, initialLon);
-        }
-    };
+		onResetToDeviceLocation: () => {
+			setBboxToFit(null);
+			setMapView(prev => ({ ...prev, zoom: INIT_ZOOM }));
+			onResetToDeviceLocation();
+			searchViewModel.onResetLocation();
+		}
+	};
 }

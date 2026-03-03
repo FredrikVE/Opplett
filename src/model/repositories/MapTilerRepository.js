@@ -6,6 +6,7 @@ export default class MapTilerRepository {
         this.dataSource = mapTilerDataSource;
     }
 
+    //Privat hjelpemetode for å sikre gyldige koordinater (felles for alle kall)
     #sanitize(lat, lon) {
         return {
             lat: Math.max(-90, Math.min(90, Number(lat))),
@@ -22,35 +23,19 @@ export default class MapTilerRepository {
         
         return raw.map(item => {
             const sanitized = this.#sanitize(item.lat, item.lon);
-            const apiTimezone = item.timezone; 
-            const lookupTimezone = tzLookup(sanitized.lat, sanitized.lon);
-
-            let finalTz = apiTimezone || lookupTimezone;
-
-            // --- DEN NYE, SMARTERE DATOLINJE-VAKTPOSTEN ---
             
-            // Vi sjekker om stedsnavnet inneholder "Amerikansk Samoa" eller "American Samoa"
-            const isAmericanSamoa = item.name.toLowerCase().includes("samoa") && 
-                                   (item.name.toLowerCase().includes("amerikansk") || 
-                                    item.name.toLowerCase().includes("american"));
-
-            // Hvis det ER Amerikansk Samoa, men tz-lookup tror det er Apia (+13): Tving til Pago Pago (-11)
-            if (isAmericanSamoa && finalTz === "Pacific/Apia") {
-                finalTz = "Pacific/Pago_Pago";
-            } 
-            
-            // Hvis det IKKE er Amerikansk Samoa (altså selvstendige Samoa), 
-            // men longitude er i området, stoler vi på at Apia (+13) er riktig.
-            // Dette sørger for at Apia-søket ditt forblir på onsdag 4. mars.
-
+            //Vi sender med tidssonen fra API-et hvis den finnes, 
+            //men vi utfører ikke lenger "Samoa-vaktposten" her.
+            //Den jobben gjøres nå sentralt i App.jsx / resolveTimezone.
             return {
                 ...item,
                 ...sanitized,
-                timezone: finalTz
+                timezone: item.timezone || tzLookup(sanitized.lat, sanitized.lon)
             };
         });
     }
 
+    //Reverse geocoding ved å søke på koordinater som tekst
     async getCoordinates(lat, lon) {
         const query = `${lon},${lat}`; 
         const results = await this.getSuggestions(query, null);
@@ -63,12 +48,11 @@ export default class MapTilerRepository {
 
         return rawData.features.map(f => {
             const coords = this.#sanitize(f.center[1], f.center[0]);
-            // For markører i kartet bruker vi land-sjekk her også hvis nødvendig,
-            // men ofte er f.text (navnet) nok til å kjøre samme logikk.
+            
             return {
                 name: f.text,
                 ...coords,
-                timezone: tzLookup(coords.lat, coords.lon)
+                timezone: tzLookup(coords.lat, coords.lon)       // Enkel lookup for kart-punkter
             };
         });
     }

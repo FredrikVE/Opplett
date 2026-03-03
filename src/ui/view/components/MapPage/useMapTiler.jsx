@@ -1,18 +1,23 @@
-// src/ui/view/components/MapPage/useMapTiler.jsx
+//src/ui/view/components/MapPage/useMapTiler.jsx
 import { useEffect, useRef } from "react";
 import * as maptilersdk from "@maptiler/sdk";
 import { createRoot } from "react-dom/client";
 import WeatherSymbolLabel from "./WeatherSymbolLabel.jsx";
 
-export function useMapTiler({ apiKey, style, lat, lon, zoom, bboxToFit, weatherPoints, onMapChange, onLocationClick }) {
-
+export function useMapTiler(props) {
+    const { apiKey, style, lat, lon, zoom, bboxToFit, weatherPoints, onMapChange, onLocationClick } = props;
     const mapContainerRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const markersRef = useRef([]);
+    
+    //En vaktpost for å hindre uendelige løkker mellom kartet og state
+    const isProgrammaticMove = useRef(false);
 
-    // 1. Initialisering av kartet
+    //Initialisering av kart én gang
     useEffect(() => {
-        if (!mapContainerRef.current || mapInstanceRef.current) return;
+        if (!mapContainerRef.current || mapInstanceRef.current) {
+            return;
+        }
 
         maptilersdk.config.apiKey = apiKey;
 
@@ -24,24 +29,23 @@ export function useMapTiler({ apiKey, style, lat, lon, zoom, bboxToFit, weatherP
             attributionControl: false
         });
 
-        // Lytter på bevegelser for å synkronisere state tilbake til ViewModel
         map.on("moveend", () => {
+            //Hvis det var vi som flyttet kartet programmatisk, 
+            //trenger vi ikke rapportere endringen tilbake som en "ny" lokasjon.
+            if (isProgrammaticMove.current) {
+                isProgrammaticMove.current = false;
+                return;
+            }
+
             const center = map.getCenter();
             const bounds = map.getBounds();
-
-            // Normaliserer Lng slik at den alltid er mellom -180 og 180 (fikser 400 Bad Request)
-            const wrappedLng = center.lng.valueOf(); 
+            const wrappedLng = center.lng.valueOf();
             const normalizedLng = ((wrappedLng + 180) % 360 + 360) % 360 - 180;
 
             onMapChange(
                 center.lat,
                 normalizedLng,
-                [
-                    bounds.getWest(),
-                    bounds.getSouth(),
-                    bounds.getEast(),
-                    bounds.getNorth()
-                ],
+                [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()],
                 map.getZoom()
             );
         });
@@ -54,36 +58,41 @@ export function useMapTiler({ apiKey, style, lat, lon, zoom, bboxToFit, weatherP
                 mapInstanceRef.current = null;
             }
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // 2. Håndtering av Bounding Box (Byer/Regioner)
+    //HÅNDTERING AV BOUNDING BOX (BYER/REGIONER)
     useEffect(() => {
         const map = mapInstanceRef.current;
-        // Vi fjerner zoom fra avhengigheter for å unngå loop ved manuell zooming
-        if (!map || !bboxToFit) return;
+        if (!map || !bboxToFit) {
+            return;
+        }
 
+        isProgrammaticMove.current = true;
         map.fitBounds(
-            [
-                [bboxToFit[0], bboxToFit[1]],
-                [bboxToFit[2], bboxToFit[3]]
-            ],
-            {
-                padding: 60,
-                duration: 1000,
-                maxZoom: 12 
-            }
+            [[bboxToFit[0], bboxToFit[1]], [bboxToFit[2], bboxToFit[3]]],
+            { padding: 60, duration: 1000, maxZoom: 12 }
         );
+    }, [bboxToFit]);
 
-    }, [bboxToFit]); // Triggers kun når et nytt sted med grenser velges
-
-    // 3. Programmatisk flytting (Land-søk / Reset / Enkeltpunkter)
+    // 3. PROGRAMMATISK FLYTTING (SØK / RESET)
     useEffect(() => {
         const map = mapInstanceRef.current;
-        if (!map || lat == null || lon == null) return;
-        
-        // Vi flyr bare hvis vi IKKE har en bounding box (unngår konflikt med useEffect #2)
-        if (!bboxToFit) {
+        if (!map || lat == null || lon == null || bboxToFit) {
+            return;
+        }
+
+        const center = map.getCenter();
+        const currentLat = center.lat;
+        const currentLon = ((center.lng + 180) % 360 + 360) % 360 - 180;
+
+        //Vi flyr kun hvis avviket er merkbart (f.eks. nytt søk)
+        const threshold = 0.001; 
+        const hasMovedSignificantly = 
+            Math.abs(currentLat - lat) > threshold || 
+            Math.abs(currentLon - lon) > threshold;
+
+        if (hasMovedSignificantly) {
+            isProgrammaticMove.current = true;
             map.flyTo({
                 center: [lon, lat],
                 zoom: zoom,
@@ -91,33 +100,38 @@ export function useMapTiler({ apiKey, style, lat, lon, zoom, bboxToFit, weatherP
                 essential: true
             });
         }
+    }, 
+    [lat, lon, zoom, bboxToFit]);
 
-    }, [lat, lon, zoom, bboxToFit]);
-
-    // 4. Oppdatering av værmarkører med klikk-støtte
+    // 4. VÆRMARKØRER
     useEffect(() => {
         const map = mapInstanceRef.current;
-        if (!map) return;
+        if (!map) {
+            return;
+        }
 
-        // Rens gamle markører fra kartet og minnet
+        // Rydd opp eksisterende markører
         markersRef.current.forEach(m => m.remove());
         markersRef.current = [];
 
+        // Tegn nye
         markersRef.current = weatherPoints.map(point => {
             const container = document.createElement("div");
-            container.style.cursor = "pointer";
+            container.className = "map-marker-wrapper";
             
-            // Klikkhåndtering for å navigere til værvarsel-siden
-            container.onclick = (e) => {
-                e.stopPropagation(); 
+            container.onclick = (event) => {
+
+                event.stopPropagation();
+
                 if (onLocationClick) {
+                    // Her sender vi med hele lokasjonsobjektet slik at App.jsx kan sette manualLocation
                     onLocationClick({
                         lat: point.lat,
                         lon: point.lon,
-                        name: point.name || "Valgt fra kart",
+                        name: point.name,
                         timezone: point.timezone,
                         type: point.type,
-                        bounds: point.bounds 
+                        bounds: point.bounds
                     });
                 }
             };
@@ -132,7 +146,8 @@ export function useMapTiler({ apiKey, style, lat, lon, zoom, bboxToFit, weatherP
             return marker;
         });
 
-    }, [weatherPoints, onLocationClick]);
+    }, 
+    [weatherPoints, onLocationClick]);
 
     return mapContainerRef;
 }
