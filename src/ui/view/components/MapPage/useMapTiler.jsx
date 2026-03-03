@@ -11,7 +11,7 @@ export function useMapTiler(props) {
     const markersRef = useRef([]);
     const isProgrammaticMove = useRef(false); //En vaktpost for å hindre uendelige løkker mellom kartet og state
 
-    //Initialiser karte én gang
+    //Initialiser kartet karte én gang
     useEffect(() => {
         if (!mapContainerRef.current || mapInstanceRef.current) {
             return;
@@ -77,8 +77,8 @@ export function useMapTiler(props) {
                 mapInstanceRef.current = null;
             }
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+            //eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); //Tom dependency array slik at ikke useEffect lyter til noe
 
 
     //Håndtering av bbox-grender for omkringliggende steder (F.eks. ved søk på byer eller regioner)
@@ -133,11 +133,11 @@ export function useMapTiler(props) {
                 essential: true
             });
 
-            // Når fly-to er ferdig, tvinger vi en oppdatering av bbox for å hente vær
+            //Når fly-to er ferdig, tvinger vi en oppdatering av bbox for å hente vær
             map.once("moveend", () => {
                 const bounds = map.getBounds();
                 
-                //Vi pakker ut det endelige utsnittet i formatet [Vest, Sør, Øst, Nord]
+                //Pakker ut det endelige utsnittet i formatet [Vest, Sør, Øst, Nord]
                 const finalBbox = [
                     bounds.getWest(), 
                     bounds.getSouth(), 
@@ -145,13 +145,8 @@ export function useMapTiler(props) {
                     bounds.getNorth()
                 ];
 
-                // Vi henter det endelige zoom-nivået etter at animasjonen er ferdig
-                const finalZoom = map.getZoom();
-
-                // Vi sender den oppdaterte tilstanden til ViewModel.
-                // Siden ViewModel satte bbox til 'null' ved starten av flyttingen,
-                // vil denne nye verdien tvinge frem et friskt API-kall for vær.
-                onMapChange(lat, lon, finalBbox, finalZoom);
+                const finalZoom = map.getZoom();                //Vi henter det endelige zoom-nivået etter at animasjonen er ferdig
+                onMapChange(lat, lon, finalBbox, finalZoom);   //Sender oppdaterte tilstand til ViewModel for nytt API-kall for værikoner.
             });
         }
     }, [lat, lon, zoom, bboxToFit, onMapChange]);
@@ -163,11 +158,11 @@ export function useMapTiler(props) {
             return;
         }
 
-        // Rydd opp eksisterende markører
+        //Rydd opp og fjerner eksisterende vær-labler
         markersRef.current.forEach(m => m.remove());
         markersRef.current = [];
 
-        // Tegn nye markører basert på weatherPoints
+        //Tegner nye vær-labels
         markersRef.current = weatherPoints.map(point => {
             const container = document.createElement("div");
             container.className = "map-marker-wrapper";
@@ -175,6 +170,7 @@ export function useMapTiler(props) {
             
             container.onclick = (event) => {
                 event.stopPropagation();
+
                 if (onLocationClick) {
                     onLocationClick({
                         lat: point.lat,
