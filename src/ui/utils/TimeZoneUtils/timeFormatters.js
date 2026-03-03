@@ -1,75 +1,66 @@
-//src/ui/utils/TimeZoneUtils/timeFormatters.js
+// src/ui/utils/TimeZoneUtils/timeFormatters.js
+import { DateTime } from "luxon";
+
 const UI_LOCALE = "nb-NO";
 
-//Finn aktiv tidssone med fallback
 export function resolveTimezone(explicitTz) {
-    if (explicitTz) {
-        return explicitTz;
-    }
-
-    //return null; // ingen magisk fallback her
-    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return explicitTz || DateTime.local().zoneName;
 }
 
-//HH:mm i lokal tid
+/**
+ * HH:mm i lokal tid. 
+ */
 export function formatToLocalTime(isoString, tz) {
-    if (!isoString) {
-        return "--:--";
+    if (!isoString) return "--:--";
+
+    const dt = DateTime.fromISO(isoString).setZone(tz).setLocale(UI_LOCALE);
+    
+    // DEBUG: Fjern denne når alt stemmer
+    if (tz.includes("Chatham") || tz.includes("Kathmandu")) {
+        console.log(`[TZ DEBUG] ${tz}: ISO ${isoString} -> Lokal ${dt.toFormat("HH:mm")} (Offset: ${dt.offset})`);
     }
 
-    return new Date(isoString).toLocaleTimeString(UI_LOCALE, {
-        timeZone: tz,
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false
-    });
+    return dt.toFormat("HH:mm");
 }
 
+/**
+ * Time (0–23) i lokal tid.
+ */
+export function getLocalHour(zuluTime, tz) {
+    if (!zuluTime) return 0;
+    return DateTime.fromISO(zuluTime).setZone(tz).hour;
+}
 
-//Dagsetikett: "Mandag 12. feb"
+/**
+ * Dagsetikett: "Mandag 12. feb"
+ */
 export function formatToLocalDateLabel(isoString, tz) {
-    const label = new Date(isoString).toLocaleDateString(UI_LOCALE, {
-        weekday: "long",
-        day: "numeric",
-        month: "short",
-        timeZone: tz
-    });
-
-    // Kapitaliser første bokstav (nb-NO gir små bokstaver)
+    if (!isoString) return "";
+    const dt = DateTime.fromISO(isoString).setZone(tz).setLocale(UI_LOCALE);
+    const label = dt.toFormat("cccc d. MMM");
     return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
-
-//Kort dato: "man. 12. feb"
+/**
+ * Kort dato: "man. 12. feb"
+ */
 export function formatLocalDate(zuluTime, tz) {
-    return new Date(zuluTime).toLocaleDateString(UI_LOCALE, {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-        timeZone: tz
-    });
+    if (!zuluTime) return "";
+    return DateTime.fromISO(zuluTime).setZone(tz).setLocale(UI_LOCALE).toFormat("ccc d. MMM");
 }
 
-
- //Time (0–23) i lokal tid
-export function getLocalHour(zuluTime, tz) {
-    return Number(
-        new Date(zuluTime).toLocaleTimeString(UI_LOCALE, {
-            timeZone: tz,
-            hour: "numeric",
-            hour12: false
-        })
-    );
-}
-
-//Full dato og klokkeslett
+/**
+ * Full dato og klokkeslett
+ */
 export function formatLocalDateTime(timestampMs, tz) {
-    return new Date(timestampMs).toLocaleString(UI_LOCALE, {
-        timeZone: tz,
-        weekday: "long",
-        day: "numeric",
-        month: "short",
-        hour: "2-digit",
-        minute: "2-digit"
-    });
+    if (!timestampMs) return "";
+
+    let dt;
+    if (typeof timestampMs === "number") {
+        dt = DateTime.fromMillis(timestampMs).setZone(tz);
+    } else {
+        dt = DateTime.fromISO(timestampMs).setZone(tz);
+    }
+
+    return dt.setLocale(UI_LOCALE).toFormat("cccc d. MMM HH:mm");
 }
