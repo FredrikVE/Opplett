@@ -126,6 +126,30 @@ class LocationForecastRepositoryTestSuite {
     }
 
 
+    async testPagoPagoDate() {
+        const tz = "Pacific/Pago_Pago";
+        
+        // Vi setter "Nå" til Tirsdag kl 12:15 i Oslo
+        // Dette tilsvarer Tirsdag kl 00:15 i Pago Pago
+        this.fixedNow = DateTime.fromObject(
+            { year: 2026, month: 3, day: 3, hour: 12, minute: 15 }, 
+            { zone: "Europe/Oslo" }
+        );
+        
+        const result = await this.repo.getHourlyForecast(-14.2, -170.7, 1, tz);
+
+        console.log(`--- [PAGO PAGO DEBUG] ---`);
+        console.log(`Tid i Oslo: ${this.fixedNow.setZone("Europe/Oslo").toString()}`);
+        console.log(`Tid i Pago Pago: ${this.fixedNow.setZone(tz).toString()}`);
+        console.log(`Resultat dato: ${result[0].dateISO}`);
+        console.log(`Resultat time: ${result[0].localTime}`);
+
+        // ASSERT: Det skal fortsatt være 3. mars i Pago Pago
+        assert.strictEqual(result[0].dateISO, "2026-03-03", "Det skal være tirsdag i Pago Pago");
+        assert.strictEqual(result[0].localTime, 0, "Klokken skal være midnatt (00)");
+    }
+
+
 
     async run() {
         await this.testGetHourlyForecast();
@@ -136,6 +160,7 @@ class LocationForecastRepositoryTestSuite {
         await this.testTimezoneHalfHour();
         await this.testBufferThreshold();
         await this.testMidnightBoundary();
+        await this.testPagoPagoDate();
     }
 }
 
