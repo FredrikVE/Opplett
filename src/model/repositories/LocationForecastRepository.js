@@ -1,3 +1,4 @@
+// src/model/repositories/LocationForecastRepository.js
 import { DateTime } from "luxon";
 
 export default class LocationForecastRepository {
@@ -20,7 +21,7 @@ export default class LocationForecastRepository {
         }
 
         const res = await this.datasource.fetchLocationForecast(cleanLat, cleanLon);
-        const ts = res.properties.timeseries.slice(0, hoursAhead + 6);
+        const ts = res.properties.timeseries.slice(0, hoursAhead + 6);                   // Henter litt ekstra data (hoursAhead + 6) for å sikre nok data etter startIndex-forskyvning
 
         this.cache.set(key, ts);
         return ts;
@@ -30,7 +31,9 @@ export default class LocationForecastRepository {
         const hourly = await this.getHourlyForecast(lat, lon, 1, timeZone);
         const now = hourly[0];
 
-        if (!now) return null;
+        if (!now) {
+            return null;
+        }
 
         return {
             weatherSymbol: now.weatherSymbol,
@@ -44,21 +47,13 @@ export default class LocationForecastRepository {
         };
     }
 
-    //HOVEDMETODER FOR FORECAST
+    //HOVEDMETODE FOR FORECAST
     async getHourlyForecast(lat, lon, hoursAhead, timeZone) {
         const timeseries = await this.#getTimeseries(lat, lon, hoursAhead);
         const now = DateTime.now().setZone(timeZone);
 
-        // --- LEGG INN DENNE LOGGEN HER ---
-        if (timeZone.includes("Pago_Pago")) {
-            console.log("--- [PAGO PAGO DEBUG START] ---");
-            console.log("Lokal tid i Pago Pago nå:", now.toString());
-            console.log("Første timestamp fra API (UTC):", timeseries[0].time);
-            console.log("Første timestamp konvertert til Pago Pago:", 
-                DateTime.fromISO(timeseries[0].time).setZone(timeZone).toString());
-        }
-        // ---------------------------------
-
+        // FINN RIKTIG STARTPUNKT (startIndex)
+        // Vi beholder timen vi er inne i, men hopper frem hvis det er < 15 min til neste time.
         let startIndex = -1;
         for (let i = 0; i < timeseries.length; i++) {
             const entryStart = DateTime.fromISO(timeseries[i].time).setZone(timeZone);
@@ -68,70 +63,26 @@ export default class LocationForecastRepository {
                 ? DateTime.fromISO(nextEntry.time).setZone(timeZone)
                 : entryStart.plus({ hours: 1 });
 
-            // LOGIKK: Vi beholder timen vi er inne i, 
-            // men hvis det er mindre enn 15 minutter til NESTE time starter, 
-            // så hopper vi frem slik at varselet føles oppdatert.
-    
             const buffer = entryStart.hour === 23 ? 0 : 15;
             if (now < entryEnd.minus({ minutes: buffer })) {
                 startIndex = i;
                 break;
             }
-
-            /*@@@@@@@@
-            // Finn første relevante time
-            let startIndex = 0; // Default til start hvis vi ikke finner noe bedre
-            for (let i = 0; i < timeseries.length; i++) {
-                const entryTime = DateTime.fromISO(timeseries[i].time).setZone(timeZone);
-                const nextEntryTime = timeseries[i+1] 
-                    ? DateTime.fromISO(timeseries[i+1].time).setZone(timeZone)
-                    : entryTime.plus({ hours: 1 });
-
-                // Hvis 'nå' er før slutten på denne timen, har vi funnet startpunktet vårt
-                if (now < nextEntryTime) {
-                    startIndex = i;
-                    break;
-                }
-            }
-            @@@@@@@@@@*/
-        
-
-            /*
-            if (now < entryEnd.minus({ minutes: 15 })) {
-                startIndex = i;
-                break;
-            }
-            */
-        
-            
-            // STRAM LOGIKK: Vis nåværende time helt til den er 100% ferdig.
-            // Hvis kl er 09:59:59, viser den fortsatt 09:00-varselet.
-            /*
-           if (now < entryEnd) {
-                startIndex = i;
-                break;
-            }
-            */
         }
 
-        // Failsafe: hvis nåtid er etter alt i lista, ta siste
-        if (startIndex === -1) startIndex = 0;
-
-        // Debug-print for ekstreme offsets
-        const offsetHours = now.offset / 60;
-        if (Math.abs(offsetHours) > 10 || timeZone.includes("Chatham") || timeZone.includes("Kathmandu") || timeZone.includes("Kolkata")) {
-            console.log(`--- [TZ DEBUG] ${timeZone} ---`);
-            console.log("Lokal tid nå:", now.toString());
-            console.log("Første relevante time i liste:", DateTime.fromISO(timeseries[startIndex].time).setZone(timeZone).toString());
+        if (startIndex === -1) {
+            startIndex = 0;
         }
 
+        // STRUKTURER DATA (Mapping)
         const effectiveSeries = timeseries.slice(startIndex, startIndex + hoursAhead);
-
         const hourly = [];
+
         for (const entry of effectiveSeries) {
             const timeISO = entry.time;
             const dt = DateTime.fromISO(timeISO).setZone(timeZone);
             
+            // Bruker Luxon direkte for utledede verdier (fjerner behov for Date-hacks)
             const dateISO = dt.toISODate(); 
             const localTime = dt.hour;
             const localMinute = dt.minute;
@@ -206,12 +157,13 @@ export default class LocationForecastRepository {
         return dailySummary;
     }
 
-    // --- PRIVATE HJELPEMETODER (Main Branch Logikk) ---
-
+    //PRIVATE HJELPEMETODER FOR BEREGNING ---
     #groupHoursByDate(hourlyForecast) {
         const result = {};
         for (const hour of hourlyForecast) {
-            if (!result[hour.dateISO]) result[hour.dateISO] = [];
+            if (!result[hour.dateISO]) {
+                result[hour.dateISO] = [];
+            }
             result[hour.dateISO].push(hour);
         }
         return result;
@@ -219,7 +171,9 @@ export default class LocationForecastRepository {
 
     #calculateMinMaxTemp(hours) {
         const temps = [];
-        for (const h of hours) temps.push(h.temp);
+        for (const h of hours) {
+            temps.push(h.temp);
+        }
         return {
             minTemp: Math.round(Math.min(...temps)),
             maxTemp: Math.round(Math.max(...temps))
@@ -230,7 +184,10 @@ export default class LocationForecastRepository {
         let best = null;
         let minDiff = Infinity;
         for (const h of hours) {
-            if (!h.precipitation6h) continue;
+            if (!h.precipitation6h) {
+                continue;
+            }
+
             const diff = Math.abs(h.localTime - targetHour);
             if (diff < minDiff) {
                 minDiff = diff;
@@ -247,7 +204,9 @@ export default class LocationForecastRepository {
         const blocks = [];
 
         for (const t of targets) {
+
             const best = this.#getBestHourWith6hPrecipAt(hours, t);
+
             if (best && !used.has(best.timeISO)) {
                 used.add(best.timeISO);
                 blocks.push(best.precipitation6h);
@@ -260,45 +219,55 @@ export default class LocationForecastRepository {
                 min += p.min ?? 0;
                 max += p.max ?? 0;
             }
-            return {
-                total: Number(total.toFixed(1)),
-                min: Number(min.toFixed(1)),
-                max: Number(max.toFixed(1))
-            };
+        } 
+        
+        else {
+            for (const h of hours) {
+                total += h.precipitation?.amount ?? 0;
+                min += h.precipitation?.min ?? 0;
+                max += h.precipitation?.max ?? 0;
+            }
         }
-
-        for (const h of hours) {
-            total += h.precipitation?.amount ?? 0;
-            min += h.precipitation?.min ?? 0;
-            max += h.precipitation?.max ?? 0;
-        }
-        return { total: Number(total.toFixed(1)), min: Number(min.toFixed(1)), max: Number(max.toFixed(1)) };
+        return { 
+            total: Number(total.toFixed(1)), 
+            min: Number(min.toFixed(1)), 
+            max: Number(max.toFixed(1)) 
+        };
     }
 
     #calculateAvgWind(hours) {
         const winds = [];
         for (const h of hours) {
-            if (h.localTime >= 9 && h.localTime <= 18) winds.push(h.wind);
+            if (h.localTime >= 9 && h.localTime <= 18) {
+                winds.push(h.wind);
+            }
         }
         if (winds.length === 0) {
             for (const h of hours) winds.push(h.wind);
         }
-        if (winds.length === 0) return 0;
+
+        if (winds.length === 0) {
+            return 0;
+        }
 
         winds.sort((a, b) => a - b);
+
         return Math.ceil(winds[Math.floor(winds.length * 0.75)]);
     }
 
     #getSymbolAtSpecificHour(hours, targetHour) {
         let best = null;
         let minDiff = Infinity;
+
         for (const h of hours) {
+
             const diff = Math.abs(h.localTime - targetHour);
             if (diff < minDiff) {
                 minDiff = diff;
                 best = h;
             }
         }
+
         return minDiff <= 3 ? best?.weatherSymbol ?? null : null;
     }
 }
