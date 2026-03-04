@@ -11,12 +11,12 @@ function calculateMinDist(zoom) {
 	return 0.001;
 }
 
-export default function useMapPageViewModel(mapTilerRepository, searchLocationUseCase, getMapWeatherUseCase, activeLocation, onLocationChange, onResetToDeviceLocation) {
-	const INIT_ZOOM = 12;
-	const COUNTRY_ZOOM = 3; 
-	const DEBOUNCE_DELAY_MS = 500;
+export default function useMapPageViewModel( mapTilerRepository, searchLocationUseCase, getMapWeatherUseCase, activeLocation, onLocationChange, onResetToDeviceLocation) {
+    const DEFAULT_ZOOM = 12;      // Standard zoom for byer/tettsteder
+    const COUNTRY_ZOOM = 3;    // Oversiktszoom for land
+    const DEBOUNCE_DELAY_MS = 500;
 
-	const [mapView, setMapView] = useState({ bbox: null, zoom: INIT_ZOOM });
+	const [mapView, setMapView] = useState({ bbox: null, zoom: DEFAULT_ZOOM });
 	const [bboxToFit, setBboxToFit] = useState(null);
 	
 	//Vi holder på en lokal kopi av lokasjonen for å støtte umiddelbar feedback ved panorering,
@@ -121,36 +121,48 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 		suggestions: searchViewModel.suggestions,
 		onSearchChange: searchViewModel.onSearchChange,
 
-		onSuggestionSelected: (selected) => {
-			onLocationChange(selected);
-			searchViewModel.onSuggestionSelected(selected);
-			
-			if (selected.type === "country") {
-				setBboxToFit(null);
-				setMapView(prev => ({ 
-					...prev, zoom: COUNTRY_ZOOM
-				}));
-			} 
-			
-			else if (selected.bounds) {
-				const bbox = [
-					selected.bounds.southwest.lng,
-					selected.bounds.southwest.lat,
-					selected.bounds.northeast.lng,
-					selected.bounds.northeast.lat
-				];
-				setBboxToFit(bbox);
-			} 
-			
-			else {
-				setBboxToFit(null);
-				setMapView(prev => ({ ...prev, zoom: INIT_ZOOM }));
-			}
-		},
+
+        onSuggestionSelected: (selected) => {
+            onLocationChange(selected);
+            searchViewModel.onSuggestionSelected(selected);
+            
+            if (selected.type === "country") {
+                // For land: Zoom ut til nivå 3
+                setBboxToFit(null);
+                setMapView(prev => ({ 
+                    ...prev, 
+                    zoom: COUNTRY_ZOOM
+                }));
+            } 
+
+            else if (selected.bounds) {
+                // For byer/regioner med definert grense: Bruk bboxToFit.
+                // Kartet vil automatisk zoome inn (max 12 pga fitBounds-innstilling i useMapTiler)
+                const bbox = [
+                    selected.bounds.southwest.lng,
+                    selected.bounds.southwest.lat,
+                    selected.bounds.northeast.lng,
+                    selected.bounds.northeast.lat
+                ];
+                setBboxToFit(bbox);
+                // Vi setter også zoom i state for å være konsistente
+                setMapView(prev => ({ ...prev, zoom: DEFAULT_ZOOM }));
+            } 
+
+            else {
+                // For spesifikke punkt/steder uten bounds: 
+                // Tving zoom tilbake til 12 for å unngå at vi blir hengende i "land-zoom"
+                setBboxToFit(null);
+                setMapView(prev => ({ 
+                    ...prev, 
+                    zoom: DEFAULT_ZOOM 
+                }));
+            }
+        },
 
 		onResetToDeviceLocation: () => {
 			setBboxToFit(null);
-			setMapView({ bbox: null, zoom: INIT_ZOOM });
+			setMapView({ bbox: null, zoom: DEFAULT_ZOOM });
 			setLocalLocation(activeLocation);     // reset lokal kartposisjon
 			onResetToDeviceLocation();			  // reset global SSOT
 			searchViewModel.onResetLocation();
