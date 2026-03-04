@@ -1,4 +1,4 @@
-// src/ui/utils/MapUtils/MapWeatherIconSpread.js
+//src/ui/utils/MapUtils/MapWeatherIconSpread.js
 import { MAP_ZOOM_LEVELS } from "./MapZoomLevels";
 
 export function calculateWeatherIconSpread(zoom) {
