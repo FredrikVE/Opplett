@@ -1,4 +1,4 @@
-// src/ui/view/components/MapPage/useMapTiler.jsx
+//src/ui/view/components/MapPage/useMapTiler.jsx
 import { useEffect, useRef } from "react";
 import * as maptilersdk from "@maptiler/sdk";
 import { createRoot } from "react-dom/client";
@@ -24,8 +24,19 @@ export function useMapTiler(props) {
             style,
             center: [Number(lon), Number(lat)],
             zoom: Number(zoom),
-            attributionControl: false
+            attributionControl: false,
+            //navigationControl: false
+            navigationControl: {showCompass: false}
         });
+
+        map.addControl(
+            new maptilersdk.NavigationControl({
+                showZoom: true,
+                showCompass: true,
+                //visualizePitch: true
+            }),
+            "top-right"
+        );
 
         //Synkroniserer kartets startposisjon med ViewModel med en gang stilen er lastet.
         //Dette sikrer at værikonene hentes umiddelbart, uten at brukeren må flytte kartet først.
@@ -43,8 +54,6 @@ export function useMapTiler(props) {
             const currentZoom = map.getZoom();                  //Hent ut nåværende zoom-nivå
             onMapChange(lat, lon, currentBbox, currentZoom);  // Rapporter tilstanden tilbake til ViewModel
         });
-
-        
 
         map.on("moveend", () => {
             // Hvis det var vi som flyttet kartet programmatisk, 
