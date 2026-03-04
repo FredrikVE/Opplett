@@ -52,11 +52,24 @@ export default class MapTilerDataSource {
 
 
     //Henter signifikante steder innenfor et bounding box (BBOX)
+    /*
     async getNearbyPlaces(bbox) {
         const url = new URL(`${this.#baseUrl}/place.json`);
         url.searchParams.set("key", this.#apiKey);
         url.searchParams.set("bbox", bbox.join(","));
         url.searchParams.set("limit", "10");
+
+        return await this.#fetchWithLog(url, "Nearby");
+    }
+    */
+
+    async getNearbyPlaces(bbox) {
+        const url = new URL(`${this.#baseUrl}/place.json`);
+        url.searchParams.set("key", this.#apiKey);
+        url.searchParams.set("bbox", bbox.join(","));
+        // Begrens til betydelige bosetninger
+        url.searchParams.set("types", "city,town,village"); 
+        url.searchParams.set("limit", "10"); // Maks grense for maptiler er 10
 
         return await this.#fetchWithLog(url, "Nearby");
     }

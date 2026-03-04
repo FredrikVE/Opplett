@@ -1,178 +1,139 @@
 // src/model/domain/GetMapWeatherUseCase.js
-export default class GetMapWeatherUseCase {
+import LocationNameFormatter from "../../geolocation/LocationNameFormatter";
 
+export default class GetMapWeatherUseCase {
     constructor(mapTilerRepository, getCurrentWeatherUseCase) {
         this.mapTilerRepository = mapTilerRepository;
         this.getCurrentWeatherUseCase = getCurrentWeatherUseCase;
+        
+        // Injiserer din legacy formatter for stedsnavn
+        this.formatter = new LocationNameFormatter();
 
-        // Kapasitet og begrensninger
+        // Konfigurasjon for distribusjon av ikoner
         this.maxWeatherLocations = 10;
-        this.shuffleBias = 0.5;
-
-        // Definerer rutenett for distribusjon (0.0 til 1.0)
-        const EDGE_OFFSET_NEAR = 0.2;
-        const CENTER_POSITION = 0.5;
-        const EDGE_OFFSET_FAR = 0.8;
-
-        this.gridDistributionSteps = [
-            EDGE_OFFSET_NEAR,
-            CENTER_POSITION,
-            EDGE_OFFSET_FAR
-        ];
-
-        this.randomSpreadFactor = 0.2;
-        this.randomCenterOffset = 0.5;
+        this.gridSteps = [0.2, 0.5, 0.8]; // Ditt 3x3 rutenett
+        this.randomSpreadFactor = 0.1;   // Litt "jitter" for naturlig plassering
     }
 
-    async execute(bbox, timeZone, minDist) {
+    /**
+     * @param {Array} bbox [west, south, east, north]
+     * @param {string} timeZone Tidssone (f.eks "Europe/Oslo")
+     * @param {number} minDist Minimumsavstand mellom ikoner (i grader)
+     * @param {Object} centerCoords Aktiv lokasjon fra SSOT {lat, lon, name}
+     */
+    async execute(bbox, timeZone, minDist, centerCoords = null) {
         try {
-            if (!bbox || !Array.isArray(bbox)) {
-                return [];
+            if (!bbox || !Array.isArray(bbox)) return [];
+
+            // 1. Generer potensielle punkter fra rutenettet (Din motor)
+            let points = this.#generateGridPoints(bbox);
+
+            // 2. Legg til aktiv lokasjon som prioritet (Senter-ankeret)
+            // Vi legger den først i arrayen så den alltid "vinner" i avstandsfilteret
+            if (centerCoords && centerCoords.lat != null) {
+                points.unshift({
+                    lat: centerCoords.lat,
+                    lon: centerCoords.lon,
+                    name: centerCoords.name,
+                    isPriority: true
+                });
             }
 
-            // 1. Hent faktiske steder fra MapTiler (disse er allerede vasket i Repo)
-            let places = await this.mapTilerRepository.getNearbySignificantPlaces(bbox);
-            
-            if (!places) {
-                places = [];
-            }
+            // 3. Filtrer ut punkter som ligger for tett (Avstandssjekk)
+            const uniquePoints = this.#filterPoints(points, minDist);
 
-            // 2. Generer koordinater med naturlig spredning (vaskes internt i metoden)
-            const scatteredPoints = this.#generateScatteredPoints(bbox);
-
-            // 3. Kombiner
-            let combinedPlaces = [...places, ...scatteredPoints];
-
-            // 4. Bruker Fisher–Yates-shuffle
-            this.#shuffle(combinedPlaces);
-
-            // 5. Fjern punkter som ligger for tett (minDist er i grader)
-            const uniquePlaces = this.#filterTooClose(
-                combinedPlaces,
-                minDist,
-                this.maxWeatherLocations
-            );
-
-            // 6. Hent værdata i parallell
-            // getCurrentWeatherUseCase håndterer nå sanitizing før MET-kall via DataSource
+            // 4. Hent vær og stedsnavn i parallell for de utvalgte punktene
             const results = await Promise.all(
-                uniquePlaces.map(async (place) => {
+                uniquePoints.map(async (point) => {
                     try {
+                        // Hent værdata fra MET via UseCase
                         const weather = await this.getCurrentWeatherUseCase.execute({
-                            lat: place.lat,
-                            lon: place.lon,
+                            lat: point.lat,
+                            lon: point.lon,
                             timeZone
                         });
 
-                        if (!weather) {
-                            return null;
+                        if (!weather) return null;
+
+                        let finalName = point.name;
+                        
+                        // Hent og vask navn hvis det mangler (fra grid) eller er generisk
+                        if (!finalName || finalName === "" || finalName === "Min posisjon") {
+                            const locationInfo = await this.mapTilerRepository.getCoordinates(point.lat, point.lon);
+                            
+                            // Bruker din legacy-logikk med flagget "isMapIcon = true".
+                            // Dette sikrer at vi kun får "Mellombølgen", ikke "Mellombølgen, Oslo".
+                            finalName = this.formatter.format(locationInfo, true);
                         }
 
                         return {
                             ...weather,
-                            ...place
+                            ...point,
+                            name: finalName 
                         };
-
-                    } 
-                    catch {
+                    } catch (error) {
+                        console.error("Error fetching data for point in GetMapWeatherUseCase:", error);
                         return null;
                     }
                 })
             );
 
             return results.filter(Boolean);
-
-        } 
-        catch (error) {
+        } catch (error) {
             console.error("Feil i GetMapWeatherUseCase:", error);
             return [];
         }
     }
 
-    // Fisher–Yates shuffle (O(n))
-    #swap(array, indexA, indexB) {
-        [array[indexA], array[indexB]] = [array[indexB], array[indexA]];
-    }
-
-    #shuffle(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            this.#swap(array, i, j)
-        }
-    }
-    
-    #filterTooClose(places, minDist, maxCount) {
-        const filtered = [];
-        const minDistSquared = minDist * minDist;
-        
-        let placeIndex = 0;
-
-        while (placeIndex < places.length && filtered.length < maxCount) {
-            const currentPoint = places[placeIndex];
-
-            if (this.#isDistanceSafe(currentPoint, filtered, minDistSquared)) {
-                filtered.push(currentPoint);
-            }
-
-            placeIndex++;
-        }
-
-        return filtered;
-    }
-
-    #isDistanceSafe(currentPoint, existingPoints, minDistSquared) {
-        for (const existing of existingPoints) {
-            const a = existing.lat - currentPoint.lat;
-            const b = existing.lon - currentPoint.lon;
-            
-            // Pytagoras a² + b² < c²
-            const distanceSquared = a * a + b * b;
-
-            if (distanceSquared < minDistSquared) {
-                return false; 
-            }
-        }
-        return true;
-    }
-
-    #generateScatteredPoints(bbox) {
+    /**
+     * Lager et rutenett med tilfeldig forskyvning
+     * @private
+     */
+    #generateGridPoints(bbox) {
         const [west, south, east, north] = bbox;
-
-        const latitudeSpan = north - south;
-        const longitudeSpan = east - west;
-
+        const latSpan = north - south;
+        const lonSpan = east - west;
         const points = [];
 
-        for (const latStep of this.gridDistributionSteps) {
-            for (const lonStep of this.gridDistributionSteps) {
-
-                const gridPositionLat = south + (latitudeSpan * latStep);
-                const gridPositionLon = west + (longitudeSpan * lonStep);
-
-                const randomOffsetLat =
-                    (Math.random() - this.randomCenterOffset)
-                    * latitudeSpan
-                    * this.randomSpreadFactor;
-
-                const randomOffsetLon =
-                    (Math.random() - this.randomCenterOffset)
-                    * longitudeSpan
-                    * this.randomSpreadFactor;
-
-                // Vasker de genererte koordinatene før de legges til
-                // slik at de holder seg innenfor -180 til 180 og -90 til 90
-                const finalLat = Math.max(-90, Math.min(90, gridPositionLat + randomOffsetLat));
-                const rawLon = gridPositionLon + randomOffsetLon;
-                const finalLon = ((rawLon + 180) % 360 + 360) % 360 - 180;
+        for (const latStep of this.gridSteps) {
+            for (const lonStep of this.gridSteps) {
+                // Beregn grid-posisjon med litt tilfeldig jitter
+                const lat = south + (latSpan * latStep) + (Math.random() - 0.5) * latSpan * this.randomSpreadFactor;
+                const lon = west + (lonSpan * lonStep) + (Math.random() - 0.5) * lonSpan * this.randomSpreadFactor;
 
                 points.push({
-                    lat: finalLat,
-                    lon: finalLon,
-                    name: ""
+                    lat: Math.max(-90, Math.min(90, lat)),
+                    lon: ((lon + 180) % 360 + 360) % 360 - 180,
+                    name: "" 
                 });
             }
         }
+        // Shuffle rutenettet så vi ikke alltid prioriterer samme hjørne av kartet
+        return points.sort(() => Math.random() - 0.5);
+    }
 
-        return points;
+    /**
+     * Fjerner punkter som ligger for nær hverandre
+     * @private
+     */
+    #filterPoints(points, minDist) {
+        const filtered = [];
+        const minDistSq = minDist * minDist;
+
+        for (const point of points) {
+            if (filtered.length >= this.maxWeatherLocations) break;
+
+            const isTooClose = filtered.some(existing => {
+                const dLat = existing.lat - point.lat;
+                const dLon = existing.lon - point.lon;
+                return (dLat * dLat + dLon * dLon) < minDistSq;
+            });
+
+            // Behold punktet hvis det er trygt eller prioritert
+            if (!isTooClose || point.isPriority) {
+                filtered.push(point);
+            }
+        }
+        return filtered;
     }
 }

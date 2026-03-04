@@ -70,7 +70,8 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 				const points = await getMapWeatherUseCase.execute(
 					mapView.bbox,
 					tz,
-					minDist
+					minDist,
+					activeLocation
 				);
 
 				if (!cancelled) {

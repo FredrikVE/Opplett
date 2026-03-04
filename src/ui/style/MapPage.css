@@ -42,46 +42,107 @@
 /* --- Loading overlay --- */
 .map-loading-overlay {
     position: absolute;
-    inset: 0; /* top:0 right:0 bottom:0 left:0 */
+    inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.25); /* dimmer kartet */
+    background: rgba(0, 0, 0, 0.25);
     z-index: 10;
-    pointer-events: none; /* lar kartet fortsatt være interaktivt */
+    pointer-events: none;
+}
+
+/* --- Zoom Indicator --- */
+.zoom-indicator {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 5;
+    border: 1px solid rgba(0,0,0,0.1);
 }
 
 /* --- Værmarkør på kartet --- */
 .map-weather-marker {
     filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
-    transition: transform 0.2s ease-out;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    /* Forankrer markøren sentralt over koordinatet */
+    transform: translate(-50%, -50%);
+    will-change: transform;
 }
 
 .map-weather-marker:hover {
-    transform: scale(1.1);
+    transform: translate(-50%, -50%) scale(1.1);
     z-index: 1000;
 }
 
 .marker-container {
     display: flex;
     align-items: center;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 1.5px solid #ffffff;
     padding: 4px 12px 4px 6px;
     border-radius: 40px;
-    gap: 6px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    gap: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+    min-width: fit-content;
 }
 
 .marker-icon {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     object-fit: contain;
+    /* Gir litt dybde til selve ikonet */
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+}
+
+/* Container for temperatur og navn stablet vertikalt */
+.marker-details {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    line-height: 1.1;
 }
 
 .marker-temp {
     font-weight: 800;
-    font-size: 16px;
-    color: #1a1a1a;
+    font-size: 15px;
+    color: #061629;
+    letter-spacing: -0.5px;
+}
+
+.marker-name {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #556b82;
+    white-space: nowrap;
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: capitalize;
+}
+
+/* --- Responsivitet --- */
+@media (max-width: 600px) {
+    .map-content {
+        height: 400px;
+    }
+    
+    .marker-name {
+        max-width: 60px; /* Kortere navn på små skjermer */
+    }
+}
+
+@media (max-width: 400px) {
+    .marker-name {
+        display: none; /* Skjul navn helt hvis det er ekstremt trangt */
+    }
+    .marker-container {
+        padding: 4px 8px 4px 4px;
+    }
 }
