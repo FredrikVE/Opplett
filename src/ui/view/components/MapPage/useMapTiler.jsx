@@ -92,7 +92,7 @@ export function useMapTiler(props) {
 		map.fitBounds(
 			[southWest, northEast],
 			{
-				padding: 40,
+				padding: 5,
 				duration: 1000,
 				maxZoom: 15		//dette virker dumt fordi det bryter med SSOT-mekanismen for zoom...
 			}

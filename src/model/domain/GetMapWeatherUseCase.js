@@ -5,33 +5,29 @@ export default class GetMapWeatherUseCase {
     constructor(mapTilerRepository, getCurrentWeatherUseCase) {
         this.mapTilerRepository = mapTilerRepository;
         this.getCurrentWeatherUseCase = getCurrentWeatherUseCase;
-        
-        // Injiserer din legacy formatter for stedsnavn
         this.formatter = new LocationNameFormatter();
 
-        // Konfigurasjon for distribusjon av ikoner
         this.maxWeatherLocations = 10;
-        this.gridSteps = [0.2, 0.5, 0.8]; // Ditt 3x3 rutenett
-        this.randomSpreadFactor = 0.1;   // Litt "jitter" for naturlig plassering
+        this.gridSteps = [0.2, 0.5, 0.8]; 
+        this.randomSpreadFactor = 0.15;
     }
 
-    /**
-     * @param {Array} bbox [west, south, east, north]
-     * @param {string} timeZone Tidssone (f.eks "Europe/Oslo")
-     * @param {number} minDist Minimumsavstand mellom ikoner (i grader)
-     * @param {Object} centerCoords Aktiv lokasjon fra SSOT {lat, lon, name}
-     */
     async execute(bbox, timeZone, minDist, centerCoords = null) {
         try {
             if (!bbox || !Array.isArray(bbox)) return [];
 
-            // 1. Generer potensielle punkter fra rutenettet (Din motor)
-            let points = this.#generateGridPoints(bbox);
+            // 1. HENT EKTE STEDER FRA MAPTILER (Viktigst for naturlig plotting)
+            const realPlaces = await this.mapTilerRepository.getNearbySignificantPlaces(bbox);
 
-            // 2. Legg til aktiv lokasjon som prioritet (Senter-ankeret)
-            // Vi legger den først i arrayen så den alltid "vinner" i avstandsfilteret
+            // 2. GENERER GRID-PUNKTER (Som backup/fyllmasse)
+            const gridPoints = this.#generateGridPoints(bbox);
+
+            // 3. BYGG PRIORITERT LISTE
+            let allPotentialPoints = [];
+
+            // A: Prioritet 1 - Aktivt valgt sted (Senter)
             if (centerCoords && centerCoords.lat != null) {
-                points.unshift({
+                allPotentialPoints.push({
                     lat: centerCoords.lat,
                     lon: centerCoords.lon,
                     name: centerCoords.name,
@@ -39,14 +35,22 @@ export default class GetMapWeatherUseCase {
                 });
             }
 
-            // 3. Filtrer ut punkter som ligger for tett (Avstandssjekk)
-            const uniquePoints = this.#filterPoints(points, minDist);
+            // B: Prioritet 2 - Faktiske steder fra MapTiler
+            // Vi shuffler disse litt så vi ikke alltid får nøyaktig de samme 10 hvis det er mange treff
+            const shuffledRealPlaces = [...realPlaces].sort(() => Math.random() - 0.5);
+            allPotentialPoints.push(...shuffledRealPlaces);
 
-            // 4. Hent vær og stedsnavn i parallell for de utvalgte punktene
+            // C: Prioritet 3 - Grid punkter (Dekker "tomme" områder på kartet)
+            allPotentialPoints.push(...gridPoints);
+
+            // 4. FILTRER BASERT PÅ AVSTAND (minDist)
+            // Siden vi la ekte steder først i lista, vil disse "vinne" over grid-punktene
+            const uniquePoints = this.#filterPoints(allPotentialPoints, minDist);
+
+            // 5. HENT VÆR OG FORMATER NAVN
             const results = await Promise.all(
                 uniquePoints.map(async (point) => {
                     try {
-                        // Hent værdata fra MET via UseCase
                         const weather = await this.getCurrentWeatherUseCase.execute({
                             lat: point.lat,
                             lon: point.lon,
@@ -57,12 +61,9 @@ export default class GetMapWeatherUseCase {
 
                         let finalName = point.name;
                         
-                        // Hent og vask navn hvis det mangler (fra grid) eller er generisk
+                        // Bruk reverse geocoding kun hvis navnet mangler (grid-punkter)
                         if (!finalName || finalName === "" || finalName === "Min posisjon") {
                             const locationInfo = await this.mapTilerRepository.getCoordinates(point.lat, point.lon);
-                            
-                            // Bruker din legacy-logikk med flagget "isMapIcon = true".
-                            // Dette sikrer at vi kun får "Mellombølgen", ikke "Mellombølgen, Oslo".
                             finalName = this.formatter.format(locationInfo, true);
                         }
 
@@ -71,8 +72,9 @@ export default class GetMapWeatherUseCase {
                             ...point,
                             name: finalName 
                         };
-                    } catch (error) {
-                        console.error("Error fetching data for point in GetMapWeatherUseCase:", error);
+                    } 
+                    catch (error) {
+                        console.log("Error in the GetMapWeatherUseCase: ", error)
                         return null;
                     }
                 })
@@ -85,10 +87,6 @@ export default class GetMapWeatherUseCase {
         }
     }
 
-    /**
-     * Lager et rutenett med tilfeldig forskyvning
-     * @private
-     */
     #generateGridPoints(bbox) {
         const [west, south, east, north] = bbox;
         const latSpan = north - south;
@@ -97,7 +95,6 @@ export default class GetMapWeatherUseCase {
 
         for (const latStep of this.gridSteps) {
             for (const lonStep of this.gridSteps) {
-                // Beregn grid-posisjon med litt tilfeldig jitter
                 const lat = south + (latSpan * latStep) + (Math.random() - 0.5) * latSpan * this.randomSpreadFactor;
                 const lon = west + (lonSpan * lonStep) + (Math.random() - 0.5) * lonSpan * this.randomSpreadFactor;
 
@@ -108,14 +105,9 @@ export default class GetMapWeatherUseCase {
                 });
             }
         }
-        // Shuffle rutenettet så vi ikke alltid prioriterer samme hjørne av kartet
-        return points.sort(() => Math.random() - 0.5);
+        return points;
     }
 
-    /**
-     * Fjerner punkter som ligger for nær hverandre
-     * @private
-     */
     #filterPoints(points, minDist) {
         const filtered = [];
         const minDistSq = minDist * minDist;
@@ -129,7 +121,8 @@ export default class GetMapWeatherUseCase {
                 return (dLat * dLat + dLon * dLon) < minDistSq;
             });
 
-            // Behold punktet hvis det er trygt eller prioritert
+            // Punktet beholdes hvis det ikke er for nærme noe vi allerede har lagt til,
+            // eller hvis det er det absolutte senterpunktet (isPriority).
             if (!isTooClose || point.isPriority) {
                 filtered.push(point);
             }

@@ -67,12 +67,16 @@ export default class MapTilerDataSource {
         const url = new URL(`${this.#baseUrl}/place.json`);
         url.searchParams.set("key", this.#apiKey);
         url.searchParams.set("bbox", bbox.join(","));
-        // Begrens til betydelige bosetninger
-        url.searchParams.set("types", "city,town,village"); 
-        url.searchParams.set("limit", "10"); // Maks grense for maptiler er 10
+        
+        // Inkluderer flere lag for å få treff som "Sofies Plass", "Rathkes Plass" etc.
+        // 'subdivision' og 'address' gir ofte de lokale navnene du ser på bilde 1.
+        url.searchParams.set("types", "city,town,village,subdivision,neighborhood,place"); 
+        url.searchParams.set("limit", "10"); 
 
         return await this.#fetchWithLog(url, "Nearby");
     }
+
+
 
     //PRIVATE HJELPEMETODER
     async #fetchWithLog(url, type, options = {}) {
