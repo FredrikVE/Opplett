@@ -31,8 +31,8 @@ export function useMapTiler(props) {
 
         map.addControl(
             new maptilersdk.NavigationControl({
-                showZoom: true,
-                showCompass: true,
+                showZoom: true,                     //dette er den eneste måten jeg får KUN "pluss minus" til å synes
+                showCompass: false,
                 //visualizePitch: true
             }),
             "top-right"
