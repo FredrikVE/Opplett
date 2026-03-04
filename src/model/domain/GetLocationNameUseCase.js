@@ -1,8 +1,8 @@
 //src/model/domain/GetLocationNameUseCase.js
 export default class GetLocationNameUseCase {
 	
-    constructor(geocodingRepository) {
-		this.geocodingRepository = geocodingRepository;
+    constructor(mapTilerRepo) {
+		this.mapTilerRepository = mapTilerRepo;
 	}
 
 	async execute({ lat, lon }) {
@@ -10,6 +10,6 @@ export default class GetLocationNameUseCase {
 			throw new Error("Latitude and longitude are required");
 		}
 
-		return this.geocodingRepository.getCoordinates(lat, lon);
+		return this.mapTilerRepository.getCoordinates(lat, lon);
 	}
 }

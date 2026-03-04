@@ -44,13 +44,15 @@ export default class MapTilerRepository {
 
     async getNearbySignificantPlaces(bbox) {
         const rawData = await this.dataSource.getNearbyPlaces(bbox);
-        if (!rawData?.features) return [];
+        if (!rawData?.features) {
+            return [];
+        }
 
-        return rawData.features.map(f => {
-            const coords = this.#sanitize(f.center[1], f.center[0]);
+        return rawData.features.map(feature => {
+            const coords = this.#sanitize(feature.center[1], feature.center[0]);
             
             return {
-                name: f.text,
+                name: feature.text,
                 ...coords,
                 timezone: tzLookup(coords.lat, coords.lon)       // Enkel lookup for kart-punkter
             };
