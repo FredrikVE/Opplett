@@ -25,18 +25,9 @@ export function useMapTiler(props) {
             center: [Number(lon), Number(lat)],
             zoom: Number(zoom),
             attributionControl: false,
-            //navigationControl: false
-            navigationControl: {showCompass: false}
+            navigationControl: true,
+            geolocateControl: false,
         });
-
-        map.addControl(
-            new maptilersdk.NavigationControl({
-                showZoom: true,                     //dette er den eneste måten jeg får KUN "pluss minus" til å synes
-                showCompass: false,
-                //visualizePitch: true
-            }),
-            "top-right"
-        );
 
         //Synkroniserer kartets startposisjon med ViewModel med en gang stilen er lastet.
         //Dette sikrer at værikonene hentes umiddelbart, uten at brukeren må flytte kartet først.
