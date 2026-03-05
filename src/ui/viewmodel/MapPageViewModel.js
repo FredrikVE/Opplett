@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import useSearchViewModel from "./SearchViewModel.js";
 import { calculateMapView } from "../utils/MapUtils/MapZoomHelper.js";
 import { calculateWeatherIconSpread } from "../utils/MapUtils/MapWeatherIconSpread.js";
