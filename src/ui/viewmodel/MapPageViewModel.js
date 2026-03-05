@@ -4,14 +4,7 @@ import { calculateMapView } from "../utils/MapUtils/MapZoomHelper.js";
 import { calculateWeatherIconSpread } from "../utils/MapUtils/MapWeatherIconSpread.js";
 import { MAP_ZOOM_LEVELS } from "../utils/MapUtils/MapZoomLevels.js";
 
-export default function useMapPageViewModel(
-    mapTilerRepository, 
-    searchLocationUseCase, 
-    getMapWeatherUseCase, 
-    activeLocation, 
-    onLocationChange, 
-    onResetToDeviceLocation
-) {
+export default function useMapPageViewModel(mapTilerRepository, searchLocationUseCase, getMapWeatherUseCase, activeLocation, onLocationChange, onResetToDeviceLocation) {
     const DEBOUNCE_DELAY_MS = 500;
 
     // State
