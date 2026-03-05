@@ -8,12 +8,12 @@ export function useMapTiler(props) {
     const mapContainerRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const markersRef = useRef([]);
+    const isProgrammaticMove = useRef(false);
 
     // 1. Initialiser kartet
     useEffect(() => {
         if (!mapContainerRef.current || mapInstanceRef.current) return;
 
-        console.log("[DEBUG 3] Initialiserer MapTiler SDK");
         maptilersdk.config.apiKey = apiKey;
 
         const map = new maptilersdk.Map({
@@ -24,23 +24,21 @@ export function useMapTiler(props) {
             attributionControl: false,
         });
 
-        // Trigger onMapChange med en gang kartet er klart for å låse opp ViewModel
         map.on("load", () => {
-            console.log("[DEBUG 3] Kart lastet. Henter første BBOX.");
             const bounds = map.getBounds();
-            const currentBbox = [
-                bounds.getWest(),
-                bounds.getSouth(),
-                bounds.getEast(),
-                bounds.getNorth()
-            ];
-            onMapChange(lat, lon, currentBbox, map.getZoom());
+            onMapChange(lat, lon, [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()], map.getZoom());
         });
 
         map.on("moveend", () => {
+            // Hvis flyttingen ble trigget av koden (søkeresultat), ikke send oppdatering tilbake til VM
+            // Dette hindrer "shaking" eller at kartet hopper tilbake
+            if (isProgrammaticMove.current) {
+                isProgrammaticMove.current = false;
+                return;
+            }
+
             const center = map.getCenter();
             const bounds = map.getBounds();
-            console.log("[DEBUG 3] moveend: Oppdaterer ViewModel med nytt utsnitt.");
             onMapChange(
                 center.lat,
                 center.lng,
@@ -53,7 +51,6 @@ export function useMapTiler(props) {
 
         return () => {
             if (mapInstanceRef.current) {
-                console.log("[DEBUG 3] Rydder opp kart-instans");
                 mapInstanceRef.current.remove();
                 mapInstanceRef.current = null;
             }
@@ -61,33 +58,21 @@ export function useMapTiler(props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [apiKey, style]);
 
-    // 2. Tegn markører hver gang weatherPoints endres
+    // 2. Markør-logikken (Beholdes som den er siden den fungerer)
     useEffect(() => {
         const map = mapInstanceRef.current;
         if (!map) return;
 
-        console.log(`[DEBUG 3] weatherPoints endret. Mottok: ${weatherPoints?.length || 0} punkter.`);
-
-        // Fjern gamle markører
         markersRef.current.forEach(m => m.remove());
         markersRef.current = [];
 
-        if (!weatherPoints || weatherPoints.length === 0) {
-            console.log("[DEBUG 3] Ingen punkter å tegne.");
-            return;
-        }
+        if (!weatherPoints || weatherPoints.length === 0) return;
 
-        weatherPoints.forEach((point, idx) => {
-            console.log(`[DEBUG 3] Lager markør #${idx}: ${point.name} (${point.temp}°)`);
-            
+        weatherPoints.forEach((point) => {
             const el = document.createElement("div");
             el.className = "map-marker-wrapper";
             el.style.zIndex = "1000";
-
-            // Bruk onclick her for enkelhets skyld
-            el.onclick = () => {
-                onLocationClick?.(point);
-            };
+            el.onclick = () => onLocationClick?.(point);
 
             const root = createRoot(el);
             root.render(<WeatherSymbolLabel point={point} />);
@@ -98,21 +83,42 @@ export function useMapTiler(props) {
             
             markersRef.current.push(marker);
         });
-
-        // Cleanup root ved unmount
-        return () => {
-            markersRef.current.forEach(m => m.remove());
-        };
     }, [weatherPoints, onLocationClick]);
 
-    // 3. Håndter flytting (bboxToFit fra søk)
+    // 3. SMART FLYTTING: Håndterer både BBOX (Regioner) og Lat/Lon (Byer/Land)
     useEffect(() => {
         const map = mapInstanceRef.current;
-        if (map && bboxToFit) {
-            console.log("[DEBUG 3] Flytter kart til bboxToFit:", bboxToFit);
-            map.fitBounds(bboxToFit, { padding: 40 });
+        if (!map) return;
+
+        // PRIORITET 1: Bounding Box (Brukes for fylker, kommuner osv.)
+        if (bboxToFit) {
+            isProgrammaticMove.current = true;
+            map.fitBounds(bboxToFit, { 
+                padding: 50, 
+                maxZoom: 14, 
+                duration: 1500 
+            });
+            return; // Avbryt så vi ikke kjører flyTo rett etterpå
         }
-    }, [bboxToFit]);
+
+        // PRIORITET 2: Punkt-flytting (Brukes for Land, Kontinent eller spesifikke steder uten bounds)
+        const center = map.getCenter();
+        const hasMovedSignificantly = 
+            Math.abs(center.lat - lat) > 0.01 || 
+            Math.abs(center.lng - lon) > 0.01 ||
+            Math.abs(map.getZoom() - zoom) > 0.1;
+
+        if (hasMovedSignificantly) {
+            isProgrammaticMove.current = true;
+            map.flyTo({
+                center: [lon, lat],
+                zoom: zoom,
+                speed: 1.2,
+                curve: 1.4,
+                essential: true
+            });
+        }
+    }, [lat, lon, zoom, bboxToFit]);
 
     return mapContainerRef;
 }
