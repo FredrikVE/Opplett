@@ -1,4 +1,3 @@
-// src/model/datasource/MapTilerDataSource.js
 const API_KEY = import.meta.env.VITE_MAPTILER_API_KEY;
 
 export default class MapTilerDataSource {
@@ -8,143 +7,156 @@ export default class MapTilerDataSource {
 
     constructor() {
         if (!API_KEY) {
-			throw new Error("Mangler VITE_MAPTILER_API_KEY i .env");
-		}
+            throw new Error("Mangler VITE_MAPTILER_API_KEY i .env");
+        }
 
         this.#apiKey = API_KEY;
         this.#baseUrl = "https://api.maptiler.com/geocoding";
+        // Bruker streets-v2 som standard stil for kartet
         this.#style = `https://api.maptiler.com/maps/streets-v2/style.json?key=${this.#apiKey}`;
         this.apiCallCount = 0;
     }
 
+    /**
+     * Returnerer konfigurasjon for kart-oppsettet
+     */
     getBaseConfig() {
         return { apiKey: this.#apiKey, style: this.#style };
     }
 
-	//Søker etter geografiske steder ved hjelp av MapTiler Geocoding API.
-	async search(query, signal, proximity) {
-		const searchUrl = new URL(`${this.#baseUrl}/${encodeURIComponent(query)}.json`);
-		searchUrl.searchParams.set("key", this.#apiKey);
-		searchUrl.searchParams.set("language", "no");
-
-		//Hvis vi har en referanseposisjon (f.eks. brukerens GPS), prioriterer vi treff i nærheten
-		const hasProximity = proximity?.lat != null && proximity?.lon != null;
-		if (hasProximity) {
-			const proximityValue = `${proximity.lon},${proximity.lat}`;
-			searchUrl.searchParams.set("proximity", proximityValue);
-		}
-
-		//Utfør selve nettverkskallet via vår interne hjelpemetode
-		const apiResponseData = await this.#fetchWithLog(searchUrl, "Search", { signal });
-
-		//Hent ut listen med geografiske treff (Features) fra responsen
-		//Vi sikrer oss med en tom liste [] dersom API-et returnerer null/undefined
-		const searchResults = apiResponseData?.features || [];
-
-		//Transformer hvert rå-treff fra API-et til vårt interne lokasjonsobjekt
-		const mappedLocations = searchResults.map((geoFeature) => {
-			return this.#mapFeatureToLocation(geoFeature);
-		});
-
-		return mappedLocations;
-	}
-
-
-
-    //Henter signifikante steder innenfor et bounding box (BBOX)
-    /*
-    async getNearbyPlaces(bbox) {
-        const url = new URL(`${this.#baseUrl}/place.json`);
-        url.searchParams.set("key", this.#apiKey);
-        url.searchParams.set("bbox", bbox.join(","));
-        url.searchParams.set("limit", "10");
-
-        return await this.#fetchWithLog(url, "Nearby");
-    }
-    */
-
-    async getNearbyPlaces(bbox) {
-        const url = new URL(`${this.#baseUrl}/place.json`);
-        url.searchParams.set("key", this.#apiKey);
-        url.searchParams.set("bbox", bbox.join(","));
+    /**
+     * [DEBUG 1] Skanner kartutsnittet (bbox) i et 4x4 grid for å finne steder
+     */
+    async getNearbyPlaces(bbox, zoom) {
+        console.log("[DEBUG 1] DataSource: getNearbyPlaces startet.", { zoom, bbox });
         
-        // Inkluderer flere lag for å få treff som "Sofies Plass", "Rathkes Plass" etc.
-        // 'subdivision' og 'address' gir ofte de lokale navnene du ser på bilde 1.
-        url.searchParams.set("types", "city,town,village,subdivision,neighborhood,place"); 
-        url.searchParams.set("limit", "10"); 
+        if (!bbox || bbox.length !== 4) {
+            console.warn("[DEBUG 1] DataSource: Ugyldig BBOX mottatt:", bbox);
+            return [];
+        }
 
-        return await this.#fetchWithLog(url, "Nearby");
+        const [minLon, minLat, maxLon, maxLat] = bbox;
+        const points = [];
+        const steps = 3; // Gir 4x4 = 16 grid-punkter for bedre dekning av skjermen
+
+        for (let i = 0; i <= steps; i++) {
+            for (let j = 0; j <= steps; j++) {
+                points.push({
+                    lon: (minLon + (maxLon - minLon) * (i / steps)).toFixed(6),
+                    lat: (minLat + (maxLat - minLat) * (j / steps)).toFixed(6)
+                });
+            }
+        }
+
+        console.log(`[DEBUG 1] DataSource: Skanner ${points.length} koordinater via reverse geocoding...`);
+
+        const results = await Promise.all(points.map(async (p, idx) => {
+            // Vi spør etter nærmeste stedsnavn uten å begrense på 'types' for å få flest mulig treff
+            const url = `${this.#baseUrl}/${p.lon},${p.lat}.json?key=${this.#apiKey}&language=no`;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    console.error(`[DEBUG 1] API-feil punkt #${idx}: ${response.status}`);
+                    return null;
+                }
+                
+                const data = await response.json();
+                
+                if (!data.features || data.features.length === 0) {
+                    return null; 
+                }
+
+                // Vi tar det første treffet (vanligvis mest nøyaktig/størst)
+                const feature = data.features[0];
+
+                console.log(`[DEBUG 1] Punkt #${idx} (${p.lat}, ${p.lon}) fant: ${feature.text}`);
+                
+                return {
+                    name: feature.text,
+                    lat: feature.center[1],
+                    lon: feature.center[0]
+                };
+            } catch (error) {
+                console.error(`[DEBUG 1] Nettverksfeil punkt #${idx}:`, error.message);
+                return null;
+            }
+        }));
+
+        // Fjern null-verdier og duplikater (hvis flere grid-punkter traff samme by)
+        const seenNames = new Set();
+        const uniqueResults = results.filter(f => {
+            if (!f || seenNames.has(f.name)) return false;
+            seenNames.add(f.name);
+            return true;
+        });
+
+        console.log(`[DEBUG 1] DataSource ferdig. Fant ${uniqueResults.length} unike steder på skjermen.`);
+        return uniqueResults;
     }
 
+    /**
+     * Standard søkefunksjon for søkefeltet (Geocoding)
+     */
+    async search(query, signal, proximity) {
+        const searchUrl = new URL(`${this.#baseUrl}/${encodeURIComponent(query)}.json`);
+        searchUrl.searchParams.set("key", this.#apiKey);
+        searchUrl.searchParams.set("language", "no");
 
+        if (proximity?.lat != null && proximity?.lon != null) {
+            searchUrl.searchParams.set("proximity", `${proximity.lon},${proximity.lat}`);
+        }
 
-    //PRIVATE HJELPEMETODER
+        const apiResponseData = await this.#fetchWithLog(searchUrl, "Search", { signal });
+        const searchResults = apiResponseData?.features || [];
+
+        return searchResults.map((geoFeature) => this.#mapFeatureToLocation(geoFeature));
+    }
+
+    /**
+     * Privat hjelpemetode for fetch med logging av teller
+     */
     async #fetchWithLog(url, type, options = {}) {
         this.apiCallCount++;
         const id = this.apiCallCount;
-
-        console.log(`[MapTiler] #${id} (${type}) -> ${url.pathname}`);
-
         try {
             const response = await fetch(url.toString(), options);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const data = await response.json();
-            console.log(`[MapTiler] #${id} OK (Fant ${data.features?.length || 0})`);
             return data;
-        } 
-		
-		catch (error) {
-
-            if (error.name === "AbortError") {
-                console.log(`[MapTiler] #${id} Avbrutt`);
-            }
-
-			else {
-                console.error(`[MapTiler] #${id} FEIL:`, error.message);
+        } catch (error) {
+            if (error.name !== "AbortError") {
+                console.error(`[MapTiler] #${id} (${type}) FEIL:`, error.message);
             }
             return null;
         }
     }
 
-	#mapFeatureToLocation(searchResult) {
-        //akk ut koordinatene fra senterpunktet [longitude, latitude]
+    /**
+     * Mapper MapTiler GeoJSON format til vårt interne format
+     */
+    #mapFeatureToLocation(searchResult) {
         const [lon, lat] = searchResult.center;
 
-        //Pakk ut Bounding Box (utsnitt) hvis det finnes
-        // MapTiler bruker formatet: [vest, sør, øst, nord]
         let bounds = null;
         if (searchResult.bbox) {
             const [west, south, east, north] = searchResult.bbox;
-            
             bounds = {
                 southwest: { lng: west, lat: south },
                 northeast: { lng: east, lat: north }
             };
         }
 
-        //Finn tidssone (sjekker både selve punktet og områdene rundt)
         const featureTz = searchResult.properties?.timezone;
-        const contextTz = searchResult.context?.find(areaLayer => 
-			areaLayer.properties?.timezone
-		)?.properties?.timezone;
+        const contextTz = searchResult.context?.find(areaLayer => areaLayer.properties?.timezone)?.properties?.timezone;
 
-
-        const finalTz = featureTz || contextTz || null;
-
-        //Sett sammen det endelige lokasjonsobjektet
-        const mappedLocation = {
-            name: searchResult.place_name || searchResult.text || "Ukjent sted",
+        return {
+            name: searchResult.text || searchResult.place_name || "Ukjent sted",
             lat,
             lon,
             bounds,
             type: searchResult.place_type?.[0] || null,
-            timezone: finalTz
+            timezone: featureTz || contextTz || null
         };
-
-        return mappedLocation;
     }
 }

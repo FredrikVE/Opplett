@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@maptiler/geocoding-control": "^2.1.7",
+    "@maptiler/marker-layout": "^2.0.1",
     "@maptiler/sdk": "^3.11.1",
     "highcharts": "^12.5.0",
     "highcharts-react-official": "^3.2.3",

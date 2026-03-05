@@ -1,136 +1,150 @@
-// src/ui/viewmodel/MapPageViewModel.js
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import useSearchViewModel from "./SearchViewModel.js";
 import { calculateMapView } from "../utils/MapUtils/MapZoomHelper.js";
 import { calculateWeatherIconSpread } from "../utils/MapUtils/MapWeatherIconSpread.js";
 import { MAP_ZOOM_LEVELS } from "../utils/MapUtils/MapZoomLevels.js";
 
-
-export default function useMapPageViewModel(mapTilerRepository, searchLocationUseCase, getMapWeatherUseCase, activeLocation, onLocationChange, onResetToDeviceLocation) {
+export default function useMapPageViewModel(
+    mapTilerRepository, 
+    searchLocationUseCase, 
+    getMapWeatherUseCase, 
+    activeLocation, 
+    onLocationChange, 
+    onResetToDeviceLocation
+) {
     const DEBOUNCE_DELAY_MS = 500;
 
     // State
     const [mapView, setMapView] = useState({ bbox: null, zoom: MAP_ZOOM_LEVELS.DEFAULT });
     const [bboxToFit, setBboxToFit] = useState(null);
-    const [localLocation, setLocalLocation] = useState(activeLocation);
     const [weatherPoints, setWeatherPoints] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
-	//Synkroniser lokasjon når brukeren søker eller bytter sted i en annen tab
-	useEffect(() => {
-		setLocalLocation(activeLocation);
-		setBboxToFit(null);                 //Nullstiller bboxToFit så kartet flytter seg til det nye stedet
-	}, [activeLocation]);
+    // Initialiserer søk med proximity fra SSOT
+    const searchViewModel = useSearchViewModel(
+        searchLocationUseCase, 
+        onLocationChange, 
+        { lat: activeLocation.lat, lon: activeLocation.lon },
+        onResetToDeviceLocation
+    );
 
-	// Initialiserer søk med proximity fra SSOT
-	const searchViewModel = useSearchViewModel(
-		searchLocationUseCase, 
-		onLocationChange, 
-		{ lat: activeLocation.lat, lon: activeLocation.lon },
-		onResetToDeviceLocation
-	);
+    const { apiKey, style } = useMemo(() => {
+        return mapTilerRepository.getMapConfig();
+    }, [mapTilerRepository]);
 
-	const { apiKey, style } = useMemo(() => {
-		return mapTilerRepository.getMapConfig();
-	}, 
-	[mapTilerRepository]);
+    // Tidssonen kommer ferdig vasket fra activeLocation
+    const tz = activeLocation.timezone;
 
-	//Tidssonen kommer ferdig vasket fra activeLocation
-	const tz = activeLocation.timezone;
+    /**
+     * [DEBUG VM] Logger hver gang kartet sender endringsmelding
+     */
+    const onMapChange = useCallback((lat, lon, bbox, currentZoom) => {
+        console.log("[DEBUG VM] onMapChange mottatt:", { lat, lon, zoom: currentZoom, hasBbox: !!bbox });
+        setBboxToFit(null); 
+        setMapView({
+            bbox,
+            zoom: currentZoom,
+            lat, 
+            lon
+        });
+    }, []);
 
-	//Håndterer endringer i kartet (panorering/zooming)
-	const onMapChange = useCallback((lat, lon, bbox, currentZoom) => {
-		setBboxToFit(null); 
+    /**
+     * [DEBUG VM] Hoved-effekt for henting av værdata
+     */
+    useEffect(() => {
+        console.log("[DEBUG VM] Sjekker forutsetninger for vær-henting:", {
+            hasBbox: !!mapView.bbox,
+            hasTz: !!tz,
+            tz: tz,
+            zoom: mapView.zoom
+        });
 
-		setLocalLocation(prev => ({
-			...prev,
-			lat,
-			lon
-		}));
+        if (!mapView.bbox || !tz) {
+            console.log("[DEBUG VM] Stopper: Mangler BBOX eller Tidssone.");
+            return;
+        }
 
-		setMapView({
-			bbox,
-			zoom: currentZoom
-		});
-	}, []);
+        let cancelled = false;
+        const minDist = calculateWeatherIconSpread(mapView.zoom);
+        
+        console.log(`[DEBUG VM] Planlegger henting om ${DEBOUNCE_DELAY_MS}ms. minDist: ${minDist}`);
 
-	//Henting av værdata for kartutsnitt
-	useEffect(() => {
-		if (!mapView.bbox || !tz) {
-			return;
-		}
+        const timer = setTimeout(async () => {
+            if (cancelled) return;
 
-		let cancelled = false;
-		const minDist = calculateWeatherIconSpread(mapView.zoom);
+            setIsLoading(true);
+            console.log("[DEBUG VM] Kaller GetMapWeatherUseCase.execute()...");
 
-		const timer = setTimeout(async () => {
+            try {
+                // Her sender vi med zoom som siste argument for å hjelpe DataSource
+                const points = await getMapWeatherUseCase.execute(
+                    mapView.bbox,
+                    tz,
+                    minDist,
+                    activeLocation,
+                    mapView.zoom 
+                );
 
-			setIsLoading(true);
-			try {
-				const points = await getMapWeatherUseCase.execute(
-					mapView.bbox,
-					tz,
-					minDist,
-					activeLocation
-				);
+                if (!cancelled) {
+                    console.log(`[DEBUG VM] Suksess! Mottok ${points?.length || 0} punkter.`);
+                    setWeatherPoints(points || []);
+                }
+            } 
+            catch (error) {
+                console.error("[DEBUG VM] Feil i fetch-prosessen:", error);
+            } 
+            finally {
+                if (!cancelled) {
+                    setIsLoading(false);
+                }
+            }
+        }, DEBOUNCE_DELAY_MS);
 
-				if (!cancelled) {
-					setWeatherPoints(points);
-				}
-			} 
-			
-			catch (error) {
-				console.error("Feil ved henting av kartvær:", error);
-			} 
-			
-			finally {
-				if (!cancelled) {
-					setIsLoading(false);
-				}
-			}
-		}, DEBOUNCE_DELAY_MS);
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
+    }, [mapView.bbox, mapView.zoom, tz, getMapWeatherUseCase, activeLocation]);
 
-		return () => {
-			cancelled = true;
-			clearTimeout(timer);
-		};
-	}, 
+    return {
+        apiKey,
+        style,
+        zoom: mapView.zoom,
+        bboxToFit,
+        location: activeLocation,
+        mapCenter: { 
+            lat: mapView.lat ?? activeLocation.lat, 
+            lon: mapView.lon ?? activeLocation.lon 
+        },
+        weatherPoints,
+        isLoading,
+        onMapChange,
 
-	[mapView.bbox, mapView.zoom, tz, getMapWeatherUseCase]);
-
-	return {
-		apiKey,
-		style,
-		zoom: mapView.zoom,
-		bboxToFit,
-		location: localLocation,
-		mapCenter: { lat: localLocation.lat, lon: localLocation.lon },
-		weatherPoints,
-		isLoading,
-		onMapChange,
-
-		query: searchViewModel.query,
-		suggestions: searchViewModel.suggestions,
-		onSearchChange: searchViewModel.onSearchChange,
-
+        query: searchViewModel.query,
+        suggestions: searchViewModel.suggestions,
+        onSearchChange: searchViewModel.onSearchChange,
 
         onSuggestionSelected: (selected) => {
+            console.log("[DEBUG VM] Forslag valgt:", selected.name);
             onLocationChange(selected);
             searchViewModel.onSuggestionSelected(selected);
-            const { zoom, bbox } = calculateMapView(selected); // Henter ferdig utregnet zoom og bbox fra helperen
+            const { zoom, bbox } = calculateMapView(selected); 
 
             setBboxToFit(bbox);
             setMapView(prev => ({ 
                 ...prev, 
-                zoom: zoom 
+                zoom: zoom,
+                lat: selected.lat,
+                lon: selected.lon
             }));
         },
 
         onResetToDeviceLocation: () => {
+            console.log("[DEBUG VM] Resetter til GPS.");
             setBboxToFit(null);
             setMapView({ bbox: null, zoom: MAP_ZOOM_LEVELS.DEFAULT });
-            setLocalLocation(activeLocation); 	//reset lokal kartposisjon
-            onResetToDeviceLocation();  		//reset global SSOT
+            onResetToDeviceLocation();
             searchViewModel.onResetLocation();
         }
     };

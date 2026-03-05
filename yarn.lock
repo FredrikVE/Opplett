@@ -389,7 +389,14 @@
     "@turf/union" "^7.2.0"
     geo-coordinates-parser "^1.7.4"
 
-"@maptiler/sdk@^1 || ^2 || ^3", "@maptiler/sdk@^3.11.1":
+"@maptiler/marker-layout@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.npmjs.org/@maptiler/marker-layout/-/marker-layout-2.0.1.tgz"
+  integrity sha512-2a+/KsaNmC7n6pngfp9G1cfckvjVRRt26V0ibyRC2JB05JqoEQjrqegsaezX14iX1b+rq6fOqPr0dDeWuRCFtg==
+  dependencies:
+    "@maptiler/sdk" "^3.0.0"
+
+"@maptiler/sdk@^1 || ^2 || ^3", "@maptiler/sdk@^3.0.0", "@maptiler/sdk@^3.11.1":
   version "3.11.1"
   resolved "https://registry.npmjs.org/@maptiler/sdk/-/sdk-3.11.1.tgz"
   integrity sha512-cYNDZcCZAOgn4admSgq4sD3I9zwpl8w96u4RV++T9cwZsAsZe7Jxco7Elr/6zpM+pJYRUbBchuU5Hqik92XQAg==

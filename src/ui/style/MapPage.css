@@ -1,5 +1,6 @@
 /* src/ui/style/MapPage.css */
 
+/* --- Hovedoppsett for kartsiden --- */
 .map-screen {
     width: 100%;
     max-width: 860px;
@@ -22,6 +23,7 @@
     margin: 2rem;
 }
 
+/* Beholderen for kartet */
 .map-content {
     width: 100%;
     height: 500px;
@@ -30,46 +32,31 @@
     background: #ffffff;
     border: 1px solid rgba(6, 22, 41, 0.08);
     box-shadow: 0 10px 28px rgba(6, 22, 41, 0.08);
-    position: relative; /* Viktig for overlay */
+    position: relative; /* Kritisk: Lar absolutt posisjonerte markører ligge inni her */
 }
 
 .map-page-wrap,
 .map {
     width: 100%;
     height: 100%;
+    position: relative;
 }
 
-/* --- Loading overlay --- */
-.map-loading-overlay {
+/* --- Marker Wrapper (Forelder-div generert i useMapTiler) --- */
+.map-marker-wrapper {
     position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.25);
-    z-index: 10;
-    pointer-events: none;
+    top: 0;
+    left: 0;
+    z-index: 10; /* Ligger oppå kart-canvaset */
+    pointer-events: auto; /* Gjør markøren klikkbar */
+    will-change: transform;
 }
 
-/* --- Zoom Indicator --- */
-.zoom-indicator {
-    position: absolute;
-    bottom: 20px;
-    left: 20px;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: bold;
-    z-index: 5;
-    border: 1px solid rgba(0,0,0,0.1);
-}
-
-/* --- Værmarkør på kartet --- */
+/* --- Værmarkør / Boble styling --- */
 .map-weather-marker {
     filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
     transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    /* Forankrer markøren sentralt over koordinatet */
+    /* Forankrer markøren sentralt over punktet fra MarkerLayout */
     transform: translate(-50%, -50%);
     will-change: transform;
 }
@@ -97,11 +84,9 @@
     width: 34px;
     height: 34px;
     object-fit: contain;
-    /* Gir litt dybde til selve ikonet */
     filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
 }
 
-/* Container for temperatur og navn stablet vertikalt */
 .marker-details {
     display: flex;
     flex-direction: column;
@@ -127,6 +112,42 @@
     text-transform: capitalize;
 }
 
+/* --- Loading overlay --- */
+.map-loading-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.25);
+    z-index: 20;
+    pointer-events: none;
+}
+
+/* --- Zoom Indicator --- */
+.zoom-indicator {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 15;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* --- Animasjon når nye markører dukker opp --- */
+@keyframes fadeInMarker {
+    from { opacity: 0; transform: translate(-50%, -40%); }
+    to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+.fade-in-animation {
+    animation: fadeInMarker 0.4s ease-out forwards;
+}
+
 /* --- Responsivitet --- */
 @media (max-width: 600px) {
     .map-content {
@@ -134,13 +155,13 @@
     }
     
     .marker-name {
-        max-width: 60px; /* Kortere navn på små skjermer */
+        max-width: 60px;
     }
 }
 
 @media (max-width: 400px) {
     .marker-name {
-        display: none; /* Skjul navn helt hvis det er ekstremt trangt */
+        display: none;
     }
     .marker-container {
         padding: 4px 8px 4px 4px;

@@ -28,6 +28,13 @@ Hver page består av flere "componenter" som du finner i mappa `src/ui/view/comp
 
 Hver og en av disse initieres i `App.jsx`, som er programmets `main`.
 
+## Bruk av bilioteker i Maptiler
+
+```
+npm install @maptiler/marker-layout
+```
+
+
 ## Bruk av Highcharts
 
 Applikasjonen bruker **Highcharts** (via `highcharts` og `highcharts-react-official`) for å visualisere værdata i grafvisningen. Highcharts brukes til å generere dynamiske og interaktive grafer for blant annet temperatur, vind, UV-indeks og solforhold. Grafkonfigurasjonene er strukturert og organisert i egne konfigurasjons- og hjelpefiler for å holde View-komponentene rene og fokusert på presentasjon.
