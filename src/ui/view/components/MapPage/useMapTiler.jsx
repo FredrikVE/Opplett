@@ -4,15 +4,33 @@ import { createRoot } from "react-dom/client";
 import WeatherSymbolLabel from "./WeatherSymbolLabel.jsx";
 
 export function useMapTiler(props) {
+
     const { apiKey, style, lat, lon, zoom, bboxToFit, weatherPoints, onMapChange, onLocationClick } = props;
+
     const mapContainerRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const markersRef = useRef([]);
     const isProgrammaticMove = useRef(false);
 
-    // 1. Initialiser kartet
+    const SIGNIFICANT_MOVE_THRESHOLD = 0.01;
+    const SIGNIFICANT_ZOOM_THRESHOLD = 0.1;
+
+    const FIT_BOUNDS_PADDING = 50;
+    const FIT_BOUNDS_MAX_ZOOM = 14;
+    const FIT_BOUNDS_DURATION = 1500;
+
+    /**
+     * Initialiser kartet
+     */
     useEffect(() => {
-        if (!mapContainerRef.current || mapInstanceRef.current) return;
+
+        if (!mapContainerRef.current) {
+            return;
+        }
+
+        if (mapInstanceRef.current) {
+            return;
+        }
 
         maptilersdk.config.apiKey = apiKey;
 
@@ -22,16 +40,26 @@ export function useMapTiler(props) {
             center: [Number(lon), Number(lat)],
             zoom: Number(zoom),
             attributionControl: false,
+            navigationControl: true, 
+            geolocateControl: false,
         });
 
         map.on("load", () => {
+
             const bounds = map.getBounds();
-            onMapChange(lat, lon, [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()], map.getZoom());
+
+            const bbox = [
+                bounds.getWest(),
+                bounds.getSouth(),
+                bounds.getEast(),
+                bounds.getNorth()
+            ];
+
+            onMapChange(lat, lon, bbox, map.getZoom());
         });
 
         map.on("moveend", () => {
-            // Hvis flyttingen ble trigget av koden (søkeresultat), ikke send oppdatering tilbake til VM
-            // Dette hindrer "shaking" eller at kartet hopper tilbake
+
             if (isProgrammaticMove.current) {
                 isProgrammaticMove.current = false;
                 return;
@@ -39,10 +67,18 @@ export function useMapTiler(props) {
 
             const center = map.getCenter();
             const bounds = map.getBounds();
+
+            const bbox = [
+                bounds.getWest(),
+                bounds.getSouth(),
+                bounds.getEast(),
+                bounds.getNorth()
+            ];
+
             onMapChange(
                 center.lat,
                 center.lng,
-                [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()],
+                bbox,
                 map.getZoom()
             );
         });
@@ -50,75 +86,125 @@ export function useMapTiler(props) {
         mapInstanceRef.current = map;
 
         return () => {
-            if (mapInstanceRef.current) {
-                mapInstanceRef.current.remove();
-                mapInstanceRef.current = null;
+
+            if (!mapInstanceRef.current) {
+                return;
             }
+
+            mapInstanceRef.current.remove();
+            mapInstanceRef.current = null;
+
         };
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [apiKey, style]);
 
-    // 2. Markør-logikken (Beholdes som den er siden den fungerer)
-    useEffect(() => {
-        const map = mapInstanceRef.current;
-        if (!map) return;
 
-        markersRef.current.forEach(m => m.remove());
+
+    /**
+     * Marker-logikk
+     */
+    useEffect(() => {
+
+        const map = mapInstanceRef.current;
+
+        if (!map) {
+            return;
+        }
+
+        for (const marker of markersRef.current) {
+            marker.remove();
+        }
+
         markersRef.current = [];
 
-        if (!weatherPoints || weatherPoints.length === 0) return;
+        if (!weatherPoints || weatherPoints.length === 0) {
+            return;
+        }
 
-        weatherPoints.forEach((point) => {
-            const el = document.createElement("div");
-            el.className = "map-marker-wrapper";
-            el.style.zIndex = "1000";
-            el.onclick = () => onLocationClick?.(point);
+        for (const point of weatherPoints) {
 
-            const root = createRoot(el);
+            const element = document.createElement("div");
+            element.className = "map-marker-wrapper";
+            element.style.zIndex = "1000";
+
+            element.onclick = () => {
+                if (onLocationClick) {
+                    onLocationClick(point);
+                }
+            };
+
+            const root = createRoot(element);
             root.render(<WeatherSymbolLabel point={point} />);
 
-            const marker = new maptilersdk.Marker({ element: el })
+            const marker = new maptilersdk.Marker({ element })
                 .setLngLat([point.lon, point.lat])
                 .addTo(map);
-            
+
             markersRef.current.push(marker);
-        });
+        }
+
     }, [weatherPoints, onLocationClick]);
 
-    // 3. SMART FLYTTING: Håndterer både BBOX (Regioner) og Lat/Lon (Byer/Land)
+
+
+    /**
+     * Programmatisk flytting av kart
+     */
     useEffect(() => {
+
         const map = mapInstanceRef.current;
-        if (!map) return;
 
-        // PRIORITET 1: Bounding Box (Brukes for fylker, kommuner osv.)
+        if (!map) {
+            return;
+        }
+
+        // PRIORITET 1: Bounding box
         if (bboxToFit) {
+
             isProgrammaticMove.current = true;
-            map.fitBounds(bboxToFit, { 
-                padding: 50, 
-                maxZoom: 14, 
-                duration: 1500 
+
+            map.fitBounds(bboxToFit, {
+                padding: FIT_BOUNDS_PADDING,
+                maxZoom: FIT_BOUNDS_MAX_ZOOM,
+                duration: FIT_BOUNDS_DURATION
             });
-            return; // Avbryt så vi ikke kjører flyTo rett etterpå
+
+            return;
         }
 
-        // PRIORITET 2: Punkt-flytting (Brukes for Land, Kontinent eller spesifikke steder uten bounds)
+        // PRIORITET 2: Punkt-flytting
         const center = map.getCenter();
-        const hasMovedSignificantly = 
-            Math.abs(center.lat - lat) > 0.01 || 
-            Math.abs(center.lng - lon) > 0.01 ||
-            Math.abs(map.getZoom() - zoom) > 0.1;
 
-        if (hasMovedSignificantly) {
-            isProgrammaticMove.current = true;
-            map.flyTo({
-                center: [lon, lat],
-                zoom: zoom,
-                speed: 1.2,
-                curve: 1.4,
-                essential: true
-            });
+        const latMoved =
+            Math.abs(center.lat - lat) > SIGNIFICANT_MOVE_THRESHOLD;
+
+        const lonMoved =
+            Math.abs(center.lng - lon) > SIGNIFICANT_MOVE_THRESHOLD;
+
+        const zoomChanged =
+            Math.abs(map.getZoom() - zoom) > SIGNIFICANT_ZOOM_THRESHOLD;
+
+        const hasMovedSignificantly =
+            latMoved || lonMoved || zoomChanged;
+
+        if (!hasMovedSignificantly) {
+            return;
         }
+
+        isProgrammaticMove.current = true;
+
+        map.flyTo({
+            center: [lon, lat],
+            zoom: zoom,
+            speed: 1.2,
+            curve: 1.4,
+            essential: true
+        });
+
     }, [lat, lon, zoom, bboxToFit]);
+
+
 
     return mapContainerRef;
 }

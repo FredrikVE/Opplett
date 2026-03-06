@@ -7,12 +7,7 @@ import { MAP_ZOOM_LEVELS } from "../utils/MapUtils/MapZoomLevels.js";
 export default function useMapPageViewModel(mapTilerRepository, searchLocationUseCase, getMapWeatherUseCase, activeLocation, onLocationChange, onResetToDeviceLocation) {
 
     const DEBOUNCE_DELAY_MS = 500;
-    const DEFAULT_MAP_VIEW = {
-        bbox: null,
-        zoom: MAP_ZOOM_LEVELS.DEFAULT,
-        lat: null,
-        lon: null
-    };
+    const DEFAULT_MAP_VIEW = { bbox: null, zoom: MAP_ZOOM_LEVELS.DEFAULT, lat: null, lon: null};
 
     //State
     const [mapView, setMapView] = useState(DEFAULT_MAP_VIEW);
@@ -20,11 +15,14 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
     const [weatherPoints, setWeatherPoints] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
+    //Proximity for søk
+    const searchProximity = {lat: activeLocation.lat, lon: activeLocation.lon};
+
     //Initialiserer søk med proximity fra SSOT
     const searchViewModel = useSearchViewModel(
         searchLocationUseCase,
         onLocationChange,
-        { lat: activeLocation.lat, lon: activeLocation.lon },   //ikke så glad i å ha dette som objekt litteral
+        searchProximity,
         onResetToDeviceLocation
     );
 
@@ -34,7 +32,6 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 
     //Tidssonen kommer ferdig vasket fra activeLocation
     const tz = activeLocation.timezone;
-
 
     //Kartet sender endringer hit når brukeren panorerer eller zoomer
     const onMapChange = useCallback((lat, lon, bbox, currentZoom) => {
@@ -73,10 +70,9 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
         }
 
         let cancelled = false;
-
         const minDist = calculateWeatherIconSpread(mapView.zoom);
 
-        console.log(`[DEBUG VM] Planlegger henting om ${DEBOUNCE_DELAY_MS}ms. minDist: ${minDist}`);
+        console.log( `[DEBUG VM] Planlegger henting om ${DEBOUNCE_DELAY_MS}ms. minDist: ${minDist}`);
 
         const timer = setTimeout(async () => {
 
@@ -100,23 +96,23 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 
                 if (!cancelled) {
 
-                    console.log(
-                        `[DEBUG VM] Suksess! Mottok ${points?.length || 0} punkter.`
-                    );
+                    console.log( `[DEBUG VM] Suksess! Mottok ${points?.length || 0} punkter.`);
 
                     setWeatherPoints(points || []);
                 }
 
             } 
             catch (error) {
+
                 console.error("[DEBUG VM] Feil i fetch-prosessen:", error);
 
             } 
-
             finally {
+
                 if (!cancelled) {
                     setIsLoading(false);
                 }
+
             }
 
         }, DEBOUNCE_DELAY_MS);
@@ -128,14 +124,19 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 
     }, [mapView.bbox, mapView.zoom, tz, getMapWeatherUseCase, activeLocation]);
 
+    //Beregnet kart-senter
+    const mapCenter = {
+        lat: mapView.lat ?? activeLocation.lat,
+        lon: mapView.lon ?? activeLocation.lon
+    };
+
     return {
         apiKey,
         style,
         zoom: mapView.zoom,
         bboxToFit,
         location: activeLocation,
-
-        mapCenter: { lat: mapView.lat ?? activeLocation.lat, lon: mapView.lon ?? activeLocation.lon},
+        mapCenter: mapCenter,
 
         weatherPoints,
         isLoading,
@@ -146,31 +147,26 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
         onSearchChange: searchViewModel.onSearchChange,
 
         onSuggestionSelected: (selected) => {
-
             console.log("[DEBUG VM] Forslag valgt:", selected.name);
-
             onLocationChange(selected);
             searchViewModel.onSuggestionSelected(selected);
-
             const { zoom, bbox } = calculateMapView(selected);
-
             setBboxToFit(bbox);
-
-            setMapView(prev => ({
-                ...prev,
+            setMapView({
+                bbox: bbox,
                 zoom: zoom,
                 lat: selected.lat,
                 lon: selected.lon
-            }));
-
+            });
         },
 
         onResetToDeviceLocation: () => {
             console.log("[DEBUG VM] Resetter til GPS.");
             setBboxToFit(null);
-            setMapView(DEFAULT_MAP_VIEW);  //Nullstiller kartvisningen slik at activeLocation overtar
+            setMapView(DEFAULT_MAP_VIEW);
             onResetToDeviceLocation();
             searchViewModel.onResetLocation();
+
         }
     };
 }
