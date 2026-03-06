@@ -1,56 +1,86 @@
 import tzLookup from "tz-lookup";
 
 export default class MapTilerRepository {
-    constructor(mapTilerDataSource) {
-        this.dataSource = mapTilerDataSource;
-    }
 
-    /**
-     * Sikrer at koordinater er innenfor gyldige grenser.
-     */
-    #sanitize(lat, lon) {
-        return {
-            lat: Math.max(-90, Math.min(90, Number(lat))),
-            lon: ((Number(lon) + 180) % 360 + 360) % 360 - 180
-        };
-    }
+	constructor(mapTilerDataSource) {
+		this.dataSource = mapTilerDataSource;
+	}
 
-    /**
-     * Henter grunnkonfigurasjon for kartet (API-nøkkel og stil).
-     * Stilen er viktig for Marker Layout da den inneholder label-lagene.
-     */
-    getMapConfig() {
-        return this.dataSource.getBaseConfig();
-    }
+	//Sikrer at koordinater er innenfor gyldige grenser.
+	#sanitize(lat, lon) {
 
-    /**
-     * Henter forslag til søkefeltet.
-     */
-    async getSuggestions(query, signal, proximity) {
-        const raw = await this.dataSource.search(query, signal, proximity);
-        
-        return raw.map(item => {
-            const sanitized = this.#sanitize(item.lat, item.lon);
-            
-            return {
-                ...item,
-                ...sanitized,
-                timezone: item.timezone || tzLookup(sanitized.lat, sanitized.lon)
-            };
-        });
-    }
+		const numericLat = Number(lat);
+		const numericLon = Number(lon);
 
-    async getNearbySignificantPlaces(bbox, zoom) {
-        console.log("[DEBUG REPO] Kaller DataSource.getNearbyPlaces...");
-        return await this.dataSource.getNearbyPlaces(bbox, zoom);
-    }
+		const clampedLat = Math.max(-90, Math.min(90, numericLat));
+		const normalizedLon = ((numericLon + 180) % 360 + 360) % 360 - 180;
 
-    /**
-     * Reverse geocoding for å finne navn på et spesifikt punkt (f.eks. ved klikk i kart).
-     */
-    async getCoordinates(lat, lon) {
-        const query = `${lon},${lat}`; 
-        const results = await this.getSuggestions(query, null);
-        return results?.[0] ?? null;
-    }
+		return {
+			lat: clampedLat,
+			lon: normalizedLon
+		};
+	}
+
+
+	//Henter grunnkonfigurasjon for kartet (API-nøkkel og stil).
+	getMapConfig() {
+		const config = this.dataSource.getBaseConfig();
+		return config;
+	}
+
+
+	//Henter forslag til søkefeltet.
+	async getSuggestions(query, signal, proximity) {
+
+		const rawResults = await this.dataSource.search(query, signal, proximity);
+		
+        const suggestions = [];
+
+		for (let i = 0; i < rawResults.length; i++) {
+			const item = rawResults[i];
+			const sanitizedCoords = this.#sanitize(item.lat, item.lon);
+			const lat = sanitizedCoords.lat;
+			const lon = sanitizedCoords.lon;
+
+			let timezone = item.timezone;
+
+			if (!timezone) {
+				timezone = tzLookup(lat, lon);
+			}
+
+			const suggestion = {
+				...item,
+				lat: lat,
+				lon: lon,
+				timezone: timezone
+			};
+
+			suggestions.push(suggestion);
+		}
+
+		return suggestions;
+	}
+
+	async getNearbySignificantPlaces(bbox, zoom) {
+		const places = await this.dataSource.getNearbyPlaces(bbox, zoom);
+		return places;
+	}
+
+	
+	//Reverse geocoding for å finne navn på et spesifikt punkt
+	async getCoordinates(lat, lon) {
+
+		const query = `${lon},${lat}`;
+
+		const results =
+			await this.getSuggestions(query, null);
+
+		if (!results || results.length === 0) {
+			return null;
+		}
+
+		const firstResult = results[0];
+
+		return firstResult;
+	}
 }
