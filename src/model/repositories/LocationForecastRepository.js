@@ -12,8 +12,8 @@ export default class LocationForecastRepository {
         const cleanLat = Math.max(-90, Math.min(90, Number(lat)));
         const cleanLon = ((Number(lon) + 180) % 360 + 360) % 360 - 180;
 
-        const cacheLat = cleanLat.toFixed(2);
-        const cacheLon = cleanLon.toFixed(2);
+        const cacheLat = cleanLat.toFixed(2);       //BØr denne egentlig rundes ned?
+        const cacheLon = cleanLon.toFixed(2);       //Kan dette gi følgefeil andre steder i programmet??
         const key = `${cacheLat},${cacheLon}`; // ENDRET: Nøkkelen trenger ikke hoursAhead
         
         if (this.cache.has(key)) {

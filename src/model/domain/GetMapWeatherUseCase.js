@@ -25,7 +25,7 @@ export default class GetMapWeatherUseCase {
 
             // Hvis fortsatt helt tomt (skal ikke skje pga activeLocation), legg til nød-Oslo
             if (allPoints.length === 0) {
-                allPoints.push({ name: "Oslo (Fallback)", lat: 59.91, lon: 10.75 });
+                allPoints.push({ name: "Oslo (Fallback)", lat: 59.91, lon: 10.75 }); //dumt å legge inn hardkodete koordinater her. disse bør i såfall settes i App.jsx..
             }
 
             // 3. Hent vær for alle unike punkter
@@ -33,7 +33,7 @@ export default class GetMapWeatherUseCase {
                 const weather = await this.getCurrentWeatherUseCase.execute({ 
                     lat: p.lat, lon: p.lon, timeZone 
                 });
-                return weather ? { ...weather, ...p } : null;
+                return weather ? { ...weather, ...p } : null;           //trenger vi alle disse nullsjekkene hele tiden?
             }));
 
             const final = results.filter(Boolean);
