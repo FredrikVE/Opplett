@@ -14,18 +14,16 @@ export default function useMapPageViewModel(
 ) {
     const DEBOUNCE_DELAY_MS = 500;
 
-    // Standardverdier for kartet
-    const DEFAULT_MAP_VIEW = {
-        bbox: null,
-        zoom: MAP_ZOOM_LEVELS.DEFAULT,
-        lat: activeLocation.lat, // Bruk activeLocation som fallback i stedet for null
-        lon: activeLocation.lon
-    };
-
     // =========================
     // STATE
     // =========================
-    const [mapView, setMapView] = useState(DEFAULT_MAP_VIEW);
+    const [mapView, setMapView] = useState({
+        bbox: null,
+        zoom: MAP_ZOOM_LEVELS.DEFAULT,
+        lat: activeLocation.lat,
+        lon: activeLocation.lon
+    });
+    
     const [bboxToFit, setBboxToFit] = useState(null);
     const [mapPoints, setMapPoints] = useState([]);
     const [weatherPoints, setWeatherPoints] = useState([]);
@@ -34,7 +32,7 @@ export default function useMapPageViewModel(
     // =========================
     // SSOT SYNKRONISERING
     // =========================
-    // Denne sørger for at kartet flytter seg hvis lokasjonen endres globalt (f.eks. via søk i Header)
+    // Sørger for at kartet flytter seg når activeLocation endres (f.eks. via søk i andre faner)
     useEffect(() => {
         if (activeLocation.lat && activeLocation.lon) {
             setMapView(prev => ({
@@ -42,7 +40,6 @@ export default function useMapPageViewModel(
                 lat: activeLocation.lat,
                 lon: activeLocation.lon
             }));
-            // Vi nullstiller ikke bboxToFit her for å unngå uønskede hopp ved små GPS-oppdateringer
         }
     }, [activeLocation.lat, activeLocation.lon]);
 
@@ -69,8 +66,10 @@ export default function useMapPageViewModel(
     // MAP CHANGE HANDLER
     // =========================
     const onMapChange = useCallback((lat, lon, bbox, currentZoom, points) => {
-        // Vi nullstiller bboxToFit når brukeren manuelt panorerer/zoomer
+        // Vi nullstiller bboxToFit her så kartet ikke "låses" til forrige søk
         setBboxToFit(null);
+        
+        // Lagrer punktene som extractCityPoints i kartet har funnet
         setMapPoints(points || []);
 
         setMapView({
@@ -85,6 +84,7 @@ export default function useMapPageViewModel(
     // WEATHER FETCH LOGIKK
     // =========================
     useEffect(() => {
+        // Vi trenger punkter og tidssone for å starte
         if (!mapPoints || mapPoints.length === 0 || !tz) {
             return;
         }
@@ -96,14 +96,18 @@ export default function useMapPageViewModel(
 
             setIsLoading(true);
             try {
+                // Henter værdata for alle identifiserte punkter i kartutsnittet
                 const results = await getMapWeatherUseCase.execute(mapPoints, tz);
+                
                 if (!cancelled) {
                     setWeatherPoints(results || []);
                 }
             } catch (error) {
-                console.error("[VM] Værhenting feilet:", error);
+                console.error("[VM] Feil ved henting av vær for kart:", error);
             } finally {
-                if (!cancelled) setIsLoading(false);
+                if (!cancelled) {
+                    setIsLoading(false);
+                }
             }
         }, DEBOUNCE_DELAY_MS);
 
@@ -114,28 +118,19 @@ export default function useMapPageViewModel(
     }, [mapPoints, tz, getMapWeatherUseCase]);
 
     // =========================
-    // MAP CENTER RESOLUTION
-    // =========================
-    const mapCenter = {
-        lat: mapView.lat ?? activeLocation.lat,
-        lon: mapView.lon ?? activeLocation.lon
-    };
-
-    // =========================
     // HANDLERS
     // =========================
 
     const handleSuggestionSelected = (selected) => {
-        // 1. Tøm gamle ikoner umiddelbart for å unngå visuell "støy" under flytting
+        // Tømmer forrige værikoner så de ikke henger igjen på feil plass under flytting
         setWeatherPoints([]);
         
-        // 2. Oppdater global SSOT
+        // Oppdaterer global SSOT i App.jsx
         onLocationChange(selected);
 
-        // 3. Beregn nytt utsnitt
+        // Bruker hjelpefunksjonen til å finne korrekt zoom/utsnitt for stedstypen
         const { zoom, bbox } = calculateMapView(selected);
         
-        // 4. Oppdater lokal state som trigger kart-flytting
         setBboxToFit(bbox);
         setMapView({
             bbox: bbox,
@@ -144,22 +139,17 @@ export default function useMapPageViewModel(
             lon: selected.lon
         });
 
-        // 5. Tøm søkeforslag
         searchViewModel.onSuggestionSelected(selected);
     };
 
     const handleResetToDeviceLocation = () => {
-        // 1. Tøm værikoner
         setWeatherPoints([]);
-        
-        // 2. Tving kartet til å slutte å bruke bbox
         setBboxToFit(null);
 
-        // 3. Trigger global reset (manualLocation = null i App.jsx)
+        // Nullstiller manuelt valg i App.jsx (slik at GPS overtar)
         onResetToDeviceLocation();
 
-        // 4. Oppdater lokal kart-state til standard (GPS)
-        // Her bruker vi koordinatene fra props direkte for å sikre øyeblikkelig flytting
+        // Tvinger kartet til å flytte seg til de nåværende GPS-koordinatene
         setMapView({
             bbox: null,
             zoom: MAP_ZOOM_LEVELS.DEFAULT,
@@ -167,7 +157,6 @@ export default function useMapPageViewModel(
             lon: activeLocation.lon
         });
 
-        // 5. Tøm søkefelt
         searchViewModel.onResetLocation();
     };
 
@@ -177,12 +166,15 @@ export default function useMapPageViewModel(
         zoom: mapView.zoom,
         bboxToFit,
         location: activeLocation,
-        mapCenter,
+        mapCenter: {
+            lat: mapView.lat ?? activeLocation.lat,
+            lon: mapView.lon ?? activeLocation.lon
+        },
         weatherPoints,
         isLoading,
         onMapChange,
 
-        // Søke-grensesnitt
+        // Søke-funksjonalitet
         query: searchViewModel.query,
         suggestions: searchViewModel.suggestions,
         onSearchChange: searchViewModel.onSearchChange,
