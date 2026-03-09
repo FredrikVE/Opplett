@@ -40,6 +40,18 @@ export function useMapTiler(props) {
         );
     }
 
+    // NY FUNKSJON: Sjekker om bounding boxen er absurd stor (spenner over store deler av kloden)
+    function isBoundsTooLarge(bounds) {
+        if (!bounds?.southwest || !bounds?.northeast) return true;
+        
+        const latDiff = Math.abs(bounds.northeast.lat - bounds.southwest.lat);
+        const lonDiff = Math.abs(bounds.northeast.lng - bounds.southwest.lng);
+        
+        // Hvis boksen spenner over mer enn 60 grader i en retning, er den for stor til å være nyttig
+        // for nøyaktig filtrering. (Gjelder USA, Russland, Norge pga Bouvetøya etc).
+        return latDiff > 60 || lonDiff > 60;
+    }
+
     function getLayerPriority(layerId) {
         switch (layerId) {
             case "Capital city labels": return 0;
@@ -100,15 +112,20 @@ export function useMapTiler(props) {
         const map = mapInstanceRef.current;
         if (!map) return [];
 
-        // Henter data fra den ferske referansen
         const currentLoc = activeLocationRef.current;
         const selectedType = currentLoc?.type ?? null;
         const selectedBounds = currentLoc?.bounds ?? null;
         const pointLat = currentLoc?.lat;
         const pointLon = currentLoc?.lon;
 
-        const shouldRestrictToSelectedBounds =
+        // Vi inkluderer country igjen...
+        let shouldRestrictToSelectedBounds =
             ["country", "major_landform", "region", "subregion", "county", "municipality"].includes(selectedType);
+
+        // ...MEN vi slår av bbox-filtreringen hvis boksen er korrupt/gigantisk!
+        if (shouldRestrictToSelectedBounds && isBoundsTooLarge(selectedBounds)) {
+            shouldRestrictToSelectedBounds = false;
+        }
 
         const abstractMarkers = syncAbstractMarkersFromLayout();
         const mappedPoints = [];
@@ -221,6 +238,8 @@ export function useMapTiler(props) {
                     // Filtrer ut byer fra andre land hvis vi har søkt på et land
                     if (currentLoc?.type === "country" && currentLoc?.countryCode) {
                         const tileCountryCode = props.iso_a2 || props.country_code;
+                        
+                        // Godta hvis det matcher. Hvis tileCountryCode mangler, godta (viktig for store byer)
                         if (tileCountryCode) {
                             return tileCountryCode.toLowerCase() === currentLoc.countryCode.toLowerCase();
                         }
@@ -252,7 +271,7 @@ export function useMapTiler(props) {
             clearTimeout(idleDebounceRef.current);
             idleDebounceRef.current = setTimeout(() => {
                 reportMapStatus();
-            }, 150);
+            }, 300); // 300ms gir god tid til at layouten oppdaterer seg før vi høster byer
         });
 
         mapInstanceRef.current = map;
