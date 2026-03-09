@@ -40,15 +40,12 @@ export function useMapTiler(props) {
         );
     }
 
-    // NY FUNKSJON: Sjekker om bounding boxen er absurd stor (spenner over store deler av kloden)
     function isBoundsTooLarge(bounds) {
         if (!bounds?.southwest || !bounds?.northeast) return true;
         
         const latDiff = Math.abs(bounds.northeast.lat - bounds.southwest.lat);
         const lonDiff = Math.abs(bounds.northeast.lng - bounds.southwest.lng);
         
-        // Hvis boksen spenner over mer enn 60 grader i en retning, er den for stor til å være nyttig
-        // for nøyaktig filtrering. (Gjelder USA, Russland, Norge pga Bouvetøya etc).
         return latDiff > 60 || lonDiff > 60;
     }
 
@@ -101,10 +98,7 @@ export function useMapTiler(props) {
         const bounds = map.getBounds();
         const bbox = [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()];
 
-        console.log("[DEBUG MAP] reportMapStatus: Kartet er ferdig rendret. Henter byer...");
         const points = extractCityPoints();
-
-        console.log(`[DEBUG MAP] reportMapStatus: Rapporterer ${points.length} punkter til VM.`);
         onMapChange(center.lat, center.lng, bbox, map.getZoom(), points);
     };
 
@@ -118,11 +112,9 @@ export function useMapTiler(props) {
         const pointLat = currentLoc?.lat;
         const pointLon = currentLoc?.lon;
 
-        // Vi inkluderer country igjen...
         let shouldRestrictToSelectedBounds =
             ["country", "major_landform", "region", "subregion", "county", "municipality"].includes(selectedType);
 
-        // ...MEN vi slår av bbox-filtreringen hvis boksen er korrupt/gigantisk!
         if (shouldRestrictToSelectedBounds && isBoundsTooLarge(selectedBounds)) {
             shouldRestrictToSelectedBounds = false;
         }
@@ -131,7 +123,6 @@ export function useMapTiler(props) {
         const mappedPoints = [];
         const seen = new Set();
 
-        // Kun vis "Valgt posisjon" hvis vi ikke har søkt på et helt land/region
         const shouldIncludeSelectedPoint =
             pointLat != null && pointLon != null &&
             !shouldRestrictToSelectedBounds &&
@@ -192,14 +183,81 @@ export function useMapTiler(props) {
         const maxPoints = getMaxPointsForZoom(map.getZoom());
         const finalPoints = mappedPoints.slice(0, maxPoints);
 
-        console.log(`[DEBUG MAP] extractCityPoints: Fant ${abstractMarkers.length} layout-markører, beholdt ${finalPoints.length}.`);
         return finalPoints;
+    };
+
+    // NY FUNKSJON: Henter polygon og tegner blå grense på kartet
+    const updateMapHighlight = async (location) => {
+        const map = mapInstanceRef.current;
+        if (!map || !map.style) return;
+
+        const validTypes = ["country", "major_landform", "region", "subregion", "county", "municipality"];
+        
+        // Fjern highlight hvis det ikke er et stort område (f.eks. "Min posisjon" eller en bestemt adresse)
+        if (!location?.id || !validTypes.includes(location.type)) {
+            if (map.getSource('highlight-source')) {
+                map.getSource('highlight-source').setData({ type: "FeatureCollection", features: [] });
+            }
+            return;
+        }
+
+        try {
+            const res = await fetch(`https://api.maptiler.com/geocoding/${location.id}.json?key=${apiKey}`);
+            if (!res.ok) return;
+            const geojson = await res.json();
+
+            // Sjekk om kartet fortsatt lever etter async-kallet
+            if (!map.style) return;
+
+            // Hvis kilden allerede finnes, bytt bare ut dataene. Hvis ikke, opprett kilden og lagene.
+            if (map.getSource('highlight-source')) {
+                map.getSource('highlight-source').setData(geojson);
+            } else {
+                map.addSource('highlight-source', { type: 'geojson', data: geojson });
+
+                // 1. Svak blå fyllfarge
+                map.addLayer({
+                    id: 'highlight-fill',
+                    type: 'fill',
+                    source: 'highlight-source',
+                    paint: {
+                        'fill-color': '#4285F4',
+                        'fill-opacity': 0.05
+                    }
+                });
+
+                // 2. Tykk og dus blå "Glow" under streken
+                map.addLayer({
+                    id: 'highlight-line-glow',
+                    type: 'line',
+                    source: 'highlight-source',
+                    paint: {
+                        'line-color': '#4285F4',
+                        'line-width': 8,
+                        'line-opacity': 0.25
+                    }
+                });
+
+                // 3. Skarp, tynnere hovedstrek i midten
+                map.addLayer({
+                    id: 'highlight-line-main',
+                    type: 'line',
+                    source: 'highlight-source',
+                    paint: {
+                        'line-color': '#4285F4',
+                        'line-width': 2,
+                        'line-opacity': 0.9
+                    }
+                });
+            }
+        } catch (e) {
+            console.error("[DEBUG MAP] Feil ved opptegning av grenser:", e);
+        }
     };
 
     useEffect(() => {
         if (!mapContainerRef.current || mapInstanceRef.current) return;
 
-        console.log("[DEBUG MAP] Initialiserer maptilersdk...");
         maptilersdk.config.apiKey = apiKey;
 
         const map = new maptilersdk.Map({
@@ -213,9 +271,6 @@ export function useMapTiler(props) {
         });
 
         map.on("load", () => {
-            console.log("[DEBUG MAP] Kart lastet (load)");
-
-            // TVING by-lagene til å være synlige helt ned til zoom 2
             const labelLayers = ["Capital city labels", "City labels", "Town labels", "Place labels"];
             labelLayers.forEach(layer => {
                 if (map.getLayer(layer)) {
@@ -235,11 +290,8 @@ export function useMapTiler(props) {
                     const props = feature.properties || {};
                     const currentLoc = activeLocationRef.current;
 
-                    // Filtrer ut byer fra andre land hvis vi har søkt på et land
                     if (currentLoc?.type === "country" && currentLoc?.countryCode) {
                         const tileCountryCode = props.iso_a2 || props.country_code;
-                        
-                        // Godta hvis det matcher. Hvis tileCountryCode mangler, godta (viktig for store byer)
                         if (tileCountryCode) {
                             return tileCountryCode.toLowerCase() === currentLoc.countryCode.toLowerCase();
                         }
@@ -247,6 +299,9 @@ export function useMapTiler(props) {
                     return true;
                 }
             });
+
+            // Tegn grensen første gang kartet lastes opp!
+            updateMapHighlight(activeLocationRef.current);
         });
 
         map.on("move", () => {
@@ -260,7 +315,6 @@ export function useMapTiler(props) {
 
         map.on("moveend", () => {
             if (isProgrammaticMove.current) {
-                console.log("[DEBUG MAP] moveend: Programmatisk flytting ferdig.");
                 isProgrammaticMove.current = false;
             }
         });
@@ -271,20 +325,16 @@ export function useMapTiler(props) {
             clearTimeout(idleDebounceRef.current);
             idleDebounceRef.current = setTimeout(() => {
                 reportMapStatus();
-            }, 300); // 300ms gir god tid til at layouten oppdaterer seg før vi høster byer
+            }, 300);
         });
 
         mapInstanceRef.current = map;
 
-        // --- LINTER FIKS HER ---
-        // Lagre verdien i en konstant inne i effekten
         const currentActiveMarkers = activeAbstractMarkersRef.current;
 
         return () => {
             markersRef.current.forEach((marker) => marker.remove());
             markersRef.current = [];
-            
-            // Bruk den faste referansen i oppryddingen
             currentActiveMarkers.clear();
 
             if (mapInstanceRef.current) {
@@ -294,6 +344,14 @@ export function useMapTiler(props) {
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [apiKey, style]);
+
+    // NY EFFECT: Tegner grensen på nytt hver gang ID-en til søket endrer seg!
+    useEffect(() => {
+        const map = mapInstanceRef.current;
+        if (map && map.loaded()) {
+            updateMapHighlight(activeLocation);
+        }
+    }, [activeLocation.id, apiKey]); 
 
     useEffect(() => {
         const map = mapInstanceRef.current;
@@ -329,7 +387,6 @@ export function useMapTiler(props) {
         if (!map || lat == null || lon == null) return;
 
         if (bboxToFit) {
-            console.log("[DEBUG MAP] Synkronisering: fitBounds trigget");
             isProgrammaticMove.current = true;
             map.fitBounds(bboxToFit, {
                 padding: FIT_BOUNDS_PADDING,
@@ -348,7 +405,6 @@ export function useMapTiler(props) {
             Math.abs(currentZoom - zoom) > SIGNIFICANT_ZOOM_THRESHOLD;
 
         if (hasMoved) {
-            console.log(`[DEBUG MAP] Synkronisering: flyTo trigget (lat: ${lat}, lon: ${lon})`);
             isProgrammaticMove.current = true;
             map.flyTo({
                 center: [lon, lat],
