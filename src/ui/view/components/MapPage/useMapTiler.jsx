@@ -70,7 +70,7 @@ export function useMapTiler(props) {
     }
 
     function getMaxPointsForZoom(currentZoom) {
-        if (currentZoom <= 4) return 12;
+        if (currentZoom <= 4) return 10;
         if (currentZoom <= 6) return 12;
         if (currentZoom <= 8) return 12;
         if (currentZoom <= 10) return 10;
@@ -276,10 +276,16 @@ export function useMapTiler(props) {
 
         mapInstanceRef.current = map;
 
+        // --- LINTER FIKS HER ---
+        // Lagre verdien i en konstant inne i effekten
+        const currentActiveMarkers = activeAbstractMarkersRef.current;
+
         return () => {
             markersRef.current.forEach((marker) => marker.remove());
             markersRef.current = [];
-            activeAbstractMarkersRef.current.clear();
+            
+            // Bruk den faste referansen i oppryddingen
+            currentActiveMarkers.clear();
 
             if (mapInstanceRef.current) {
                 mapInstanceRef.current.remove();
