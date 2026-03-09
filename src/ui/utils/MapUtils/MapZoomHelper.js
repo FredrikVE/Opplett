@@ -5,7 +5,7 @@ export function calculateMapView(selected) {
     const { type, bounds } = selected;
     let targetZoom = MAP_ZOOM_LEVELS.DEFAULT;
 
-    //Bestem zoom-nivå basert på type (og utstrekning for regioner)
+    // Bestem zoom-nivå basert på type (og utstrekning for regioner)
     switch (true) {
         case (type === "country" || type === "major_landform"):
             targetZoom = MAP_ZOOM_LEVELS.COUNTRY;
@@ -34,11 +34,14 @@ export function calculateMapView(selected) {
             break;
     }
 
-    //Bestem om vi skal bruke Bounding Box (skipper for land/kontinent)
-    const largeTypes = ["country", "major_landform", "continent", "continental_marine"];
+    // Ikke bruk bbox for land ennå.
+    // MapTiler kan returnere enorme bbox-er for land med fjerne territorier,
+    // og da zoomer kartet nesten helt ut.
+    // Når vi senere henter full geometri for landet, kan vi fitte på polygon i stedet.
+    const skipBoundsTypes = ["country", "major_landform", "continent", "continental_marine"];
     let targetBbox = null;
 
-    if (bounds && !largeTypes.includes(type)) {
+    if (bounds && !skipBoundsTypes.includes(type)) {
         targetBbox = [
             bounds.southwest.lng,
             bounds.southwest.lat,

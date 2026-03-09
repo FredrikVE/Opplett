@@ -2,9 +2,9 @@
 import { useMapTiler } from "./useMapTiler.jsx";
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 
-export default function WeatherMap({ apiKey, style, lat, lon, zoom, bboxToFit, weatherPoints, onMapChange }) {
+export default function WeatherMap({ apiKey, style, lat, lon, zoom, bboxToFit, weatherPoints, onMapChange, activeLocation }) {
 
-	const mapContainerRef = useMapTiler({ apiKey, style, lat, lon, zoom, bboxToFit, weatherPoints, onMapChange });
+	const mapContainerRef = useMapTiler({ apiKey, style, lat, lon, zoom, bboxToFit, weatherPoints, onMapChange, activeLocation });
 
 	return (
 		<div className="map-page-wrap">

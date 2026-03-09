@@ -101,7 +101,8 @@ export default function App() {
 
         return { lat, lon, name, timezone,
             bounds: manualLocation?.bounds ?? null,
-            type: manualLocation?.type ?? null
+            type: manualLocation?.type ?? null,
+            countryCode: manualLocation?.countryCode ?? null
         };
     }, 
 	[manualLocation, coords]);

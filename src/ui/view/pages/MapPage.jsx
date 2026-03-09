@@ -50,6 +50,7 @@ export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREE
 					bboxToFit={bboxToFit}
 					weatherPoints={weatherPoints}
 					onMapChange={onMapChange}
+					activeLocation={location}
 				/>
 			</main>
 		</div>

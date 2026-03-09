@@ -124,6 +124,7 @@ export default function useMapPageViewModel(
     const handleSuggestionSelected = (selected) => {
         // Tømmer forrige værikoner så de ikke henger igjen på feil plass under flytting
         setWeatherPoints([]);
+        setMapPoints([]);     // <-- LEGG TIL DENNE
         
         // Oppdaterer global SSOT i App.jsx
         onLocationChange(selected);

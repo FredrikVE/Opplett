@@ -54,6 +54,30 @@ export default class MapTilerDataSource {
 		return locations;
 	}
 
+	#isReverseGeocodingQuery(query) {
+		if (!query || typeof query !== "string") {
+			return false;
+		}
+
+		const parts = query.split(",");
+
+		if (parts.length !== 2) {
+			return false;
+		}
+
+		const lon = Number(parts[0].trim());
+		const lat = Number(parts[1].trim());
+
+		return (
+			Number.isFinite(lon) &&
+			Number.isFinite(lat) &&
+			lon >= -180 &&
+			lon <= 180 &&
+			lat >= -90 &&
+			lat <= 90
+		);
+	}
+
 	#buildSearchUrl(query, proximity) {
 
 		const url = new URL(`${this.#baseUrl}/${encodeURIComponent(query)}.json`);
@@ -61,12 +85,21 @@ export default class MapTilerDataSource {
 		url.searchParams.set("key", this.#apiKey);
 		url.searchParams.set("language", "no");
 
-		if (proximity && proximity.lat != null && proximity.lon != null) {
+		const isReverseGeocoding = this.#isReverseGeocodingQuery(query);
 
-			url.searchParams.set(
-				"proximity",
-				`${proximity.lon},${proximity.lat}`
-			);
+		if (isReverseGeocoding) {
+			url.searchParams.set("limit", "1");
+		}
+
+		else {
+			url.searchParams.set("limit", "8");
+
+			if (proximity && proximity.lat != null && proximity.lon != null) {
+				url.searchParams.set(
+					"proximity",
+					`${proximity.lon},${proximity.lat}`
+				);
+			}
 		}
 
 		return url;
@@ -136,12 +169,15 @@ export default class MapTilerDataSource {
 		}
 
 		return {
+			id: feature.id || null,
 			name,
 			lat,
 			lon,
 			bounds,
 			type,
-			timezone
+			timezone,
+			countryCode: feature.properties?.country_code || null,
+			context: feature.context || []
 		};
 	}
 

@@ -52,14 +52,18 @@ export default class MapTilerRepository {
 			let timezone = item.timezone;
 
 			if (!timezone) {
-				timezone = tzLookup(lat, lon);
+				try {
+					timezone = tzLookup(lat, lon);
+				} catch {
+					timezone = null;
+				}
 			}
 
 			const suggestion = {
 				...item,
-				lat: lat,
-				lon: lon,
-				timezone: timezone
+				lat,
+				lon,
+				timezone
 			};
 
 			suggestions.push(suggestion);

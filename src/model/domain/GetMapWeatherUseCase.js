@@ -57,7 +57,12 @@ export default class GetMapWeatherUseCase {
 
 			const combinedResult = {
 				...weather,
-				...point
+				...point,
+				id: point.id ?? null,
+				type: point.type ?? null,
+				bounds: point.bounds ?? null,
+				countryCode: point.countryCode ?? null,
+				context: point.context ?? []
 			};
 
 			weatherResults.push(combinedResult);
