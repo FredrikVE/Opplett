@@ -30,8 +30,12 @@ Hver og en av disse initieres i `App.jsx`, som er programmets `main`.
 
 ## Bruk av bilioteker i Maptiler
 
-```
+```bash
 npm install @maptiler/marker-layout
+```
+
+```bash
+npm install --save @maptiler/sdk
 ```
 
 
