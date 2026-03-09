@@ -21,24 +21,31 @@ export default class MapTilerRepository {
 		};
 	}
 
-
 	//Henter grunnkonfigurasjon for kartet (API-nøkkel og stil).
 	getMapConfig() {
+
 		const config = this.dataSource.getBaseConfig();
+
+		console.log("[DEBUG Repo] Map config hentet:", config);
+
 		return config;
 	}
-
 
 	//Henter forslag til søkefeltet.
 	async getSuggestions(query, signal, proximity) {
 
+		console.log("[DEBUG Repo] Søker etter:", query);
+
 		const rawResults = await this.dataSource.search(query, signal, proximity);
-		
-        const suggestions = [];
+
+		const suggestions = [];
 
 		for (let i = 0; i < rawResults.length; i++) {
+
 			const item = rawResults[i];
+
 			const sanitizedCoords = this.#sanitize(item.lat, item.lon);
+
 			const lat = sanitizedCoords.lat;
 			const lon = sanitizedCoords.lon;
 
@@ -58,28 +65,30 @@ export default class MapTilerRepository {
 			suggestions.push(suggestion);
 		}
 
+		console.log("[DEBUG Repo] Forslag funnet:", suggestions.length);
+
 		return suggestions;
 	}
 
-	async getNearbySignificantPlaces(bbox, zoom) {
-		const places = await this.dataSource.getNearbyPlaces(bbox, zoom);
-		return places;
-	}
-
-	
 	//Reverse geocoding for å finne navn på et spesifikt punkt
 	async getCoordinates(lat, lon) {
 
+		console.log("[DEBUG Repo] Reverse lookup:", lat, lon);
+
 		const query = `${lon},${lat}`;
 
-		const results =
-			await this.getSuggestions(query, null);
+		const results = await this.getSuggestions(query, null);
 
 		if (!results || results.length === 0) {
+
+			console.log("[DEBUG Repo] Ingen koordinat-resultater.");
+
 			return null;
 		}
 
 		const firstResult = results[0];
+
+		console.log("[DEBUG Repo] Reverse lookup resultat:", firstResult);
 
 		return firstResult;
 	}

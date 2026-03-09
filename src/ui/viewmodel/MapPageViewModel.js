@@ -1,172 +1,245 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import useSearchViewModel from "./SearchViewModel.js";
 import { calculateMapView } from "../utils/MapUtils/MapZoomHelper.js";
-import { calculateWeatherIconSpread } from "../utils/MapUtils/MapWeatherIconSpread.js";
 import { MAP_ZOOM_LEVELS } from "../utils/MapUtils/MapZoomLevels.js";
 
-export default function useMapPageViewModel(mapTilerRepository, searchLocationUseCase, getMapWeatherUseCase, activeLocation, onLocationChange, onResetToDeviceLocation) {
+export default function useMapPageViewModel(
+	mapTilerRepository,
+	searchLocationUseCase,
+	getMapWeatherUseCase,
+	activeLocation,
+	onLocationChange,
+	onResetToDeviceLocation
+) {
 
-    const DEBOUNCE_DELAY_MS = 500;
-    const DEFAULT_MAP_VIEW = { bbox: null, zoom: MAP_ZOOM_LEVELS.DEFAULT, lat: null, lon: null};
+	const DEBOUNCE_DELAY_MS = 500;
 
-    //State
-    const [mapView, setMapView] = useState(DEFAULT_MAP_VIEW);
-    const [bboxToFit, setBboxToFit] = useState(null);
-    const [weatherPoints, setWeatherPoints] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
+	const DEFAULT_MAP_VIEW = {
+		bbox: null,
+		zoom: MAP_ZOOM_LEVELS.DEFAULT,
+		lat: null,
+		lon: null
+	};
 
-    //Proximity for søk
-    const searchProximity = {lat: activeLocation.lat, lon: activeLocation.lon};
+	// =========================
+	// STATE
+	// =========================
 
-    //Initialiserer søk med proximity fra SSOT
-    const searchViewModel = useSearchViewModel(
-        searchLocationUseCase,
-        onLocationChange,
-        searchProximity,
-        onResetToDeviceLocation
-    );
+	const [mapView, setMapView] = useState(DEFAULT_MAP_VIEW);
+	const [bboxToFit, setBboxToFit] = useState(null);
+	const [mapPoints, setMapPoints] = useState([]);
+	const [weatherPoints, setWeatherPoints] = useState([]);
+	const [isLoading, setIsLoading] = useState(false);
 
-    const { apiKey, style } = useMemo(() => {
-        return mapTilerRepository.getMapConfig();
-    }, [mapTilerRepository]);
+	console.log("[DEBUG VM] Init MapPageViewModel");
 
-    //Tidssonen kommer ferdig vasket fra activeLocation
-    const tz = activeLocation.timezone;
+	// =========================
+	// SEARCH PROXIMITY
+	// =========================
 
-    //Kartet sender endringer hit når brukeren panorerer eller zoomer
-    const onMapChange = useCallback((lat, lon, bbox, currentZoom) => {
+	const searchProximity = {
+		lat: activeLocation.lat,
+		lon: activeLocation.lon
+	};
 
-        console.log("[DEBUG VM] onMapChange mottatt:", {
-            lat,
-            lon,
-            zoom: currentZoom,
-            hasBbox: !!bbox
-        });
+	console.log("[DEBUG VM] Search proximity:", searchProximity);
 
-        setBboxToFit(null);
+	const searchViewModel = useSearchViewModel(
+		searchLocationUseCase,
+		onLocationChange,
+		searchProximity,
+		onResetToDeviceLocation
+	);
 
-        setMapView({
-            bbox,
-            zoom: currentZoom,
-            lat,
-            lon
-        });
+	// =========================
+	// MAP CONFIG
+	// =========================
 
-    }, []);
+	const { apiKey, style } = useMemo(() => {
 
-    //Henter værdata for gjeldende kartutsnitt
-    useEffect(() => {
+		const config = mapTilerRepository.getMapConfig();
 
-        console.log("[DEBUG VM] Sjekker forutsetninger for vær-henting:", {
-            hasBbox: !!mapView.bbox,
-            hasTz: !!tz,
-            tz: tz,
-            zoom: mapView.zoom
-        });
+		console.log("[DEBUG VM] Map config loaded:", config);
 
-        if (!mapView.bbox || !tz) {
-            console.log("[DEBUG VM] Stopper: Mangler BBOX eller Tidssone.");
-            return;
-        }
+		return config;
 
-        let cancelled = false;
-        const minDist = calculateWeatherIconSpread(mapView.zoom);
+	}, [mapTilerRepository]);
 
-        console.log( `[DEBUG VM] Planlegger henting om ${DEBOUNCE_DELAY_MS}ms. minDist: ${minDist}`);
+	// =========================
+	// TIMEZONE
+	// =========================
 
-        const timer = setTimeout(async () => {
+	const tz = activeLocation.timezone;
 
-            if (cancelled) {
-                return;
-            }
+	console.log("[DEBUG VM] Active timezone:", tz);
 
-            setIsLoading(true);
+	// =========================
+	// MAP CHANGE HANDLER
+	// =========================
 
-            console.log("[DEBUG VM] Kaller GetMapWeatherUseCase.execute()...");
+	const onMapChange = useCallback((lat, lon, bbox, currentZoom, points) => {
 
-            try {
+		console.log("[DEBUG VM] onMapChange mottatt:", {
+			lat,
+			lon,
+			zoom: currentZoom,
+			points: points.length
+		});
 
-                const points = await getMapWeatherUseCase.execute(
-                    mapView.bbox,
-                    tz,
-                    minDist,
-                    activeLocation,
-                    mapView.zoom
-                );
+		setBboxToFit(null);
 
-                if (!cancelled) {
+		setMapPoints(points);
 
-                    console.log( `[DEBUG VM] Suksess! Mottok ${points?.length || 0} punkter.`);
+		setMapView({
+			bbox,
+			zoom: currentZoom,
+			lat,
+			lon
+		});
 
-                    setWeatherPoints(points || []);
-                }
+	}, []);
 
-            } 
-            catch (error) {
+	// =========================
+	// WEATHER FETCH
+	// =========================
 
-                console.error("[DEBUG VM] Feil i fetch-prosessen:", error);
+	useEffect(() => {
 
-            } 
-            finally {
+		console.log("[DEBUG VM] Evaluating weather fetch conditions");
+		console.log("[DEBUG VM] mapPoints:", mapPoints);
 
-                if (!cancelled) {
-                    setIsLoading(false);
-                }
+		if (mapPoints.length === 0 || !tz) {
 
-            }
+			console.log("[DEBUG VM] STOP fetch: missing points or timezone");
+			return;
+		}
 
-        }, DEBOUNCE_DELAY_MS);
+		let cancelled = false;
 
-        return () => {
-            cancelled = true;
-            clearTimeout(timer);
-        };
+		console.log("[DEBUG VM] Scheduling weather fetch in", DEBOUNCE_DELAY_MS, "ms");
 
-    }, [mapView.bbox, mapView.zoom, tz, getMapWeatherUseCase, activeLocation]);
+		const timer = setTimeout(async () => {
 
-    //Beregnet kart-senter
-    const mapCenter = {
-        lat: mapView.lat ?? activeLocation.lat,
-        lon: mapView.lon ?? activeLocation.lon
-    };
+			if (cancelled) {
+				console.log("[DEBUG VM] Fetch cancelled before execution");
+				return;
+			}
 
-    return {
-        apiKey,
-        style,
-        zoom: mapView.zoom,
-        bboxToFit,
-        location: activeLocation,
-        mapCenter: mapCenter,
+			setIsLoading(true);
 
-        weatherPoints,
-        isLoading,
-        onMapChange,
+			console.log("[DEBUG VM] Calling GetMapWeatherUseCase.execute()");
+			console.log("[DEBUG VM] Points:", mapPoints.length);
 
-        query: searchViewModel.query,
-        suggestions: searchViewModel.suggestions,
-        onSearchChange: searchViewModel.onSearchChange,
+			try {
 
-        onSuggestionSelected: (selected) => {
-            console.log("[DEBUG VM] Forslag valgt:", selected.name);
-            onLocationChange(selected);
-            searchViewModel.onSuggestionSelected(selected);
-            const { zoom, bbox } = calculateMapView(selected);
-            setBboxToFit(bbox);
-            setMapView({
-                bbox: bbox,
-                zoom: zoom,
-                lat: selected.lat,
-                lon: selected.lon
-            });
-        },
+				const results = await getMapWeatherUseCase.execute(
+					mapPoints,
+					tz
+				);
 
-        onResetToDeviceLocation: () => {
-            console.log("[DEBUG VM] Resetter til GPS.");
-            setBboxToFit(null);
-            setMapView(DEFAULT_MAP_VIEW);
-            onResetToDeviceLocation();
-            searchViewModel.onResetLocation();
+				if (!cancelled) {
 
-        }
-    };
+					console.log("[DEBUG VM] Weather points received:", results?.length);
+
+					setWeatherPoints(results || []);
+				}
+
+			} catch (error) {
+
+				console.error("[DEBUG VM] Weather fetch failed:", error);
+
+			} finally {
+
+				if (!cancelled) {
+					setIsLoading(false);
+				}
+			}
+
+		}, DEBOUNCE_DELAY_MS);
+
+		return () => {
+
+			console.log("[DEBUG VM] Cleanup weather fetch timer");
+
+			cancelled = true;
+			clearTimeout(timer);
+		};
+
+	}, [
+		mapPoints,
+		tz,
+		getMapWeatherUseCase
+	]);
+
+	// =========================
+	// MAP CENTER
+	// =========================
+
+	const mapCenter = {
+		lat: mapView.lat ?? activeLocation.lat,
+		lon: mapView.lon ?? activeLocation.lon
+	};
+
+	console.log("[DEBUG VM] Map center resolved:", mapCenter);
+
+	// =========================
+	// RETURN VIEWMODEL
+	// =========================
+
+	return {
+
+		apiKey,
+		style,
+
+		zoom: mapView.zoom,
+
+		bboxToFit,
+		location: activeLocation,
+
+		mapCenter,
+
+		weatherPoints,
+		isLoading,
+
+		onMapChange,
+
+		query: searchViewModel.query,
+		suggestions: searchViewModel.suggestions,
+		onSearchChange: searchViewModel.onSearchChange,
+
+		onSuggestionSelected: (selected) => {
+
+			console.log("[DEBUG VM] Suggestion selected:", selected.name);
+
+			onLocationChange(selected);
+
+			searchViewModel.onSuggestionSelected(selected);
+
+			const { zoom, bbox } = calculateMapView(selected);
+
+			console.log("[DEBUG VM] Calculated map view:", { zoom, bbox });
+
+			setBboxToFit(bbox);
+
+			setMapView({
+				bbox: bbox,
+				zoom: zoom,
+				lat: selected.lat,
+				lon: selected.lon
+			});
+		},
+
+		onResetToDeviceLocation: () => {
+
+			console.log("[DEBUG VM] Resetting to device location");
+
+			setBboxToFit(null);
+
+			setMapView(DEFAULT_MAP_VIEW);
+
+			onResetToDeviceLocation();
+
+			searchViewModel.onResetLocation();
+		}
+	};
 }

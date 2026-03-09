@@ -6,90 +6,64 @@ export default class GetMapWeatherUseCase {
 		this.getCurrentWeatherUseCase = getCurrentWeatherUseCase;
 	}
 
-	async execute(bbox, timeZone, activeLocation, zoom) {   //minDist er fjernet fra parameteret
+	async execute(points, timeZone) {
 
-		console.log("[DEBUG 2] UseCase: Starter henting av ekte steder...");
+		console.log("[DEBUG 2] UseCase: Starter værhenting for kartpunkter");
 
 		try {
 
-			const nearbyPlaces = await this.#loadNearbyPlaces(bbox, zoom);
-			const pointsToFetch = this.#buildPointList(activeLocation,nearbyPlaces);
-			const weatherPoints = await this.#loadWeatherForPoints(pointsToFetch, timeZone);
+			if (!points || points.length === 0) {
+				console.log("[DEBUG 2] Ingen punkter mottatt.");
+				return [];
+			}
+
+			console.log(`[DEBUG 2] Mottok ${points.length} kartpunkter.`);
+
+			const weatherPoints = await this.#loadWeatherForPoints(points, timeZone);
 
 			console.log(`[DEBUG 2] UseCase ferdig. Sender ${weatherPoints.length} punkter til VM.`);
 
 			return weatherPoints;
 
-		} 
-        catch (error) {
+		}
+		catch (error) {
+
 			console.error("[DEBUG 2] Kritisk UseCase feil:", error);
+
 			return [];
 		}
 	}
 
-	async #loadNearbyPlaces(bbox, zoom) {
+	async #loadWeatherForPoints(points, timeZone) {
 
-		let places = [];
+		const weatherResults = [];
 
-		try {
-			places = await this.mapTilerRepository.getNearbySignificantPlaces(bbox, zoom);
+		for (const point of points) {
 
-			const count = places ? places.length : 0;
-			console.log(`[DEBUG 2] Repo fant ${count} steder.`);
+			console.log("[DEBUG 2] Henter vær for:", point.name || "ukjent sted", point.lat, point.lon);
 
+			const weather = await this.getCurrentWeatherUseCase.execute({
+				lat: point.lat,
+				lon: point.lon,
+				timeZone
+			});
+
+			if (!weather) {
+
+				console.log("[DEBUG 2] Ingen værdata for punkt:", point);
+
+				continue;
+			}
+
+			const combinedResult = {
+				...weather,
+				...point
+			};
+
+			weatherResults.push(combinedResult);
 		}
 
-        catch (repoError) {
-			console.error("[DEBUG 2] Feil ved henting fra Repo:", repoError);
-		}
-
-		return places;
+		return weatherResults;
 	}
-
-	#buildPointList(activeLocation, places) {
-
-		const points = [];
-
-		//Legg til aktiv lokasjon (SSOT)
-		if (activeLocation && activeLocation.lat != null) {
-			points.push(activeLocation);
-		}
-
-		//Legg til steder fra kartet
-        if (places && places.length > 0) {
-            for (const place of places) {
-                points.push(place);
-            }
-        }
-
-		return points;
-	}
-
-    async #loadWeatherForPoints(points, timeZone) {
-
-        const weatherResults = [];
-
-        for (const point of points) {
-            const weather = await this.getCurrentWeatherUseCase.execute({
-                lat: point.lat,
-                lon: point.lon,
-                timeZone
-            });
-
-            if (!weather) {
-                continue;
-            }
-
-            const combinedResult = {
-                ...weather,
-                ...point
-            };
-
-            weatherResults.push(combinedResult);
-        }
-
-        return weatherResults;
-    }
-
 
 }
