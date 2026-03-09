@@ -4,6 +4,7 @@ import * as maptilersdk from "@maptiler/sdk";
 import { MarkerLayout } from "@maptiler/marker-layout";
 import { createRoot } from "react-dom/client";
 import WeatherSymbolLabel from "./WeatherSymbolLabel.jsx";
+import { calculateWeatherIconSpread } from "../../../utils/MapUtils/MapWeatherIconSpread.js";
 
 export function useMapTiler(props) {
     const { apiKey, style, lat, lon, zoom, bboxToFit, weatherPoints, onMapChange, onLocationClick } = props;
@@ -23,8 +24,7 @@ export function useMapTiler(props) {
     const FIT_BOUNDS_DURATION = 1500;
 
     /**
-     * Hjelpefunksjon for å rapportere kartstatus tilbake til ViewModel.
-     * Denne brukes både ved manuell draing og etter programmatisk flytting.
+     * Rapporterer kartets nåværende tilstand tilbake til ViewModel.
      */
     const reportMapStatus = () => {
         const map = mapInstanceRef.current;
@@ -33,56 +33,93 @@ export function useMapTiler(props) {
         const center = map.getCenter();
         const bounds = map.getBounds();
         const bbox = [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()];
+        
+        console.log("[DEBUG MAP] reportMapStatus: Henter byer for utsnitt...");
         const points = extractCityPoints();
 
+        console.log(`[DEBUG MAP] reportMapStatus: Rapporterer ${points.length} punkter til VM.`);
         onMapChange(center.lat, center.lng, bbox, map.getZoom(), points);
     };
 
     /**
-     * Trekker ut stedsnavn fra kartet. 
-     * Legger også alltid til det aktive koordinatet (lat/lon) for å sikre SSOT-plott.
+     * Trekker ut stedsnavn fra kartet og filtrerer dem basert på zoom-nivå (Spread).
      */
     const extractCityPoints = () => {
         const map = mapInstanceRef.current;
         if (!map) return [];
 
+        console.log("[DEBUG MAP] extractCityPoints: Søker i utvidede kartlag for zoom", map.getZoom());
+        
+        // UTVIDELSE: Inkluderer 'State labels' og 'Country labels' for å finne store byer på landsnivå
         const features = map.queryRenderedFeatures({
-            layers: ["City labels", "Place labels"]
+            layers: [
+                "City labels", 
+                "Place labels", 
+                "Country labels", 
+                "State labels"
+            ]
         });
 
-        const points = [];
+        const rawPoints = [];
         const seen = new Set();
 
-        // 1. LEGG ALLTID TIL SENTRUMSPUNKTET (SSOT)
-        // Dette sikrer at værikonet for stedet du søkte på eller resetter til alltid vises.
-        points.push({
+        // 1. Prioritet: Legg alltid til det punktet SSOT peker på (der brukeren er/søkte)
+        rawPoints.push({
             name: "Valgt posisjon",
             lat: lat,
             lon: lon,
-            type: "center-priority"
+            isPriority: true
         });
-        seen.add("center-priority");
+        seen.add("priority-center");
 
-        // 2. LEGG TIL ANDRE SYNLIGE BYER FRA KARTET
+        // 2. Samle potensielle byer/steder fra kart-lagene
         for (const feature of features) {
-            if (!feature.geometry || !feature.properties?.name) continue;
+            const props = feature.properties;
+            if (!feature.geometry || !props?.name) continue;
             
-            const name = feature.properties.name;
-            const className = feature.properties?.class;
+            const name = props.name;
+            const className = props?.class;
             
-            if (["city", "town", "village", "suburb"].includes(className) && !seen.has(name)) {
+            // Vi filtrerer ut land-navn, men beholder byer/steder
+            if (className !== "country" && !seen.has(name)) {
                 const coords = feature.geometry.coordinates;
-                points.push({
+                rawPoints.push({
                     name: name,
                     lon: coords[0],
                     lat: coords[1],
-                    type: className
+                    type: className || "place",
+                    isPriority: false
                 });
                 seen.add(name);
             }
-            if (points.length >= 12) break;
         }
-        return points;
+
+        // 3. Filtrering basert på avstand (Spread-logikk)
+        const currentZoom = map.getZoom();
+        const minDist = calculateWeatherIconSpread(currentZoom);
+        const filteredPoints = [];
+
+        for (const point of rawPoints) {
+            if (point.isPriority) {
+                filteredPoints.push(point);
+                continue;
+            }
+
+            const isTooClose = filteredPoints.some(existing => {
+                const dLat = existing.lat - point.lat;
+                const dLon = existing.lon - point.lon;
+                return (dLat * dLat + dLon * dLon) < (minDist * minDist);
+            });
+
+            if (!isTooClose) {
+                filteredPoints.push(point);
+            }
+
+            if (filteredPoints.length >= 15) break; 
+        }
+
+        console.log(`[DEBUG MAP] extractCityPoints: Fant ${rawPoints.length} rå-labels, beholdt ${filteredPoints.length} etter filtrering.`);
+        return filteredPoints;
     };
 
     /**
@@ -91,6 +128,7 @@ export function useMapTiler(props) {
     useEffect(() => {
         if (!mapContainerRef.current || mapInstanceRef.current) return;
 
+        console.log("[DEBUG MAP] Initialiserer maptilersdk...");
         maptilersdk.config.apiKey = apiKey;
 
         const map = new maptilersdk.Map({
@@ -104,23 +142,26 @@ export function useMapTiler(props) {
         });
 
         map.on("load", () => {
+            console.log("[DEBUG MAP] Kart lastet (load)");
             markerLayoutRef.current = new MarkerLayout(map, {
                 layers: ["City labels", "Place labels"],
                 markerSize: [40, 70],
                 offset: [0, -10]
             });
 
-            // Trigger første runde med værhenting
-            reportMapStatus();
+            setTimeout(() => {
+                console.log("[DEBUG MAP] Kjører initial reportMapStatus");
+                reportMapStatus();
+            }, 250);
         });
 
         map.on("moveend", () => {
-            // Hvis flyttingen var styrt av kode, håndteres rapporten i flytte-useEffecten nedenfor
             if (isProgrammaticMove.current) {
+                console.log("[DEBUG MAP] moveend: Programmatisk flytting ferdig.");
                 isProgrammaticMove.current = false;
                 return;
             }
-
+            console.log("[DEBUG MAP] moveend: Brukerstyrt flytting ferdig.");
             requestAnimationFrame(reportMapStatus);
         });
 
@@ -142,6 +183,7 @@ export function useMapTiler(props) {
         const map = mapInstanceRef.current;
         if (!map) return;
 
+        console.log(`[DEBUG MAP] Oppdaterer markører. Antall weatherPoints: ${weatherPoints?.length || 0}`);
         markersRef.current.forEach(m => m.remove());
         markersRef.current = [];
 
@@ -150,8 +192,7 @@ export function useMapTiler(props) {
         weatherPoints.forEach(point => {
             const container = document.createElement("div");
             container.className = "map-marker-wrapper";
-            container.style.cursor = "pointer";
-
+            
             container.onclick = (e) => {
                 e.stopPropagation();
                 if (onLocationClick) onLocationClick(point);
@@ -169,21 +210,27 @@ export function useMapTiler(props) {
     }, [weatherPoints, onLocationClick]);
 
     /**
-     * 3. SYNKRONISERING: Flytt kartet ved endring (Reset / Søk)
+     * 3. SYNKRONISERING: Håndter Reset, Søk og BBox-flytting
      */
     useEffect(() => {
         const map = mapInstanceRef.current;
         if (!map || lat == null || lon == null) return;
 
+        const reportWithDelay = (source) => {
+            console.log(`[DEBUG MAP] reportWithDelay trigget fra: ${source}. Venter på labels...`);
+            // Økt delay til 350ms for å sikre at store kartutsnitt rekker å tegne labels
+            setTimeout(reportMapStatus, 350);
+        };
+
         if (bboxToFit) {
+            console.log("[DEBUG MAP] Synkronisering: fitBounds trigget", bboxToFit);
             isProgrammaticMove.current = true;
             map.fitBounds(bboxToFit, {
                 padding: FIT_BOUNDS_PADDING,
                 maxZoom: FIT_BOUNDS_MAX_ZOOM,
                 duration: FIT_BOUNDS_DURATION
             });
-            // Tving frem oppdatering av vær etter at BBox animasjonen er ferdig
-            setTimeout(reportMapStatus, FIT_BOUNDS_DURATION + 100);
+            reportWithDelay("bboxToFit");
             return;
         }
 
@@ -195,6 +242,7 @@ export function useMapTiler(props) {
                          Math.abs(currentZoom - zoom) > SIGNIFICANT_ZOOM_THRESHOLD;
 
         if (hasMoved) {
+            console.log(`[DEBUG MAP] Synkronisering: flyTo trigget (lat: ${lat}, lon: ${lon})`);
             isProgrammaticMove.current = true;
             map.flyTo({
                 center: [lon, lat],
@@ -203,8 +251,7 @@ export function useMapTiler(props) {
                 essential: true
             });
             
-            // Tving frem væroppdatering når flyvningen er over
-            map.once('moveend', reportMapStatus);
+            map.once('moveend', () => reportWithDelay("flyTo"));
         }
     }, [lat, lon, zoom, bboxToFit]);
 
