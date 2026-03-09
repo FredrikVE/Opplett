@@ -270,6 +270,20 @@ export function useMapTiler(props) {
             geolocateControl: false,
         });
 
+        // --- NYTT: Fanger opp "missing image"-feilen og mater den med et usynlig bilde ---
+        map.on('styleimagemissing', (e) => {
+            const id = e.id; 
+            // Opprett et usynlig lerret på 1x1 piksel
+            const canvas = document.createElement('canvas');
+            canvas.width = 1;
+            canvas.height = 1;
+            const context = canvas.getContext('2d');
+            const emptyImageData = context.getImageData(0, 0, 1, 1);
+            
+            // Gi det usynlige bildet til kartet slik at den slutter å klage
+            map.addImage(id, emptyImageData); 
+        });
+
         map.on("load", () => {
             const labelLayers = ["Capital city labels", "City labels", "Town labels", "Place labels"];
             labelLayers.forEach(layer => {
