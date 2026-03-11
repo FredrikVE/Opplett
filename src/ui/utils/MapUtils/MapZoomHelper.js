@@ -1,5 +1,5 @@
 // src/ui/utils/MapUtils/MapZoomHelper.js
-import { MAP_ZOOM_LEVELS } from "./MapZoomLevels";
+import { MAP_ZOOM_LEVELS } from "./MapConfig";
 
 export function calculateMapView(selected) {
     const { type, bounds } = selected;
