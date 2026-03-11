@@ -3,62 +3,52 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import useSearchViewModel from "./SearchViewModel.js";
 import { calculateMapView } from "../utils/MapUtils/MapZoomHelper.js";
 import { getBoundsFromGeometry } from "../utils/MapUtils/MapBoundsHelper.js";
+import { MAP_CAMERA,LOCATION_TYPES } from "../utils/MapUtils/MapConfig.js";
 
-/**
- * ViewModel for MapPage.
- * Håndterer logikk for kamerasynkronisering (mapTarget), søk-integrasjon,
- * henting av polygon-geometri og værpunkter i kartutsnittet.
- */
+
 export default function useMapPageViewModel(mapTilerRepository, searchLocationUseCase, getMapWeatherUseCase, getLocationGeometryUseCase, activeLocation, onLocationChange, onResetToDeviceLocation) {
+
     const DEBOUNCE_DELAY_MS = 500;
 
-    // =========================
-    // STATE
-    // =========================
+    /* =========================================================
+       STATE
+    ========================================================= */
     const [highlightGeometry, setHighlightGeometry] = useState(null);
     const [mapPoints, setMapPoints] = useState([]);
     const [weatherPoints, setWeatherPoints] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    
-    // SSOT for søke-utsnitt: Dette holder på bbox fra søket helt til kartet flyttes manuelt.
-    const [searchBbox, setSearchBbox] = useState(null);
+    const [searchBbox, setSearchBbox] = useState(null);     // bbox fra søk – beholdes til bruker flytter kartet
 
-    // =========================
-    // HANDLERS
-    // =========================
-    
-    // Rapporterer status fra kartet (kalles fra moveend i WeatherMap)
+    /* =========================================================
+       MAP EVENT HANDLERS
+    ========================================================= */
     const onMapChange = useCallback((lat, lon, bbox, zoom, points) => {
         setMapPoints(points || []);
-        // Når brukeren flytter kartet manuelt, slipper vi "låsen" fra søket/polygoner
         setSearchBbox(null);
     }, []);
 
-    // Håndterer valg av sted fra søkefeltet
+    /* =========================================================
+       SEARCH HANDLERS
+    ========================================================= */
     const handleSuggestionSelected = useCallback((selected) => {
-        // Tøm gamle værmarkører umiddelbart for bedre brukeropplevelse
         setWeatherPoints([]);
-        
-        // 1. Beregn utsnitt (bbox/zoom) fra valgt forslag umiddelbart
         const { bbox } = calculateMapView(selected);
         setSearchBbox(bbox);
-        
-        // 2. Oppdater global SSOT (App.jsx)
         onLocationChange(selected);
     }, [onLocationChange]);
 
-    // Nullstiller til brukerens GPS-posisjon
+
     const handleResetToDeviceLocation = useCallback(() => {
         setWeatherPoints([]);
         setSearchBbox(null);
         onResetToDeviceLocation();
     }, [onResetToDeviceLocation]);
 
-    // =========================
-    // SØKE-INTEGRASJON
-    // =========================
-    // VIKTIG: Vi sender koordinatene RENT inn (activeLocation.lat/lon).
-    // Hvis App.jsx har avsluttet loading, er disse verdiene tilstede.
+
+
+    /* =========================================================
+       SEARCH VIEWMODEL
+    ========================================================= */
     const searchViewModel = useSearchViewModel(
         searchLocationUseCase,
         handleSuggestionSelected,
@@ -66,89 +56,244 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
         handleResetToDeviceLocation
     );
 
-    // =========================
-    // SSOT: MAP TARGET (Hvor kartet skal flytte seg)
-    // =========================
+    /* =========================================================
+       MAP TARGET (SSOT for kamera)
+    ========================================================= */
+
+    const mapTarget = useMemo(() => {
+
+        const geoBounds = getBoundsFromGeometry(highlightGeometry);
+
+        const { zoom, bbox: defaultBbox } =
+            calculateMapView(activeLocation);
+
+        const finalBbox =
+            geoBounds ??
+            defaultBbox ??
+            searchBbox;
+
+        const isArea =
+            activeLocation.type === LOCATION_TYPES.COUNTRY ||
+            activeLocation.type === LOCATION_TYPES.REGION;
+
+        const locationId = activeLocation.id ?? `${activeLocation.lat}-${activeLocation.lon}`;
+        const geometryKey = highlightGeometry?.features?.length ? "geometry" : "no-geometry";
+
+        return {
+
+            id: `${locationId}-${geometryKey}`,
+
+            type:
+                finalBbox
+                    ? MAP_CAMERA.BOUNDS
+                    : MAP_CAMERA.CENTER,
+
+            data:
+                finalBbox ??
+                {
+                    lat: activeLocation.lat,
+                    lon: activeLocation.lon,
+                    zoom
+                },
+
+            isArea
+
+        };
+
+    }, [activeLocation, highlightGeometry, searchBbox]);
+
+    /*
+    const mapTarget = useMemo(() => {
+
+        const geoBounds = getBoundsFromGeometry(highlightGeometry);
+        const { zoom, bbox: defaultBbox } = calculateMapView(activeLocation);
+
+        const finalBbox =
+            geoBounds ??
+            searchBbox ??
+            defaultBbox;
+
+
+        const isArea =
+            activeLocation.type === LOCATION_TYPES.COUNTRY ||
+            activeLocation.type === LOCATION_TYPES.REGION;
+
+        const locationId =
+            activeLocation.id ??
+            `${activeLocation.lat}-${activeLocation.lon}`;
+
+        const geometryKey =
+            highlightGeometry?.features?.length
+                ? "geometry"
+                : "no-geometry";
+
+        return {
+
+            id: `${locationId}-${geometryKey}`,
+
+            type:
+                finalBbox
+                    ? MAP_CAMERA.BOUNDS
+                    : MAP_CAMERA.CENTER,
+
+            data:
+                finalBbox ||
+                {
+                    lat: activeLocation.lat,
+                    lon: activeLocation.lon,
+                    zoom
+                },
+
+            isArea
+
+        };
+
+    }, [activeLocation, highlightGeometry, searchBbox]);
+    */
+    /*
     const mapTarget = useMemo(() => {
         const geoBounds = getBoundsFromGeometry(highlightGeometry);
         const { zoom, bbox: defaultBbox } = calculateMapView(activeLocation);
 
-        // Prioriteringsrekkefølge for kamera-utsnitt:
-        // 1. Polygon-geometri (F.eks. landegrenser)
-        // 2. Søke-BBox (Fra forslag i søkefeltet)
-        // 3. Standard-BBox (Basert på stedstype, f.eks. "city")
-        const finalBbox = geoBounds || searchBbox || defaultBbox;
+
+        const finalBbox =
+            geoBounds ||
+            searchBbox ||
+            defaultBbox;
+
+
+        const isArea =
+            activeLocation.type === LOCATION_TYPES.COUNTRY ||
+            activeLocation.type === LOCATION_TYPES.REGION;
+
 
         return {
-            id: activeLocation.id || `${activeLocation.lat}-${activeLocation.lon}`,
-            type: finalBbox ? "bounds" : "center",
-            data: finalBbox || { lat: activeLocation.lat, lon: activeLocation.lon, zoom },
-            isArea: activeLocation.type === "country" || activeLocation.type === "region"
+
+            id:
+                //activeLocation.id || `${activeLocation.lat}-${activeLocation.lon}`,
+                `${activeLocation.id || `${activeLocation.lat}-${activeLocation.lon}`}-${highlightGeometry ? "geo" : "no-geo"}`,
+
+            type:
+                finalBbox
+                    ? MAP_CAMERA.BOUNDS
+                    : MAP_CAMERA.CENTER,
+
+            data:
+                finalBbox || { 
+                    lat: activeLocation.lat, 
+                    lon: activeLocation.lon, 
+                    zoom
+                },
+            isArea
         };
+
     }, [activeLocation, highlightGeometry, searchBbox]);
+    */
 
-    // Henter MapTiler-konfigurasjon (API-nøkkel og stil)
-    const { apiKey, style } = useMemo(() => 
-        mapTilerRepository.getMapConfig(), 
-    [mapTilerRepository]);
 
-    // =========================
-    // SIDE EFFECTS
-    // =========================
+    /* =========================================================
+       MAP CONFIG
+    ========================================================= */
+    const { apiKey, style } = useMemo(
+        () => mapTilerRepository.getMapConfig(),
+        [mapTilerRepository]
+    );
 
-    // Effekt: Hent polygon-geometri (highlight) når lokasjonens ID endres
+
+    /* =========================================================
+       LOAD LOCATION GEOMETRY
+    ========================================================= */
     useEffect(() => {
-        if (!activeLocation?.id) { 
-            setHighlightGeometry(null); 
-            return; 
+
+        if (!activeLocation?.id) {
+            setHighlightGeometry(null);
+            return;
         }
-        let cancelled = false;
-        getLocationGeometryUseCase.execute(activeLocation.id)
-            .then(geo => { if (!cancelled) setHighlightGeometry(geo); })
-            .catch(() => { if (!cancelled) setHighlightGeometry(null); });
-        return () => { cancelled = true; };
-    }, [activeLocation.id, getLocationGeometryUseCase]);
 
-    // Effekt: Hent værdata for punktene som er synlige på kartet
+        let cancelled = false;
+
+        getLocationGeometryUseCase
+            .execute(activeLocation.id)
+
+            .then(geo => {
+                if (!cancelled) {
+                    setHighlightGeometry(geo);
+                }
+            })
+
+            .catch(() => {
+                if (!cancelled) {
+                    setHighlightGeometry(null);
+                }
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, 
+    [activeLocation.id, getLocationGeometryUseCase]);
+
+
+    /* =========================================================
+       LOAD WEATHER FOR MAP POINTS
+    ========================================================= */
     useEffect(() => {
+
         if (!mapPoints.length || !activeLocation?.timezone) {
             setWeatherPoints([]);
             return;
         }
+
         let cancelled = false;
+
         const timer = setTimeout(async () => {
+
             setIsLoading(true);
+
             try {
                 const results = await getMapWeatherUseCase.execute(mapPoints, activeLocation.timezone);
-                if (!cancelled) setWeatherPoints(results || []);
-            } catch (error) {
+
+                if (!cancelled) {
+                    setWeatherPoints(results || []);
+                }
+            } 
+
+            catch (error) {
                 console.error("[MapVM] Feil ved henting av værdata:", error);
-            } finally {
-                if (!cancelled) setIsLoading(false);
+            }
+
+            finally {
+                if (!cancelled) {
+                    setIsLoading(false);
+                }
             }
         }, DEBOUNCE_DELAY_MS);
-        return () => { cancelled = true; clearTimeout(timer); };
-    }, [mapPoints, activeLocation?.timezone, getMapWeatherUseCase]);
 
-    // =========================
-    // RETURN
-    // =========================
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
+    }, 
+    [mapPoints, activeLocation?.timezone, getMapWeatherUseCase]);
+
+
+
+    /* =========================================================
+       RETURN
+    ========================================================= */
     return {
-        // Kart-konfig
+
         apiKey,
         style,
-        
-        // Tilstander
         location: activeLocation,
+
         isLoading,
         mapTarget,
+
         highlightGeometry,
         weatherPoints,
-        
-        // Handlere
         onMapChange,
-        
-        // Søk-integrasjon (Props til SearchField)
+
         query: searchViewModel.query,
         suggestions: searchViewModel.suggestions,
         onSearchChange: searchViewModel.onSearchChange,

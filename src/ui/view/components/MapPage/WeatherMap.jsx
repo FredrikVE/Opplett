@@ -5,7 +5,7 @@ import { MarkerLayout } from "@maptiler/marker-layout";
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 
 // Utils
-import { MAP_ANIMATION, MAP_MARKER_CONFIG, MAP_ZOOM_LEVELS } from "../../../utils/MapUtils/MapConfig.js";
+import { MAP_ANIMATION, MAP_MARKER_CONFIG, MAP_ZOOM_LEVELS, MAP_CAMERA } from "../../../utils/MapUtils/MapConfig.js";
 import { extractCityPoints } from "../../../utils/MapUtils/ExtractCityPoints.js";
 import { updateMapHighlight } from "../../../utils/MapUtils/MapHighlight.js";
 import { renderWeatherMarkers } from "../../../utils/MapUtils/WeatherMarkers.jsx";
@@ -80,7 +80,8 @@ export default function WeatherMap({ apiKey, style, mapTarget, weatherPoints, on
 
             markerLayoutRef.current = new MarkerLayout(map, {
                 layers: MAP_MARKER_CONFIG.LABEL_LAYERS,
-                max: MAP_MARKER_CONFIG.MAX_COUNT,
+                //max: MAP_MARKER_CONFIG.MAX_COUNT,
+                max: MAP_MARKER_CONFIG.MAX_LAYOUT_MARKERS,
                 sortingProperty: (f) => getFeaturePriorityScore(f)
             });
 
@@ -119,7 +120,8 @@ export default function WeatherMap({ apiKey, style, mapTarget, weatherPoints, on
 
         lastMovedId.current = mapTarget.id;
 
-        if (mapTarget.type === "bounds") {
+        //if (mapTarget.type === "bounds") {
+        if (mapTarget.type === MAP_CAMERA.BOUNDS) {
             map.fitBounds(mapTarget.data, {
                 padding: mapTarget.isArea
                     ? MAP_ANIMATION.PADDING.AREA
@@ -127,7 +129,9 @@ export default function WeatherMap({ apiKey, style, mapTarget, weatherPoints, on
                 duration: MAP_ANIMATION.DURATION_MS,
                 essential: true
             });
-        } else {
+        } 
+        
+        else {
             map.flyTo({
                 center: [mapTarget.data.lon, mapTarget.data.lat],
                 zoom: mapTarget.data.zoom,
