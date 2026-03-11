@@ -6,7 +6,11 @@ import LoadingSpinner from "../components/Common/LoadingSpinner/LoadingSpinner.j
 
 export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREENS }) {
 
-	const { location, mapCenter, zoom, bboxToFit, apiKey, style, weatherPoints, isLoading, onMapChange, highlightGeometry } = viewModel;
+	const { location, mapTarget, apiKey, style, weatherPoints, isLoading, onMapChange, highlightGeometry } = viewModel;
+	
+	const zoom = mapTarget?.type === "center"
+		? mapTarget?.data?.zoom
+		: null;
 
 	return (
 		<div className="map-screen">
@@ -30,29 +34,28 @@ export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREE
 
 			<main className="map-content">
 
-				{/* Spinner over kart ved lasting */}
 				{isLoading && (
 					<div className="map-loading-overlay">
 						<LoadingSpinner />
 					</div>
 				)}
 
-				<div className="zoom-indicator">
-					Zoom: {Math.round(zoom)}
-				</div>
+				{zoom !== null && (
+					<div className="zoom-indicator">
+						Zoom: {Math.round(zoom)}
+					</div>
+				)}
 
 				<WeatherMap
 					apiKey={apiKey}
 					style={style}
-					lat={mapCenter.lat}
-					lon={mapCenter.lon}
-					zoom={zoom}
-					bboxToFit={bboxToFit}
+					mapTarget={mapTarget}
 					weatherPoints={weatherPoints}
 					onMapChange={onMapChange}
 					activeLocation={location}
 					highlightGeometry={highlightGeometry}
 				/>
+
 			</main>
 		</div>
 	);
