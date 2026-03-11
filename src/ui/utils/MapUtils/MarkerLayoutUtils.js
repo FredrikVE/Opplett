@@ -11,10 +11,15 @@ export function getLayerPriority(layerId) {
 
 export function getFeaturePriorityScore(feature) {
     const props = feature?.properties || {};
-    const rank = Number(props.rank ?? 5); 
-    const layerPriority = getLayerPriority(feature?.layer?.id);
     
-    return (layerPriority * 5) + rank; 
+    // MapTiler gir ofte byer en 'rank' fra 1 (viktigst) til f.eks 10.
+    const rank = Number(props.rank ?? 10); 
+    
+    // Vi gir Capital cities (Oslo) høyeste prioritet (lavest score)
+    const isCapital = feature?.layer?.id === "Capital city labels";
+    const layerBoost = isCapital ? 0 : 10;
+    
+    return layerBoost + rank; 
 }
 
 export function syncAbstractMarkersFromLayout(markerLayout, activeMarkers) {

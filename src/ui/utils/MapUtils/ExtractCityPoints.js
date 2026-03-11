@@ -1,63 +1,70 @@
 // src/ui/utils/MapUtils/ExtractCityPoints.js
 import { syncAbstractMarkersFromLayout, getFeaturePriorityScore } from "./MarkerLayoutUtils";
+import { MAP_ZOOM_LEVELS, SPATIAL_FILTER } from "./MapZoomLevels";
 
-/**
- * Henter ut relevante punkter fra kartet for å vise værikoner.
- * Kombinerer brukerens valgte posisjon med byer som MapTiler finner i kartutsnittet.
- */
 export function extractCityPoints({ map, markerLayout, activeMarkers, activeLocation }) {
     if (!map || !markerLayout) return [];
 
-    // 1. Synkroniser markører fra MapTiler's MarkerLayout
     const abstractMarkers = syncAbstractMarkersFromLayout(markerLayout, activeMarkers);
-
     const mappedPoints = [];
     const seen = new Set();
+    
+    const currentZoom = Math.round(map.getZoom());
+    const activeCountryCode = activeLocation?.countryCode?.toLowerCase();
 
-    // 2. Legg til det valgte punktet (SSOT) – MED MINDRE det er et land.
-    const isCountry = activeLocation?.type === "country";
-    const hasCoords = activeLocation?.lat != null && activeLocation?.lon != null;
+    // --- SSOT LOGIKK FOR SPREDNING ---
+    let minDistance = 0.05; // Standard (veldig tett) for dyp zoom
 
-    if (hasCoords && !isCountry) {
-        mappedPoints.push({
-            ...activeLocation,
-            isPriority: true 
-        });
-
-        // Bruker rå koordinater som streng for unik identifikasjon
-        seen.add(`selected:${activeLocation.lat}:${activeLocation.lon}`);
+    if (currentZoom <= MAP_ZOOM_LEVELS.COUNTRY) {
+        minDistance = SPATIAL_FILTER[MAP_ZOOM_LEVELS.COUNTRY];
+    } else if (currentZoom <= MAP_ZOOM_LEVELS.REGION) {
+        minDistance = SPATIAL_FILTER[MAP_ZOOM_LEVELS.REGION];
+    } else if (currentZoom <= MAP_ZOOM_LEVELS.COUNTY) {
+        minDistance = SPATIAL_FILTER[MAP_ZOOM_LEVELS.COUNTY];
     }
 
-    // 3. Sorter byer fra kartet etter viktighet
+    function isTooClose(lat, lon) {
+        return mappedPoints.some(p => {
+            const dLat = Math.abs(p.lat - lat);
+            const dLon = Math.abs(p.lon - lon);
+            return dLat < minDistance && dLon < minDistance;
+        });
+    }
+
+    // Prioriterings-sortering (Hovedsteder og store byer først)
     const sortedMarkers = [...abstractMarkers].sort((a, b) => {
         return getFeaturePriorityScore(a.features?.[0]) - getFeaturePriorityScore(b.features?.[0]);
     });
 
-    // 4. Map features til lokasjonsobjekter
     for (const abstractMarker of sortedMarkers) {
         const feature = abstractMarker.features?.[0];
         const props = feature?.properties || {};
-        const geometry = feature?.geometry;
+        const [fLon, fLat] = feature.geometry.coordinates;
+        const itemCountryCode = (props.iso_a2 || props.country_code)?.toLowerCase();
 
-        if (!geometry || !props.name) continue;
+        // 1. LANDFILTER: Kast ut Moskva/London hvis vi ser på Norge
+        if (activeCountryCode && itemCountryCode && activeCountryCode !== itemCountryCode) {
+            continue;
+        }
 
-        const [fLon, fLat] = geometry.coordinates;
-        
-        // Unik nøkkel basert på navn og rå koordinater for å unngå duplikater
-        const dedupeKey = `${props.name}:${fLat}:${fLon}`;
+        // 2. SPREDNINGSFILTER: Bruker minDistance fra SSOT
+        const isCapital = feature?.layer?.id === "Capital city labels";
+        // Vi tillater alltid hovedsteder (Oslo må alltid med!)
+        if (!isCapital && isTooClose(fLat, fLon)) {
+            continue;
+        }
 
-        if (seen.has(dedupeKey)) continue;
+        const exactKey = `${fLat}:${fLon}`;
+        if (seen.has(exactKey)) continue;
 
         mappedPoints.push({
-            id: feature.id ?? null,
+            id: feature.id,
             name: props.name,
             lat: fLat,
             lon: fLon,
-            type: props.class || "city",
-            isPriority: false
+            isPriority: isCapital
         });
-
-        seen.add(dedupeKey);
+        seen.add(exactKey);
     }
 
     return mappedPoints;

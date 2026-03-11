@@ -10,3 +10,9 @@ export const MAP_ZOOM_LEVELS = {
     DEFAULT: 12,         // By / Sentrum / Adresse
     STREET: 14           // Detaljert gateplan
 };
+
+export const SPATIAL_FILTER = {
+    [MAP_ZOOM_LEVELS.COUNTRY]: 1.2, // Ved zoom 4 (og utover): Stor avstand
+    [MAP_ZOOM_LEVELS.REGION]: 0.6,  // Ved zoom 6: Mellomstor avstand
+    [MAP_ZOOM_LEVELS.COUNTY]: 0.2   // Ved zoom 8: Tettere
+};
