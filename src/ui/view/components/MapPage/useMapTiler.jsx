@@ -13,7 +13,7 @@ import { getBoundsFromGeometry } from "../../../utils/MapUtils/MapBoundsHelper.j
 const FLY_TO_SPEED = 1.2;
 const ANIMATION_DURATION_MS = 1500;
 const FIT_BOUNDS_PADDING_PX = 60;
-const MAX_VISIBLE_MARKERS = 20; 
+const MAX_VISIBLE_MARKERS = 10; 
 const MARKER_SIZE = [40, 70];
 const MARKER_OFFSET = [0, -10];
 const REPORT_IDLE_DELAY_MS = 300;
@@ -149,6 +149,7 @@ export function useMapTiler(props) {
             });
         } 
         else if (bboxToFit) {
+
             // PRIORITET 2: Bounding Box
             map.fitBounds(bboxToFit, {
                 padding: FIT_BOUNDS_PADDING_PX,
@@ -156,9 +157,15 @@ export function useMapTiler(props) {
                 duration: ANIMATION_DURATION_MS
             });
         } 
+
         else {
             // PRIORITET 3: Enkeltpunkt
-            map.flyTo({ center: [lon, lat], zoom: zoom, speed: FLY_TO_SPEED, essential: true });
+            map.flyTo({ 
+                center: [lon, lat], 
+                zoom: zoom, speed: 
+                FLY_TO_SPEED, 
+                essential: true 
+            });
         }
     };
 

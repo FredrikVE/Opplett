@@ -13,7 +13,7 @@ export function extractCityPoints({ map, markerLayout, activeMarkers, activeLoca
     const activeCountryCode = activeLocation?.countryCode?.toLowerCase();
 
     // --- SSOT LOGIKK FOR SPREDNING ---
-    let minDistance = 0.05; // Standard (veldig tett) for dyp zoom
+    let minDistance = 0.01; // Standard (veldig tett) for dyp zoom
 
     if (currentZoom <= MAP_ZOOM_LEVELS.COUNTRY) {
         minDistance = SPATIAL_FILTER[MAP_ZOOM_LEVELS.COUNTRY];

@@ -120,14 +120,19 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 			try {
 				const geo = await getLocationGeometryUseCase.execute(activeLocation.id);
 				if (!cancelled) setHighlightGeometry(geo);
-			} catch (err) {
+			} 
+			
+			catch (err) {
 				console.error("[VM] Klarte ikke hente highlight-geometri:", err);
 				if (!cancelled) setHighlightGeometry(null);
 			}
 		};
 
 		loadGeometry();
-		return () => { cancelled = true; };
+		return () => { 
+			cancelled = true; 
+		};
+		
 	}, [activeLocation.id, getLocationGeometryUseCase]);
 
 	// =========================
