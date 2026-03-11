@@ -1,6 +1,5 @@
-// src/ui/view/components/MapPage/useMapTiler.jsx
-
-import { useEffect, useRef } from "react";
+//src/ui/view/components/MapPage/useMapTiler.jsx
+import { useEffect, useRef, useCallback } from "react";
 import * as maptilersdk from "@maptiler/sdk";
 import { MarkerLayout } from "@maptiler/marker-layout";
 
@@ -10,37 +9,35 @@ import { renderWeatherMarkers } from "../../../utils/MapUtils/WeatherMarkers.jsx
 import { getFeaturePriorityScore } from "../../../utils/MapUtils/MarkerLayoutUtils.js";
 
 export function useMapTiler(props) {
+    const { apiKey, style, lat, lon, zoom, bboxToFit, weatherPoints, onMapChange, onLocationClick, activeLocation, highlightGeometry } = props;
 
-	const { apiKey, style, lat, lon, zoom, bboxToFit, weatherPoints, onMapChange, onLocationClick, activeLocation, highlightGeometry } = props;
+    const SIGNIFICANT_MOVE_THRESHOLD = 0.001;
+    const SIGNIFICANT_ZOOM_THRESHOLD = 0.1;
+    
+    const FIT_BOUNDS_PADDING = 50;
+    const FIT_BOUNDS_MAX_ZOOM = 14;
+    const FIT_BOUNDS_DURATION = 1500;
 
-	const SIGNIFICANT_MOVE_THRESHOLD = 0.001;
-	const SIGNIFICANT_ZOOM_THRESHOLD = 0.1;
-	
-	const FIT_BOUNDS_PADDING = 50;
-	const FIT_BOUNDS_MAX_ZOOM = 14;
-	const FIT_BOUNDS_DURATION = 1500;
+    const mapContainerRef = useRef(null);
+    const mapInstanceRef = useRef(null);
 
-	const mapContainerRef = useRef(null);
-	const mapInstanceRef = useRef(null);
+    const markersRef = useRef([]);
+    const markerLayoutRef = useRef(null);
+    const activeAbstractMarkersRef = useRef(new Map());
 
-	const markersRef = useRef([]);
-	const markerLayoutRef = useRef(null);
-	const activeAbstractMarkersRef = useRef(new Map());
+    const isProgrammaticMove = useRef(false);
+    const idleDebounceRef = useRef(null);
 
-	const isProgrammaticMove = useRef(false);
-	const idleDebounceRef = useRef(null);
+    const activeLocationRef = useRef(activeLocation);
 
-	const activeLocationRef = useRef(activeLocation);
+    useEffect(() => {
+        activeLocationRef.current = activeLocation;
+    }, [activeLocation]);
 
-	useEffect(() => {
-		activeLocationRef.current = activeLocation;
-	}, [activeLocation]);
-
-    const reportMapStatus = () => {
+    // Pakker inn reportMapStatus i useCallback så den kan brukes trygt i useEffect
+    const reportMapStatus = useCallback(() => {
         const map = mapInstanceRef.current;
-        if (!map) {
-			return;
-		}
+        if (!map) return;
 
         const center = map.getCenter();
         const bounds = map.getBounds();
@@ -58,22 +55,26 @@ export function useMapTiler(props) {
             activeLocation: activeLocationRef.current
         });
 
-		onMapChange(
-			center.lat,
-			center.lng,
-			bbox,
-			map.getZoom(),
-			points
-		);
-	};
+        onMapChange(
+            center.lat,
+            center.lng,
+            bbox,
+            map.getZoom(),
+            points
+        );
+    }, [onMapChange]);
 
-    //Initialisering av kartet
+    // 1. Initialisering av kartet
     useEffect(() => {
         if (!mapContainerRef.current || mapInstanceRef.current) {
-			return;
-		}
+            return;
+        }
 
-		maptilersdk.config.apiKey = apiKey;
+        // Kopierer refs til lokale variabler for sikker cleanup (løser ESLint feil)
+        const currentMarkers = markersRef.current;
+        const currentAbstractMarkers = activeAbstractMarkersRef.current;
+
+        maptilersdk.config.apiKey = apiKey;
 
         const map = new maptilersdk.Map({
             container: mapContainerRef.current,
@@ -85,36 +86,29 @@ export function useMapTiler(props) {
             geolocateControl: false
         });
 
-		map.on("styleimagemissing", (e) => {
+        map.on("styleimagemissing", (e) => {
+            const id = e.id;
+            const canvas = document.createElement("canvas");
+            canvas.width = 1;
+            canvas.height = 1;
+            const context = canvas.getContext("2d");
+            const emptyImageData = context.getImageData(0, 0, 1, 1);
+            map.addImage(id, emptyImageData);
+        });
 
-			const id = e.id;
+        map.on("load", () => {
+            const labelLayers = [
+                "Capital city labels",
+                "City labels",
+                "Town labels",
+                "Place labels"
+            ];
 
-			const canvas = document.createElement("canvas");
-			canvas.width = 1;
-			canvas.height = 1;
-
-			const context = canvas.getContext("2d");
-			const emptyImageData = context.getImageData(0, 0, 1, 1);
-
-			map.addImage(id, emptyImageData);
-		});
-
-		map.on("load", () => {
-
-			const labelLayers = [
-				"Capital city labels",
-				"City labels",
-				"Town labels",
-				"Place labels"
-			];
-
-			labelLayers.forEach(layer => {
-
-				if (map.getLayer(layer)) {
-					map.setLayerZoomRange(layer, 2, 24);
-				}
-
-			});
+            labelLayers.forEach(layer => {
+                if (map.getLayer(layer)) {
+                    map.setLayerZoomRange(layer, 2, 24);
+                }
+            });
 
             markerLayoutRef.current = new MarkerLayout(map, {
                 layers: labelLayers,
@@ -135,67 +129,57 @@ export function useMapTiler(props) {
                 }
             });
 
-            // Prøv å tegn highlight med en gang kartet er klart
+            // Tegn highlight umiddelbart hvis det finnes
             updateMapHighlight(map, highlightGeometry);
         });
 
         map.on("move", () => {
-
             const markerLayout = markerLayoutRef.current;
-            if (!markerLayout) {
-				return;
-			}
+            if (!markerLayout) return;
 
-            activeAbstractMarkersRef.current.forEach((abstractMarker, id) => {
+            currentAbstractMarkers.forEach((abstractMarker, id) => {
                 markerLayout.softUpdateAbstractMarker(abstractMarker);
-                activeAbstractMarkersRef.current.set(id, abstractMarker);
+                currentAbstractMarkers.set(id, abstractMarker);
             });
         });
 
         map.on("moveend", () => { 
-			isProgrammaticMove.current = false; 
-		});
+            isProgrammaticMove.current = false; 
+        });
 
         map.on("idle", () => {
-            if (isProgrammaticMove.current) {
-				return;
-			}
-
+            if (isProgrammaticMove.current) return;
             clearTimeout(idleDebounceRef.current);
             idleDebounceRef.current = setTimeout(reportMapStatus, 300);
         });
 
-		mapInstanceRef.current = map;
+        mapInstanceRef.current = map;
 
         return () => {
-            markersRef.current.forEach(m => 
-				m.remove());
-
-            activeAbstractMarkersRef.current.clear();
+            currentMarkers.forEach(m => m.remove());
+            currentAbstractMarkers.clear();
 
             if (mapInstanceRef.current) {
                 mapInstanceRef.current.remove();
                 mapInstanceRef.current = null;
             }
         };
-    }, [apiKey, style]);
+        // Bruker eslint-disable for lat/lon/zoom her fordi vi ikke vil re-initialisere kartet 
+        // hver gang brukeren panorerer, kun når API-nøkkel eller stil endres.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [apiKey, style, reportMapStatus]);
 
-    //Synkronisering av Highlight (Gjeninnført uten blokkerende loaded-sjekk)
+    // 2. Synkronisering av Highlight
     useEffect(() => {
         const map = mapInstanceRef.current;
-        if (!map) {
-			return;
-		}
-
+        if (!map) return;
         updateMapHighlight(map, highlightGeometry);
     }, [highlightGeometry]);
 
-    //Synkronisering av Værmarkører
+    // 3. Synkronisering av Værmarkører
     useEffect(() => {
         const map = mapInstanceRef.current;
-        if (!map) {
-			return;
-		}
+        if (!map) return;
 
         renderWeatherMarkers({
             map,
@@ -205,12 +189,10 @@ export function useMapTiler(props) {
         });
     }, [weatherPoints, onLocationClick]);
 
-    //Synkronisering av FlyTo / FitBounds
+    // 4. Synkronisering av FlyTo / FitBounds
     useEffect(() => {
         const map = mapInstanceRef.current;
-        if (!map || lat == null || lon == null) {
-			return;
-		}
+        if (!map || lat == null || lon == null) return;
 
         if (bboxToFit) {
             isProgrammaticMove.current = true;
@@ -224,7 +206,7 @@ export function useMapTiler(props) {
 
         const center = map.getCenter();
         const currentZoom = map.getZoom();
-		
+
         const hasMoved = 
             Math.abs(center.lat - lat) > SIGNIFICANT_MOVE_THRESHOLD ||
             Math.abs(center.lng - lon) > SIGNIFICANT_MOVE_THRESHOLD ||
