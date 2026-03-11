@@ -1,4 +1,4 @@
-//src/ui/view/components/MapPage/useMapTiler.jsx
+// src/ui/view/components/MapPage/useMapTiler.jsx
 import { useEffect, useRef, useCallback } from "react";
 import * as maptilersdk from "@maptiler/sdk";
 import { MarkerLayout } from "@maptiler/marker-layout";
@@ -8,8 +8,52 @@ import { updateMapHighlight } from "../../../utils/MapUtils/MapHighlight.js";
 import { renderWeatherMarkers } from "../../../utils/MapUtils/WeatherMarkers.jsx";
 import { getFeaturePriorityScore } from "../../../utils/MapUtils/MarkerLayoutUtils.js";
 
+/**
+ * Hjelpefunksjon for å beregne utsnitt (bounds) fra GeoJSON-geometri.
+ * Dette gir en mye mer nøyaktig sentrering enn standard bounding box fra API-et.
+ */
+const getBoundsFromGeometry = (geometry) => {
+    if (!geometry || !geometry.features || geometry.features.length === 0) return null;
+
+    let allPolygons = [];
+
+    geometry.features.forEach(feature => {
+        if (feature.geometry.type === "Polygon") {
+            allPolygons.push(feature.geometry.coordinates[0]);
+        } else if (feature.geometry.type === "MultiPolygon") {
+            feature.geometry.coordinates.forEach(poly => {
+                allPolygons.push(poly[0]);
+            });
+        }
+    });
+
+    if (allPolygons.length === 0) return null;
+
+    // Finn den landmassen med flest punkter (fungerer som en proxy for fastlandet)
+    // Dette gjør at vi ignorerer småøyer i Stillehavet eller Arktis når vi beregner zoom.
+    const mainland = allPolygons.reduce((prev, current) => 
+        (prev.length > current.length) ? prev : current
+    );
+
+    // Hvis fastlandet er veldig lite (f.eks. en liten øynasjon), 
+    // faller vi tilbake til å bruke alle punkter.
+    const coordsToUse = mainland.length > 10 ? mainland : allPolygons.flat();
+
+    const lats = coordsToUse.map(c => c[1]);
+    const lngs = coordsToUse.map(c => c[0]);
+
+    return [
+        [Math.min(...lngs), Math.min(...lats)],
+        [Math.max(...lngs), Math.max(...lats)]
+    ];
+};
+
 export function useMapTiler(props) {
-    const { apiKey, style, lat, lon, zoom, bboxToFit, weatherPoints, onMapChange, onLocationClick, activeLocation, highlightGeometry } = props;
+    const { 
+        apiKey, style, lat, lon, zoom, 
+        bboxToFit, weatherPoints, onMapChange, 
+        onLocationClick, activeLocation, highlightGeometry 
+    } = props;
 
     const SIGNIFICANT_MOVE_THRESHOLD = 0.001;
     const SIGNIFICANT_ZOOM_THRESHOLD = 0.1;
@@ -34,7 +78,6 @@ export function useMapTiler(props) {
         activeLocationRef.current = activeLocation;
     }, [activeLocation]);
 
-    // Pakker inn reportMapStatus i useCallback så den kan brukes trygt i useEffect
     const reportMapStatus = useCallback(() => {
         const map = mapInstanceRef.current;
         if (!map) return;
@@ -55,22 +98,13 @@ export function useMapTiler(props) {
             activeLocation: activeLocationRef.current
         });
 
-        onMapChange(
-            center.lat,
-            center.lng,
-            bbox,
-            map.getZoom(),
-            points
-        );
+        onMapChange(center.lat, center.lng, bbox, map.getZoom(), points);
     }, [onMapChange]);
 
     // 1. Initialisering av kartet
     useEffect(() => {
-        if (!mapContainerRef.current || mapInstanceRef.current) {
-            return;
-        }
+        if (!mapContainerRef.current || mapInstanceRef.current) return;
 
-        // Kopierer refs til lokale variabler for sikker cleanup (løser ESLint feil)
         const currentMarkers = markersRef.current;
         const currentAbstractMarkers = activeAbstractMarkersRef.current;
 
@@ -89,25 +123,16 @@ export function useMapTiler(props) {
         map.on("styleimagemissing", (e) => {
             const id = e.id;
             const canvas = document.createElement("canvas");
-            canvas.width = 1;
-            canvas.height = 1;
+            canvas.width = 1; canvas.height = 1;
             const context = canvas.getContext("2d");
             const emptyImageData = context.getImageData(0, 0, 1, 1);
             map.addImage(id, emptyImageData);
         });
 
         map.on("load", () => {
-            const labelLayers = [
-                "Capital city labels",
-                "City labels",
-                "Town labels",
-                "Place labels"
-            ];
-
+            const labelLayers = ["Capital city labels", "City labels", "Town labels", "Place labels"];
             labelLayers.forEach(layer => {
-                if (map.getLayer(layer)) {
-                    map.setLayerZoomRange(layer, 2, 24);
-                }
+                if (map.getLayer(layer)) map.setLayerZoomRange(layer, 2, 24);
             });
 
             markerLayoutRef.current = new MarkerLayout(map, {
@@ -129,23 +154,19 @@ export function useMapTiler(props) {
                 }
             });
 
-            // Tegn highlight umiddelbart hvis det finnes
             updateMapHighlight(map, highlightGeometry);
         });
 
         map.on("move", () => {
             const markerLayout = markerLayoutRef.current;
             if (!markerLayout) return;
-
             currentAbstractMarkers.forEach((abstractMarker, id) => {
                 markerLayout.softUpdateAbstractMarker(abstractMarker);
                 currentAbstractMarkers.set(id, abstractMarker);
             });
         });
 
-        map.on("moveend", () => { 
-            isProgrammaticMove.current = false; 
-        });
+        map.on("moveend", () => { isProgrammaticMove.current = false; });
 
         map.on("idle", () => {
             if (isProgrammaticMove.current) return;
@@ -158,14 +179,11 @@ export function useMapTiler(props) {
         return () => {
             currentMarkers.forEach(m => m.remove());
             currentAbstractMarkers.clear();
-
             if (mapInstanceRef.current) {
                 mapInstanceRef.current.remove();
                 mapInstanceRef.current = null;
             }
         };
-        // Bruker eslint-disable for lat/lon/zoom her fordi vi ikke vil re-initialisere kartet 
-        // hver gang brukeren panorerer, kun når API-nøkkel eller stil endres.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [apiKey, style, reportMapStatus]);
 
@@ -180,20 +198,28 @@ export function useMapTiler(props) {
     useEffect(() => {
         const map = mapInstanceRef.current;
         if (!map) return;
-
-        renderWeatherMarkers({
-            map,
-            markersRef,
-            weatherPoints,
-            onLocationClick
-        });
+        renderWeatherMarkers({ map, markersRef, weatherPoints, onLocationClick });
     }, [weatherPoints, onLocationClick]);
 
-    // 4. Synkronisering av FlyTo / FitBounds
+    // 4. Synkronisering av FlyTo / FitBounds (NÅ MED GEOMETRI-PRIORITET)
     useEffect(() => {
         const map = mapInstanceRef.current;
         if (!map || lat == null || lon == null) return;
 
+        // PRIORITET 1: Bruk utsnitt beregnet fra de blå grensene (mye mer nøyaktig sentrering)
+        const geometryBounds = getBoundsFromGeometry(highlightGeometry);
+        
+        if (geometryBounds) {
+            isProgrammaticMove.current = true;
+            map.fitBounds(geometryBounds, {
+                padding: 80, // Litt mer padding for å få landet pent i midten
+                maxZoom: FIT_BOUNDS_MAX_ZOOM,
+                duration: FIT_BOUNDS_DURATION
+            });
+            return;
+        }
+
+        // PRIORITET 2: Bruk standard bboxToFit fra søket
         if (bboxToFit) {
             isProgrammaticMove.current = true;
             map.fitBounds(bboxToFit, {
@@ -204,9 +230,9 @@ export function useMapTiler(props) {
             return;
         }
 
+        // PRIORITET 3: Fly til enkeltpunkt
         const center = map.getCenter();
         const currentZoom = map.getZoom();
-
         const hasMoved = 
             Math.abs(center.lat - lat) > SIGNIFICANT_MOVE_THRESHOLD ||
             Math.abs(center.lng - lon) > SIGNIFICANT_MOVE_THRESHOLD ||
@@ -221,7 +247,7 @@ export function useMapTiler(props) {
                 essential: true
             });
         }
-    }, [lat, lon, zoom, bboxToFit]);
+    }, [lat, lon, zoom, bboxToFit, highlightGeometry]);
 
     return mapContainerRef;
 }

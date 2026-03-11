@@ -11,6 +11,7 @@ export function getLayerPriority(layerId) {
 	}
 }
 
+/*
 export function getFeaturePriorityScore(feature) {
 	const props = feature.properties || {};
 	const rank = Number(props.rank ?? 9999);
@@ -18,6 +19,20 @@ export function getFeaturePriorityScore(feature) {
 
 	return layerPriority * 10000 + rank;
 }
+*/
+
+export function getFeaturePriorityScore(feature) {
+    const props = feature.properties || {};
+    
+    // Vi bruker 'rank' (hvor viktig kartet mener stedet er) som hovedvekt
+    const rank = Number(props.rank ?? 5); 
+    
+    // Vi gir Capital Cities et lite forsprang, men ikke så mye at de vinner over alt
+    const layerPriority = getLayerPriority(feature.layer?.id);
+    
+    return (layerPriority * 5) + rank; 
+}
+
 
 export function syncAbstractMarkersFromLayout(markerLayout, activeMarkers) {
 
