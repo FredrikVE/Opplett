@@ -6,7 +6,7 @@ import LoadingSpinner from "../components/Common/LoadingSpinner/LoadingSpinner.j
 
 export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREENS }) {
 
-	const { location, mapCenter, zoom, bboxToFit, apiKey, style, weatherPoints, isLoading, onMapChange } = viewModel;
+	const { location, mapCenter, zoom, bboxToFit, apiKey, style, weatherPoints, isLoading, onMapChange, highlightGeometry } = viewModel;
 
 	return (
 		<div className="map-screen">
@@ -51,6 +51,7 @@ export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREE
 					weatherPoints={weatherPoints}
 					onMapChange={onMapChange}
 					activeLocation={location}
+					highlightGeometry={highlightGeometry}
 				/>
 			</main>
 		</div>

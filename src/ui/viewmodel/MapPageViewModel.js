@@ -4,14 +4,7 @@ import useSearchViewModel from "./SearchViewModel.js";
 import { calculateMapView } from "../utils/MapUtils/MapZoomHelper.js";
 import { MAP_ZOOM_LEVELS } from "../utils/MapUtils/MapZoomLevels.js";
 
-export default function useMapPageViewModel(
-    mapTilerRepository,
-    searchLocationUseCase,
-    getMapWeatherUseCase,
-    activeLocation,
-    onLocationChange,
-    onResetToDeviceLocation
-) {
+export default function useMapPageViewModel(mapTilerRepository, searchLocationUseCase, getMapWeatherUseCase, getLocationGeometryUseCase, activeLocation, onLocationChange, onResetToDeviceLocation) {
     const DEBOUNCE_DELAY_MS = 500;
 
     // =========================
@@ -25,6 +18,7 @@ export default function useMapPageViewModel(
     });
     
     const [bboxToFit, setBboxToFit] = useState(null);
+    const [highlightGeometry, setHighlightGeometry] = useState(null);
     const [mapPoints, setMapPoints] = useState([]);
     const [weatherPoints, setWeatherPoints] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -117,6 +111,48 @@ export default function useMapPageViewModel(
         };
     }, [mapPoints, tz, getMapWeatherUseCase]);
 
+    // =======================================================
+    // UseEffect hook for HighlightGeometri på og kartgrenser
+    // =======================================================
+    useEffect(() => {
+
+        if (!activeLocation?.id) {
+            setHighlightGeometry(null);
+            return;
+        }
+
+        let cancelled = false;
+
+        const loadGeometry = async () => {
+
+            try {
+
+                const geo = await getLocationGeometryUseCase.execute(activeLocation.id);
+                console.log("[VM] Highlight geojson:", geo);
+
+                if (!cancelled) {
+                    setHighlightGeometry(geo);
+                }
+
+            }
+            catch (err) {
+
+                console.error("[VM] Klarte ikke hente highlight-geometri:", err);
+
+                if (!cancelled) {
+                    setHighlightGeometry(null);
+                }
+            }
+        };
+
+        loadGeometry();
+
+        return () => {
+            cancelled = true;
+        };
+
+    }, [activeLocation.id, getLocationGeometryUseCase]);
+
     // =========================
     // HANDLERS
     // =========================
@@ -167,6 +203,10 @@ export default function useMapPageViewModel(
         zoom: mapView.zoom,
         bboxToFit,
         location: activeLocation,
+        
+        //highlight for kartgrenser på landsnivå, kommunenivå og fylkesnivå.
+        highlightGeometry,
+
         mapCenter: {
             lat: mapView.lat ?? activeLocation.lat,
             lon: mapView.lon ?? activeLocation.lon

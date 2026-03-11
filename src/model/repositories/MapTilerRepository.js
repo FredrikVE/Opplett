@@ -1,12 +1,15 @@
 import tzLookup from "tz-lookup";
 
 export default class MapTilerRepository {
-
+	
 	constructor(mapTilerDataSource) {
 		this.dataSource = mapTilerDataSource;
+
+		// cache for polygon-geometri
+		this.geometryCache = new Map();
 	}
 
-	//Sikrer at koordinater er innenfor gyldige grenser.
+	// Sikrer at koordinater er innenfor gyldige grenser.
 	#sanitize(lat, lon) {
 
 		const numericLat = Number(lat);
@@ -21,7 +24,7 @@ export default class MapTilerRepository {
 		};
 	}
 
-	//Henter grunnkonfigurasjon for kartet (API-nøkkel og stil).
+	// Henter grunnkonfigurasjon for kartet (API-nøkkel og stil).
 	getMapConfig() {
 
 		const config = this.dataSource.getBaseConfig();
@@ -31,7 +34,7 @@ export default class MapTilerRepository {
 		return config;
 	}
 
-	//Henter forslag til søkefeltet.
+	// Henter forslag til søkefeltet.
 	async getSuggestions(query, signal, proximity) {
 
 		console.log("[DEBUG Repo] Søker etter:", query);
@@ -74,7 +77,7 @@ export default class MapTilerRepository {
 		return suggestions;
 	}
 
-	//Reverse geocoding for å finne navn på et spesifikt punkt
+	// Reverse geocoding for å finne navn på et spesifikt punkt
 	async getCoordinates(lat, lon) {
 
 		console.log("[DEBUG Repo] Reverse lookup:", lat, lon);
@@ -95,5 +98,24 @@ export default class MapTilerRepository {
 		console.log("[DEBUG Repo] Reverse lookup resultat:", firstResult);
 
 		return firstResult;
+	}
+
+	async getLocationGeometry(id) {
+
+		if (!id) return null;
+
+		// cache-hit
+		if (this.geometryCache.has(id)) {
+			return this.geometryCache.get(id);
+		}
+
+		console.log("[DEBUG Repo] Henter geometri for:", id);
+
+		const geojson = await this.dataSource.getLocationGeometry(id);
+
+		// cache lagring
+		this.geometryCache.set(id, geojson);
+
+		return geojson;
 	}
 }

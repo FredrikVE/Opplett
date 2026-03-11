@@ -54,7 +54,16 @@ export default class MapTilerDataSource {
 		return locations;
 	}
 
+	async getLocationGeometry(id) {
+
+		const url = new URL(`${this.#baseUrl}/${id}.json`);
+		url.searchParams.set("key", this.#apiKey);
+
+		return this.#fetch(url);
+	}
+
 	#isReverseGeocodingQuery(query) {
+
 		if (!query || typeof query !== "string") {
 			return false;
 		}
@@ -70,9 +79,9 @@ export default class MapTilerDataSource {
 
 		return (
 			Number.isFinite(lon) &&
-			Number.isFinite(lat) &&
 			lon >= -180 &&
 			lon <= 180 &&
+			Number.isFinite(lat) &&
 			lat >= -90 &&
 			lat <= 90
 		);
@@ -88,17 +97,20 @@ export default class MapTilerDataSource {
 		const isReverseGeocoding = this.#isReverseGeocodingQuery(query);
 
 		if (isReverseGeocoding) {
-			url.searchParams.set("limit", "1");
-		}
 
-		else {
+			url.searchParams.set("limit", "1");
+
+		} else {
+
 			url.searchParams.set("limit", "8");
 
 			if (proximity && proximity.lat != null && proximity.lon != null) {
+
 				url.searchParams.set(
 					"proximity",
 					`${proximity.lon},${proximity.lat}`
 				);
+
 			}
 		}
 
@@ -156,6 +168,7 @@ export default class MapTilerDataSource {
 
 					timezone = ctx.properties.timezone;
 					break;
+
 				}
 			}
 		}
@@ -180,5 +193,4 @@ export default class MapTilerDataSource {
 			context: feature.context || []
 		};
 	}
-
 }

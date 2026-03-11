@@ -47,6 +47,7 @@ import GetLocationNameUseCase from "./model/domain/GetLocationNameUseCase.js";
 import GetSunTimesUseCase from "./model/domain/GetSunTimesUseCase.js";
 import GetAlertsUseCase from "./model/domain/GetAlertsUseCase.js";
 import GetMapWeatherUseCase from "./model/domain/GetMapWeatherUseCase.js";
+import GetLocationGeometryUseCase from "./model/domain/GetLocationGeometryUseCase.js";
 
 //ViewModel og View
 import useForecastPageViewModel from "./ui/viewmodel/ForecastPageViewModel.js";
@@ -78,6 +79,7 @@ const getCurrentWeatherUseCase = new GetCurrentWeatherUseCase(locationRepo);
 const searchLocationUseCase = new SearchLocationUseCase(mapTilerRepo);
 const getLocationNameUseCase = new GetLocationNameUseCase(mapTilerRepo);
 const getMapWeatherUseCase = new GetMapWeatherUseCase(mapTilerRepo, getCurrentWeatherUseCase);
+const getLocationGeometryUseCase = new GetLocationGeometryUseCase(mapTilerRepo);
 
 export default function App() {
     const hoursAhead = 120;
@@ -135,6 +137,7 @@ export default function App() {
         mapTilerRepo,
         searchLocationUseCase,
         getMapWeatherUseCase,
+        getLocationGeometryUseCase,
         activeLocation, 		//SSOT objektet
         handleLocationChange,
         handleResetToDeviceLocation 
@@ -198,7 +201,7 @@ export default function App() {
                     activeScreen={activeScreen}
                     onChangeScreen={setActiveScreen}
                     SCREENS={NAV_SCREENS}
-                    onLocationClick={handleMapIconClick}
+                    onLocationClick={handleMapIconClick}    //trenger jeg denne??
                 />
             )}
             
