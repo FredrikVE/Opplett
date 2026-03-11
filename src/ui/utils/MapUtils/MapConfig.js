@@ -14,9 +14,9 @@ export const MAP_ZOOM_LEVELS = {
 // SSOT: Sentral funksjon for kart-begrensninger
 export function getMapConstraints(zoom) {
     //Maks antall ikoner totalt på skjermen
-    let maxMarkers = 15;
-    if (zoom < 4) maxMarkers = 6;
-    else if (zoom < 7) maxMarkers = 10;
+    let maxMarkers = 20;
+    if (zoom < 4) maxMarkers = 10;
+    else if (zoom < 7) maxMarkers = 12;
 
     //Avstand mellom ikoner (Gull-formelen din)
     const baseDistance = 50; 

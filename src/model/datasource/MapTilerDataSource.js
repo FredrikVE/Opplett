@@ -5,7 +5,7 @@ export default class MapTilerDataSource {
 	#baseUrl = "https://api.maptiler.com/geocoding";
 	#limit = 10; // Sentral styring av antall resultater
 
-	#allowedTypes = ["country", "region", "subregion", "county", "municipality", "place", "locality", "neighbourhood", "address"];
+	#allowedTypes = ["continental_marine", "major_landform", "country", "region", "subregion", "county", "municipality", "place", "locality", "neighbourhood", "address"];
 
 	constructor() {
 		if (!this.#apiKey) {
