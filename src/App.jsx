@@ -48,6 +48,7 @@ import GetSunTimesUseCase from "./model/domain/GetSunTimesUseCase.js";
 import GetAlertsUseCase from "./model/domain/GetAlertsUseCase.js";
 import GetMapWeatherUseCase from "./model/domain/GetMapWeatherUseCase.js";
 import GetLocationGeometryUseCase from "./model/domain/GetLocationGeometryUseCase.js";
+import GetCountryCitiesUseCase from "./model/domain/GetCountryCitiesUseCase.js";
 
 //ViewModel og View
 import useForecastPageViewModel from "./ui/viewmodel/ForecastPageViewModel.js";
@@ -80,6 +81,7 @@ const searchLocationUseCase = new SearchLocationUseCase(mapTilerRepo);
 const getLocationNameUseCase = new GetLocationNameUseCase(mapTilerRepo);
 const getMapWeatherUseCase = new GetMapWeatherUseCase(mapTilerRepo, getCurrentWeatherUseCase);
 const getLocationGeometryUseCase = new GetLocationGeometryUseCase(mapTilerRepo);
+const getCountryCitiesUseCase = new GetCountryCitiesUseCase(mapTilerRepo);
 
 export default function App() {
     const hoursAhead = 120;
@@ -138,6 +140,7 @@ export default function App() {
         searchLocationUseCase,
         getMapWeatherUseCase,
         getLocationGeometryUseCase,
+        getCountryCitiesUseCase,
         activeLocation, 		//SSOT objektet
         handleLocationChange,
         handleResetToDeviceLocation 

@@ -34,6 +34,23 @@ export default class MapTilerRepository {
 		return config;
 	}
 
+	async getFeaturedCities(countryCode = "no") {
+        const featured = {
+            "no": ["Oslo", "Bergen", "Trondheim", "Stavanger", "Tromsø", "Kristiansand", "Drammen"],
+            "se": ["Stockholm", "Göteborg", "Malmö"],
+            "dk": ["København", "Aarhus", "Odense"]
+        };
+
+        const cityNames = featured[countryCode.toLowerCase()] || [];
+        
+        // Kjør søk for hver by for å få koordinater/ID-er (Dette er ikke jalla, det er caching)
+        const cityData = await Promise.all(
+            cityNames.map(name => this.getSuggestions(name))
+        );
+
+        return cityData.map(results => results[0]).filter(Boolean);
+    }
+
 	// Henter forslag til søkefeltet.
 	async getSuggestions(query, signal, proximity) {
 

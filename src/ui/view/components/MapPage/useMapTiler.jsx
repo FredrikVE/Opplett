@@ -10,7 +10,7 @@ import { getFeaturePriorityScore } from "../../../utils/MapUtils/MarkerLayoutUti
 
 /**
  * Hjelpefunksjon for å beregne utsnitt (bounds) fra GeoJSON-geometri.
- * Dette gir en mye mer nøyaktig sentrering enn standard bounding box fra API-et.
+ * Gir mer nøyaktig sentrering enn standard bounding box fra API-et.
  */
 const getBoundsFromGeometry = (geometry) => {
     if (!geometry || !geometry.features || geometry.features.length === 0) return null;
@@ -29,14 +29,11 @@ const getBoundsFromGeometry = (geometry) => {
 
     if (allPolygons.length === 0) return null;
 
-    // Finn den landmassen med flest punkter (fungerer som en proxy for fastlandet)
-    // Dette gjør at vi ignorerer småøyer i Stillehavet eller Arktis når vi beregner zoom.
+    // Finn den største landmassen (proxy for fastlandet)
     const mainland = allPolygons.reduce((prev, current) => 
         (prev.length > current.length) ? prev : current
     );
 
-    // Hvis fastlandet er veldig lite (f.eks. en liten øynasjon), 
-    // faller vi tilbake til å bruke alle punkter.
     const coordsToUse = mainland.length > 10 ? mainland : allPolygons.flat();
 
     const lats = coordsToUse.map(c => c[1]);
@@ -52,9 +49,10 @@ export function useMapTiler(props) {
     const { 
         apiKey, style, lat, lon, zoom, 
         bboxToFit, weatherPoints, onMapChange, 
-        onLocationClick, activeLocation, highlightGeometry 
+        activeLocation, highlightGeometry 
     } = props;
 
+    // Konstanter for bevegelseslogikk
     const SIGNIFICANT_MOVE_THRESHOLD = 0.001;
     const SIGNIFICANT_ZOOM_THRESHOLD = 0.1;
     
@@ -62,22 +60,26 @@ export function useMapTiler(props) {
     const FIT_BOUNDS_MAX_ZOOM = 14;
     const FIT_BOUNDS_DURATION = 1500;
 
+    // Refs for MapTiler instanser
     const mapContainerRef = useRef(null);
     const mapInstanceRef = useRef(null);
-
     const markersRef = useRef([]);
     const markerLayoutRef = useRef(null);
     const activeAbstractMarkersRef = useRef(new Map());
 
+    // Kontroll-refs
     const isProgrammaticMove = useRef(false);
     const idleDebounceRef = useRef(null);
-
     const activeLocationRef = useRef(activeLocation);
 
+    // Oppdaterer ref til enhver tid for bruk i callbacks uten re-renders
     useEffect(() => {
         activeLocationRef.current = activeLocation;
     }, [activeLocation]);
 
+    /**
+     * Rapporterer kartets status (senter, zoom, synlige byer) tilbake til ViewModel.
+     */
     const reportMapStatus = useCallback(() => {
         const map = mapInstanceRef.current;
         if (!map) return;
@@ -91,6 +93,7 @@ export function useMapTiler(props) {
             bounds.getNorth()
         ];
 
+        // Henter ut byer som er synlige i tiles-laget akkurat nå
         const points = extractCityPoints({
             map,
             markerLayout: markerLayoutRef.current,
@@ -101,7 +104,7 @@ export function useMapTiler(props) {
         onMapChange(center.lat, center.lng, bbox, map.getZoom(), points);
     }, [onMapChange]);
 
-    // 1. Initialisering av kartet
+    // 1. Initialisering av kartet (Kjøres kun én gang)
     useEffect(() => {
         if (!mapContainerRef.current || mapInstanceRef.current) return;
 
@@ -120,6 +123,7 @@ export function useMapTiler(props) {
             geolocateControl: false
         });
 
+        // Håndterer manglende ikoner i stilen for å unngå konsoll-støy
         map.on("styleimagemissing", (e) => {
             const id = e.id;
             const canvas = document.createElement("canvas");
@@ -135,6 +139,7 @@ export function useMapTiler(props) {
                 if (map.getLayer(layer)) map.setLayerZoomRange(layer, 2, 24);
             });
 
+            // Oppretter MarkerLayout for intelligent filtrering av bynavn
             markerLayoutRef.current = new MarkerLayout(map, {
                 layers: labelLayers,
                 markerSize: [40, 70],
@@ -146,6 +151,7 @@ export function useMapTiler(props) {
                 filter: (feature) => {
                     const props = feature.properties || {};
                     const currentLoc = activeLocationRef.current;
+                    // Hvis vi har valgt et land, viser vi kun byer som tilhører det landet
                     if (currentLoc?.type === "country" && currentLoc?.countryCode) {
                         const tileCountryCode = props.iso_a2 || props.country_code;
                         if (tileCountryCode) return tileCountryCode.toLowerCase() === currentLoc.countryCode.toLowerCase();
@@ -157,6 +163,7 @@ export function useMapTiler(props) {
             updateMapHighlight(map, highlightGeometry);
         });
 
+        // Oppdaterer abstrakte markører under bevegelse for jevn animasjon
         map.on("move", () => {
             const markerLayout = markerLayoutRef.current;
             if (!markerLayout) return;
@@ -166,8 +173,11 @@ export function useMapTiler(props) {
             });
         });
 
-        map.on("moveend", () => { isProgrammaticMove.current = false; });
+        map.on("moveend", () => { 
+            isProgrammaticMove.current = false; 
+        });
 
+        // Bruker 'idle' med debounce for å rapportere status når kartet har stoppet helt
         map.on("idle", () => {
             if (isProgrammaticMove.current) return;
             clearTimeout(idleDebounceRef.current);
@@ -187,39 +197,46 @@ export function useMapTiler(props) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [apiKey, style, reportMapStatus]);
 
-    // 2. Synkronisering av Highlight
+    // 2. Synkronisering av blå highlight-grenser
     useEffect(() => {
         const map = mapInstanceRef.current;
         if (!map) return;
         updateMapHighlight(map, highlightGeometry);
     }, [highlightGeometry]);
 
-    // 3. Synkronisering av Værmarkører
+    // 3. Synkronisering av Værmarkører ("Dumme" markører uten klikk-logikk)
     useEffect(() => {
         const map = mapInstanceRef.current;
         if (!map) return;
-        renderWeatherMarkers({ map, markersRef, weatherPoints, onLocationClick });
-    }, [weatherPoints, onLocationClick]);
+        
+        // Vi sender inn null for onLocationClick for å gjøre dem "dumme"
+        renderWeatherMarkers({ 
+            map, 
+            markersRef, 
+            weatherPoints, 
+            onLocationClick: null 
+        });
+    }, [weatherPoints]);
 
-    // 4. Synkronisering av FlyTo / FitBounds (NÅ MED GEOMETRI-PRIORITET)
+    // 4. Synkronisering av kartutsnitt (FlyTo / FitBounds)
     useEffect(() => {
         const map = mapInstanceRef.current;
         if (!map || lat == null || lon == null) return;
 
-        // PRIORITET 1: Bruk utsnitt beregnet fra de blå grensene (mye mer nøyaktig sentrering)
+        // PRIORITET 1: Geometri-basert FitBounds (for land/regioner)
         const geometryBounds = getBoundsFromGeometry(highlightGeometry);
         
         if (geometryBounds) {
             isProgrammaticMove.current = true;
             map.fitBounds(geometryBounds, {
-                padding: 80, // Litt mer padding for å få landet pent i midten
+                padding: 80,
                 maxZoom: FIT_BOUNDS_MAX_ZOOM,
                 duration: FIT_BOUNDS_DURATION
             });
             return;
         }
 
-        // PRIORITET 2: Bruk standard bboxToFit fra søket
+        // PRIORITET 2: Standard Bounding Box fra søk
         if (bboxToFit) {
             isProgrammaticMove.current = true;
             map.fitBounds(bboxToFit, {
@@ -230,7 +247,7 @@ export function useMapTiler(props) {
             return;
         }
 
-        // PRIORITET 3: Fly til enkeltpunkt
+        // PRIORITET 3: Enkeltpunkt (FlyTo)
         const center = map.getCenter();
         const currentZoom = map.getZoom();
         const hasMoved = 

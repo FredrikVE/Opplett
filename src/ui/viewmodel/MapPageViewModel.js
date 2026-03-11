@@ -4,7 +4,7 @@ import useSearchViewModel from "./SearchViewModel.js";
 import { calculateMapView } from "../utils/MapUtils/MapZoomHelper.js";
 import { MAP_ZOOM_LEVELS } from "../utils/MapUtils/MapZoomLevels.js";
 
-export default function useMapPageViewModel(mapTilerRepository, searchLocationUseCase, getMapWeatherUseCase, getLocationGeometryUseCase, activeLocation, onLocationChange, onResetToDeviceLocation) {
+export default function useMapPageViewModel(mapTilerRepository, searchLocationUseCase, getMapWeatherUseCase, getLocationGeometryUseCase, getCountryCitiesUseCase, activeLocation, onLocationChange, onResetToDeviceLocation) {
     const DEBOUNCE_DELAY_MS = 500;
 
     // =========================
@@ -60,11 +60,22 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
     // MAP CHANGE HANDLER
     // =========================
     const onMapChange = useCallback((lat, lon, bbox, currentZoom, points) => {
-        // Vi nullstiller bboxToFit her så kartet ikke "låses" til forrige søk
         setBboxToFit(null);
-        
-        // Lagrer punktene som extractCityPoints i kartet har funnet
-        setMapPoints(points || []);
+
+        setMapPoints(prevPoints => {
+            // SJEKK: Er de eksisterende punktene våre "Featured Cities" fra et land-søk?
+            // Vi kan gjenkjenne dem ved at de ofte er flere enn det kartet rapporterer på høyt zoomnivå.
+            const isCountryView = activeLocation?.type === "country";
+            
+            if (isCountryView && prevPoints.length > 5 && points.length < 5) {
+                // Hvis vi er i land-modus og kartet prøver å gi oss færre enn 5 punkter (f.eks bare "Norge"),
+                // så beholder vi de byene vi allerede har hentet.
+                return prevPoints;
+            }
+
+            // Ellers lar vi kartet styre (standard oppførsel for vanlig panorering)
+            return points || [];
+        });
 
         setMapView({
             bbox,
@@ -72,7 +83,7 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
             lat,
             lon
         });
-    }, []);
+    }, [activeLocation?.type]); // Viktig å ha med type i dependencies
 
     // =========================
     // WEATHER FETCH LOGIKK
@@ -152,6 +163,33 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
         };
 
     }, [activeLocation.id, getLocationGeometryUseCase]);
+
+    // NY EFFECT: Hent byer når et land velges
+    useEffect(() => {
+        // Vi sjekker om det er et land (basert på type fra søkeresultatet)
+        if (activeLocation?.type === "country" && activeLocation?.countryCode) {
+            let cancelled = false;
+
+            const fetchCities = async () => {
+                setIsLoading(true);
+                try {
+                    const cities = await getCountryCitiesUseCase.execute(activeLocation.countryCode);
+                    if (!cancelled) {
+                        // Ved å sette disse i mapPoints, vil weather-effekten din 
+                        // nedenfor automatisk trigge og hente vær for dem!
+                        setMapPoints(cities); 
+                    }
+                } catch (error) {
+                    console.error("[VM] Klarte ikke hente byer for land:", error);
+                } finally {
+                    if (!cancelled) setIsLoading(false);
+                }
+            };
+
+            fetchCities();
+            return () => { cancelled = true; };
+        }
+    }, [activeLocation.id, activeLocation.type, activeLocation.countryCode, getCountryCitiesUseCase]);
 
     // =========================
     // HANDLERS
