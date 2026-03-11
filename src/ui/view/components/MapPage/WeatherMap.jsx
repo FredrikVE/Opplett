@@ -11,15 +11,7 @@ import { updateMapHighlight } from "../../../utils/MapUtils/MapHighlight.js";
 import { renderWeatherMarkers } from "../../../utils/MapUtils/WeatherMarkers.jsx";
 import { getFeaturePriorityScore } from "../../../utils/MapUtils/MarkerLayoutUtils.js";
 
-export default function WeatherMap({
-    apiKey,
-    style,
-    mapTarget,
-    weatherPoints,
-    onMapChange,
-    activeLocation,
-    highlightGeometry
-}) {
+export default function WeatherMap({ apiKey, style, mapTarget, weatherPoints, onMapChange, activeLocation, highlightGeometry }) {
     const mapContainerRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const markersRef = useRef([]);
@@ -37,7 +29,7 @@ export default function WeatherMap({
             return;
         }
 
-        // 🔧 KRITISK: oppdater MarkerLayout før vi henter punkter
+        //Oppdater MarkerLayout før vi henter punkter
         markerLayoutRef.current.update();
 
         const points = extractCityPoints({
@@ -62,7 +54,9 @@ export default function WeatherMap({
        INITIALISER KART
     ========================= */
     useEffect(() => {
-        if (!mapContainerRef.current || mapInstanceRef.current) return;
+        if (!mapContainerRef.current || mapInstanceRef.current) {
+            return;
+        }
 
         maptilersdk.config.apiKey = apiKey;
 
@@ -77,7 +71,7 @@ export default function WeatherMap({
 
         map.on("load", () => {
 
-            // åpner label layers for alle zoomnivåer
+            //Åpner label layers for alle zoomnivåer
             MAP_MARKER_CONFIG.LABEL_LAYERS.forEach(layer => {
                 if (map.getLayer(layer)) {
                     map.setLayerZoomRange(layer, 0, 24);
@@ -93,10 +87,10 @@ export default function WeatherMap({
             reportMapStatus();
         });
 
-        // brukerbevegelser
+        //Brukerbevegelser
         map.on("moveend", reportMapStatus);
 
-        // sørger for oppdatering etter zoom / label redraw
+        //Sørger for oppdatering etter zoom / label redraw
         map.on("idle", reportMapStatus);
 
         mapInstanceRef.current = map;
