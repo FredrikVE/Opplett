@@ -1,52 +1,34 @@
 //src/ui/utils/MapUtils/MarkerLayoutUtils.js
-// maptiler/markerLayoutUtils.js
-
 export function getLayerPriority(layerId) {
-	switch (layerId) {
-		case "Capital city labels": return 0;
-		case "City labels": return 1;
-		case "Town labels": return 2;
-		case "Place labels": return 3;
-		default: return 99;
-	}
+    switch (layerId) {
+        case "Capital city labels": return 0;
+        case "City labels": return 1;
+        case "Town labels": return 2;
+        case "Place labels": return 3;
+        default: return 99;
+    }
 }
 
-/*
 export function getFeaturePriorityScore(feature) {
-	const props = feature.properties || {};
-	const rank = Number(props.rank ?? 9999);
-	const layerPriority = getLayerPriority(feature.layer?.id);
-
-	return layerPriority * 10000 + rank;
-}
-*/
-
-export function getFeaturePriorityScore(feature) {
-    const props = feature.properties || {};
-    
-    // Vi bruker 'rank' (hvor viktig kartet mener stedet er) som hovedvekt
+    const props = feature?.properties || {};
     const rank = Number(props.rank ?? 5); 
-    
-    // Vi gir Capital Cities et lite forsprang, men ikke så mye at de vinner over alt
-    const layerPriority = getLayerPriority(feature.layer?.id);
+    const layerPriority = getLayerPriority(feature?.layer?.id);
     
     return (layerPriority * 5) + rank; 
 }
 
-
 export function syncAbstractMarkersFromLayout(markerLayout, activeMarkers) {
+    if (!markerLayout) return [];
 
-	if (!markerLayout) return [];
+    const markerStatus = markerLayout.update();
 
-	const markerStatus = markerLayout.update();
+    if (!markerStatus) {
+        return Array.from(activeMarkers.values());
+    }
 
-	if (!markerStatus) {
-		return Array.from(activeMarkers.values());
-	}
+    markerStatus.removed.forEach(am => activeMarkers.delete(am.id));
+    markerStatus.updated.forEach(am => activeMarkers.set(am.id, am));
+    markerStatus.new.forEach(am => activeMarkers.set(am.id, am));
 
-	markerStatus.removed.forEach(am => activeMarkers.delete(am.id));
-	markerStatus.updated.forEach(am => activeMarkers.set(am.id, am));
-	markerStatus.new.forEach(am => activeMarkers.set(am.id, am));
-
-	return Array.from(activeMarkers.values());
+    return Array.from(activeMarkers.values());
 }

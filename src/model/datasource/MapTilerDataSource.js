@@ -1,196 +1,101 @@
 const API_KEY = import.meta.env.VITE_MAPTILER_API_KEY;
 
 export default class MapTilerDataSource {
+	#apiKey = API_KEY;
+	#baseUrl = "https://api.maptiler.com/geocoding";
+	#limit = 10; // Sentral styring av antall resultater
 
-	#apiKey;
-	#baseUrl;
-	#styleUrl;
+	#allowedTypes = ["country", "region", "subregion", "county", "municipality", "place", "locality", "neighbourhood", "address"];
 
 	constructor() {
-
-		if (!API_KEY) {
+		if (!this.#apiKey) {
 			throw new Error("Mangler VITE_MAPTILER_API_KEY i .env");
 		}
-
-		this.#apiKey = API_KEY;
-		this.#baseUrl = "https://api.maptiler.com/geocoding";
-		this.#styleUrl = "https://api.maptiler.com/maps/streets-v2/style.json";
-
-		this.apiCallCount = 0;
 	}
 
+	/**
+	 * Henter grunnkonfigurasjon for kartet.
+	 */
 	getBaseConfig() {
-
 		return {
 			apiKey: this.#apiKey,
-			style: `${this.#styleUrl}?key=${this.#apiKey}`
+			style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${this.#apiKey}`
 		};
 	}
 
+	/**
+	 * Utfører søk (fremover eller bakover geokoding).
+	 */
+
 	async search(query, signal, proximity) {
+		if (!query) return [];
 
-		console.log("[DEBUG DS] Geocoding search:", query);
-
-		const url = this.#buildSearchUrl(query, proximity);
-
-		const data = await this.#fetch(url, { signal });
-
-		const locations = [];
-
-		if (data && data.features) {
-
-			for (let i = 0; i < data.features.length; i++) {
-
-				const feature = data.features[i];
-
-				const location = this.#mapFeatureToLocation(feature);
-
-				locations.push(location);
-			}
-		}
-
-		console.log("[DEBUG DS] Geocoding results:", locations.length);
-
-		return locations;
-	}
-
-	async getLocationGeometry(id) {
-
-		const url = new URL(`${this.#baseUrl}/${id}.json`);
-		url.searchParams.set("key", this.#apiKey);
-
-		return this.#fetch(url);
-	}
-
-	#isReverseGeocodingQuery(query) {
-
-		if (!query || typeof query !== "string") {
-			return false;
-		}
-
-		const parts = query.split(",");
-
-		if (parts.length !== 2) {
-			return false;
-		}
-
-		const lon = Number(parts[0].trim());
-		const lat = Number(parts[1].trim());
-
-		return (
-			Number.isFinite(lon) &&
-			lon >= -180 &&
-			lon <= 180 &&
-			Number.isFinite(lat) &&
-			lat >= -90 &&
-			lat <= 90
-		);
-	}
-
-	#buildSearchUrl(query, proximity) {
-
-		const url = new URL(`${this.#baseUrl}/${encodeURIComponent(query)}.json`);
-
+		const trimmedQuery = query.trim();
+		const isCoords = /^-?\d+\.?\d*,-?\d+\.?\d*$/.test(trimmedQuery);
+		
+		// MapTiler krever rene koordinater i URL-stien ved reverse geocoding
+		const searchPath = isCoords ? trimmedQuery : encodeURIComponent(trimmedQuery);
+		
+		const url = new URL(`${this.#baseUrl}/${searchPath}.json`);
+		
 		url.searchParams.set("key", this.#apiKey);
 		url.searchParams.set("language", "no");
+		url.searchParams.set("limit", isCoords ? "1" : `${this.#limit}`);
 
-		const isReverseGeocoding = this.#isReverseGeocodingQuery(query);
-
-		if (isReverseGeocoding) {
-
-			url.searchParams.set("limit", "1");
-
-		} else {
-
-			url.searchParams.set("limit", "8");
-
-			if (proximity && proximity.lat != null && proximity.lon != null) {
-
-				url.searchParams.set(
-					"proximity",
-					`${proximity.lon},${proximity.lat}`
-				);
-
-			}
+		// Tvinger API-et til å kun returnere geografiske områder, ikke butikker/POI
+		if (!isCoords) {
+			url.searchParams.set("types", this.#allowedTypes.join(","));
 		}
 
-		return url;
+		if (proximity?.lat != null && proximity?.lon != null) {
+			url.searchParams.set("proximity", `${proximity.lon},${proximity.lat}`);
+		}
+
+		const response = await fetch(url.toString(), { signal });
+		
+		if (!response.ok) {
+			const errorData = await response.text();
+			console.error("[MapTiler] API Feil:", errorData);
+			throw new Error(`Søk feilet: ${response.status}`);
+		}
+
+		const data = await response.json();
+		return (data.features || []).map(f => this.#mapFeatureToLocation(f));
 	}
 
-	async #fetch(url, options = {}) {
 
-		this.apiCallCount++;
-
-		console.log("[DEBUG DS] API call #", this.apiCallCount);
-
-		const response = await fetch(url.toString(), options);
-
-		if (!response.ok) {
-			throw new Error(`HTTP ${response.status}`);
-		}
-
+	/**
+	 * Henter full GeoJSON-geometri for et spesifikt sted (brukes til polygon-tegning).
+	 */
+	async getLocationGeometry(id) {
+		if (!id) return null;
+		
+		const url = `${this.#baseUrl}/${id}.json?key=${this.#apiKey}`;
+		const response = await fetch(url);
+		
+		if (!response.ok) throw new Error("Kunne ikke hente geometri");
+		
 		return response.json();
 	}
 
-	#mapFeatureToLocation(feature) {
-
-		const lon = feature.center[0];
-		const lat = feature.center[1];
-
-		let bounds = null;
-
-		if (feature.bbox) {
-
-			const west = feature.bbox[0];
-			const south = feature.bbox[1];
-			const east = feature.bbox[2];
-			const north = feature.bbox[3];
-
-			bounds = {
-				southwest: { lng: west, lat: south },
-				northeast: { lng: east, lat: north }
-			};
-		}
-
-		let timezone = null;
-
-		if (feature.properties && feature.properties.timezone) {
-
-			timezone = feature.properties.timezone;
-
-		} else if (feature.context) {
-
-			for (let i = 0; i < feature.context.length; i++) {
-
-				const ctx = feature.context[i];
-
-				if (ctx.properties && ctx.properties.timezone) {
-
-					timezone = ctx.properties.timezone;
-					break;
-
-				}
-			}
-		}
-
-		let name = feature.text || feature.place_name || "Ukjent sted";
-
-		let type = null;
-
-		if (feature.place_type && feature.place_type.length > 0) {
-			type = feature.place_type[0];
-		}
+	/**
+	 * Mapper rå-features fra MapTiler til vår interne domenemodell.
+	 */
+	#mapFeatureToLocation(f) {
+		const [lon, lat] = f.center;
 
 		return {
-			id: feature.id || null,
-			name,
+			id: f.id,
+			name: f.place_name || f.text || "Ukjent sted",
 			lat,
 			lon,
-			bounds,
-			type,
-			timezone,
-			countryCode: feature.properties?.country_code || null,
-			context: feature.context || []
+			type: f.place_type?.[0] || "unknown",
+			countryCode: f.properties?.country_code || null,
+			bounds: f.bbox ? {
+				southwest: { lng: f.bbox[0], lat: f.bbox[1] },
+				northeast: { lng: f.bbox[2], lat: f.bbox[3] }
+			} : null,
+			context: f.context || []
 		};
 	}
 }

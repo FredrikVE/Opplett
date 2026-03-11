@@ -1,74 +1,39 @@
-// src/model/domain/GetMapWeatherUseCase.js
+//src/model/domain/GetMapWeatherUseCase.js
 export default class GetMapWeatherUseCase {
+    constructor(mapTilerRepository, getCurrentWeatherUseCase) {
+        this.mapTilerRepository = mapTilerRepository;
+        this.getCurrentWeatherUseCase = getCurrentWeatherUseCase;
+    }
 
-	constructor(mapTilerRepository, getCurrentWeatherUseCase) {
-		this.mapTilerRepository = mapTilerRepository;
-		this.getCurrentWeatherUseCase = getCurrentWeatherUseCase;
-	}
+    async execute(points, timeZone) {
+        if (!points?.length) return [];
 
-	async execute(points, timeZone) {
+        try {
+            // Vi kjører alle kallene parallelt med Promise.all for mye bedre hastighet
+            const weatherPromises = points.map(async (point) => {
+                const weather = await this.getCurrentWeatherUseCase.execute({
+                    lat: point.lat,
+                    lon: point.lon,
+                    timeZone
+                });
 
-		console.log("[DEBUG 2] UseCase: Starter værhenting for kartpunkter");
+                if (!weather) return null;
 
-		try {
+                // Slå sammen dataene rett i returen
+                return {
+                    ...point, // Beholder ID, navn, koordinater fra kartet
+                    ...weather, // Legger på temperatur og symbol
+                };
+            });
 
-			if (!points || points.length === 0) {
-				console.log("[DEBUG 2] Ingen punkter mottatt.");
-				return [];
-			}
+            const results = await Promise.all(weatherPromises);
+            
+            // Filtrer bort de som feilet (null)
+            return results.filter(Boolean);
 
-			console.log(`[DEBUG 2] Mottok ${points.length} kartpunkter.`);
-
-			const weatherPoints = await this.#loadWeatherForPoints(points, timeZone);
-
-			console.log(`[DEBUG 2] UseCase ferdig. Sender ${weatherPoints.length} punkter til VM.`);
-
-			return weatherPoints;
-
-		}
-		catch (error) {
-
-			console.error("[DEBUG 2] Kritisk UseCase feil:", error);
-
-			return [];
-		}
-	}
-
-	async #loadWeatherForPoints(points, timeZone) {
-
-		const weatherResults = [];
-
-		for (const point of points) {
-
-			console.log("[DEBUG 2] Henter vær for:", point.name || "ukjent sted", point.lat, point.lon);
-
-			const weather = await this.getCurrentWeatherUseCase.execute({
-				lat: point.lat,
-				lon: point.lon,
-				timeZone
-			});
-
-			if (!weather) {
-
-				console.log("[DEBUG 2] Ingen værdata for punkt:", point);
-
-				continue;
-			}
-
-			const combinedResult = {
-				...weather,
-				...point,
-				id: point.id ?? null,
-				type: point.type ?? null,
-				bounds: point.bounds ?? null,
-				countryCode: point.countryCode ?? null,
-				context: point.context ?? []
-			};
-
-			weatherResults.push(combinedResult);
-		}
-
-		return weatherResults;
-	}
-
+        } catch (error) {
+            console.error("[GetMapWeatherUseCase] Feil:", error);
+            return [];
+        }
+    }
 }

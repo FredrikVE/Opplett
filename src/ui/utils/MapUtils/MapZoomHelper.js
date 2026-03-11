@@ -5,43 +5,33 @@ export function calculateMapView(selected) {
     const { type, bounds } = selected;
     let targetZoom = MAP_ZOOM_LEVELS.DEFAULT;
 
-    // Bestem zoom-nivå basert på type (og utstrekning for regioner)
-    switch (true) {
-        case (type === "country" || type === "major_landform"):
+    // 1. Map type til et standard zoom-nivå (brukes som fallback eller maxZoom)
+    switch (type) {
+        case "country":
+        case "major_landform":
             targetZoom = MAP_ZOOM_LEVELS.COUNTRY;
             break;
-
-        case (type === "continent" || type === "continental_marine"):
-            targetZoom = MAP_ZOOM_LEVELS.CONTINENT;
+        case "region":
+            targetZoom = MAP_ZOOM_LEVELS.REGION;
             break;
-
-        case (type === "region"): {
-            const latDiff = bounds ? (bounds.northeast.lat - bounds.southwest.lat) : 1.0;
-            targetZoom = latDiff < 0.5 ? MAP_ZOOM_LEVELS.DEFAULT : MAP_ZOOM_LEVELS.REGION;
-            break;
-        }
-
-        case (type === "subregion" || type === "county"):
+        case "subregion":
+        case "county":
             targetZoom = MAP_ZOOM_LEVELS.COUNTY;
             break;
-
-        case (type === "city" || type === "municipality"):
+        case "city":
+        case "municipality":
             targetZoom = MAP_ZOOM_LEVELS.DISTRICT;
             break;
-
         default:
             targetZoom = MAP_ZOOM_LEVELS.DEFAULT;
-            break;
     }
 
-    // Ikke bruk bbox for land ennå.
-    // MapTiler kan returnere enorme bbox-er for land med fjerne territorier,
-    // og da zoomer kartet nesten helt ut.
-    // Når vi senere henter full geometri for landet, kan vi fitte på polygon i stedet.
-    const skipBoundsTypes = ["country", "major_landform", "continent", "continental_marine"];
+    // 2. Bruk bounds hvis de finnes. 
+    // Vi fjerner "skipBoundsTypes" fordi MapTiler sin bbox for land som 
+    // Danmark og Nederland er presis, og for Norge er den "god nok" 
+    // så lenge vi har riktig padding i kartet.
     let targetBbox = null;
-
-    if (bounds && !skipBoundsTypes.includes(type)) {
+    if (bounds) {
         targetBbox = [
             bounds.southwest.lng,
             bounds.southwest.lat,
@@ -50,5 +40,8 @@ export function calculateMapView(selected) {
         ];
     }
 
-    return { zoom: targetZoom, bbox: targetBbox };
+    return { 
+        zoom: targetZoom, 
+        bbox: targetBbox 
+    };
 }

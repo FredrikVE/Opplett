@@ -1,49 +1,22 @@
-// src/ui/view/components/MapPage/useMapTiler.jsx
 import { useEffect, useRef, useCallback } from "react";
 import * as maptilersdk from "@maptiler/sdk";
 import { MarkerLayout } from "@maptiler/marker-layout";
 
+import { MAP_ZOOM_LEVELS } from "../../../utils/MapUtils/MapZoomLevels.js";
 import { extractCityPoints } from "../../../utils/MapUtils/ExtractCityPoints.js";
 import { updateMapHighlight } from "../../../utils/MapUtils/MapHighlight.js";
 import { renderWeatherMarkers } from "../../../utils/MapUtils/WeatherMarkers.jsx";
 import { getFeaturePriorityScore } from "../../../utils/MapUtils/MarkerLayoutUtils.js";
+import { getBoundsFromGeometry } from "../../../utils/MapUtils/MapBoundsHelper.js";
 
-/**
- * Hjelpefunksjon for å beregne utsnitt (bounds) fra GeoJSON-geometri.
- * Gir mer nøyaktig sentrering enn standard bounding box fra API-et.
- */
-const getBoundsFromGeometry = (geometry) => {
-    if (!geometry || !geometry.features || geometry.features.length === 0) return null;
-
-    let allPolygons = [];
-
-    geometry.features.forEach(feature => {
-        if (feature.geometry.type === "Polygon") {
-            allPolygons.push(feature.geometry.coordinates[0]);
-        } else if (feature.geometry.type === "MultiPolygon") {
-            feature.geometry.coordinates.forEach(poly => {
-                allPolygons.push(poly[0]);
-            });
-        }
-    });
-
-    if (allPolygons.length === 0) return null;
-
-    // Finn den største landmassen (proxy for fastlandet)
-    const mainland = allPolygons.reduce((prev, current) => 
-        (prev.length > current.length) ? prev : current
-    );
-
-    const coordsToUse = mainland.length > 10 ? mainland : allPolygons.flat();
-
-    const lats = coordsToUse.map(c => c[1]);
-    const lngs = coordsToUse.map(c => c[0]);
-
-    return [
-        [Math.min(...lngs), Math.min(...lats)],
-        [Math.max(...lngs), Math.max(...lats)]
-    ];
-};
+// --- KONSTANTER ---
+const FLY_TO_SPEED = 1.2;
+const ANIMATION_DURATION_MS = 1500;
+const FIT_BOUNDS_PADDING_PX = 60;
+const MAX_VISIBLE_MARKERS = 20;
+const MARKER_SIZE = [40, 70];
+const MARKER_OFFSET = [0, -10];
+const REPORT_IDLE_DELAY_MS = 300;
 
 export function useMapTiler(props) {
     const { 
@@ -52,15 +25,7 @@ export function useMapTiler(props) {
         activeLocation, highlightGeometry 
     } = props;
 
-    // Konstanter for bevegelseslogikk
-    const SIGNIFICANT_MOVE_THRESHOLD = 0.001;
-    const SIGNIFICANT_ZOOM_THRESHOLD = 0.1;
-    
-    const FIT_BOUNDS_PADDING = 50;
-    const FIT_BOUNDS_MAX_ZOOM = 14;
-    const FIT_BOUNDS_DURATION = 1500;
-
-    // Refs for MapTiler instanser
+    // Refs for MapTiler-instanser
     const mapContainerRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const markersRef = useRef([]);
@@ -71,14 +36,15 @@ export function useMapTiler(props) {
     const isProgrammaticMove = useRef(false);
     const idleDebounceRef = useRef(null);
     const activeLocationRef = useRef(activeLocation);
+    const lastProcessedLocationId = useRef(null);
 
-    // Oppdaterer ref til enhver tid for bruk i callbacks uten re-renders
+    // Hold ref oppdatert for bruk i callbacks uten re-renders
     useEffect(() => {
         activeLocationRef.current = activeLocation;
     }, [activeLocation]);
 
     /**
-     * Rapporterer kartets status (senter, zoom, synlige byer) tilbake til ViewModel.
+     * Rapporterer kartets status (senter, zoom, synlige byer) tilbake til systemet.
      */
     const reportMapStatus = useCallback(() => {
         const map = mapInstanceRef.current;
@@ -86,14 +52,8 @@ export function useMapTiler(props) {
 
         const center = map.getCenter();
         const bounds = map.getBounds();
-        const bbox = [
-            bounds.getWest(),
-            bounds.getSouth(),
-            bounds.getEast(),
-            bounds.getNorth()
-        ];
+        const bbox = [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()];
 
-        // Henter ut byer som er synlige i tiles-laget akkurat nå
         const points = extractCityPoints({
             map,
             markerLayout: markerLayoutRef.current,
@@ -104,12 +64,9 @@ export function useMapTiler(props) {
         onMapChange(center.lat, center.lng, bbox, map.getZoom(), points);
     }, [onMapChange]);
 
-    // 1. Initialisering av kartet (Kjøres kun én gang)
+    // 1. Initialisering (Kjøres kun ved oppstart eller stilbytte)
     useEffect(() => {
         if (!mapContainerRef.current || mapInstanceRef.current) return;
-
-        const currentMarkers = markersRef.current;
-        const currentAbstractMarkers = activeAbstractMarkersRef.current;
 
         maptilersdk.config.apiKey = apiKey;
 
@@ -117,78 +74,41 @@ export function useMapTiler(props) {
             container: mapContainerRef.current,
             style: style,
             center: [Number(lon || 0), Number(lat || 0)],
-            zoom: Number(zoom || 12),
+            zoom: Number(zoom || MAP_ZOOM_LEVELS.DEFAULT),
             attributionControl: false,
-            navigationControl: true,
-            geolocateControl: false
-        });
-
-        // Håndterer manglende ikoner i stilen for å unngå konsoll-støy
-        map.on("styleimagemissing", (e) => {
-            const id = e.id;
-            const canvas = document.createElement("canvas");
-            canvas.width = 1; canvas.height = 1;
-            const context = canvas.getContext("2d");
-            const emptyImageData = context.getImageData(0, 0, 1, 1);
-            map.addImage(id, emptyImageData);
+            navigationControl: true
         });
 
         map.on("load", () => {
             const labelLayers = ["Capital city labels", "City labels", "Town labels", "Place labels"];
-            labelLayers.forEach(layer => {
-                if (map.getLayer(layer)) map.setLayerZoomRange(layer, 2, 24);
-            });
-
-            // Oppretter MarkerLayout for intelligent filtrering av bynavn
             markerLayoutRef.current = new MarkerLayout(map, {
                 layers: labelLayers,
-                markerSize: [40, 70],
-                offset: [0, -10],
-                markerAnchor: "center",
-                max: 30,
+                markerSize: MARKER_SIZE,
+                offset: MARKER_OFFSET,
+                max: MAX_VISIBLE_MARKERS,
                 sortingProperty: (feature) => getFeaturePriorityScore(feature),
-                sortingOrder: "ascending",
-                filter: (feature) => {
-                    const props = feature.properties || {};
-                    const currentLoc = activeLocationRef.current;
-                    // Hvis vi har valgt et land, viser vi kun byer som tilhører det landet
-                    if (currentLoc?.type === "country" && currentLoc?.countryCode) {
-                        const tileCountryCode = props.iso_a2 || props.country_code;
-                        if (tileCountryCode) return tileCountryCode.toLowerCase() === currentLoc.countryCode.toLowerCase();
-                    }
-                    return true;
-                }
+                sortingOrder: "ascending"
             });
-
-            updateMapHighlight(map, highlightGeometry);
         });
 
-        // Oppdaterer abstrakte markører under bevegelse for jevn animasjon
         map.on("move", () => {
-            const markerLayout = markerLayoutRef.current;
-            if (!markerLayout) return;
-            currentAbstractMarkers.forEach((abstractMarker, id) => {
-                markerLayout.softUpdateAbstractMarker(abstractMarker);
-                currentAbstractMarkers.set(id, abstractMarker);
+            if (!markerLayoutRef.current) return;
+            activeAbstractMarkersRef.current.forEach(am => {
+                markerLayoutRef.current.softUpdateAbstractMarker(am);
             });
         });
 
-        map.on("moveend", () => { 
-            isProgrammaticMove.current = false; 
-        });
+        map.on("moveend", () => { isProgrammaticMove.current = false; });
 
-        // Bruker 'idle' med debounce for å rapportere status når kartet har stoppet helt
         map.on("idle", () => {
             if (isProgrammaticMove.current) return;
             clearTimeout(idleDebounceRef.current);
-            idleDebounceRef.current = setTimeout(reportMapStatus, 300);
+            idleDebounceRef.current = setTimeout(reportMapStatus, REPORT_IDLE_DELAY_MS);
         });
 
         mapInstanceRef.current = map;
 
         return () => {
-            currentMarkers.forEach(m => m.remove());
-            currentAbstractMarkers.clear();
             if (mapInstanceRef.current) {
                 mapInstanceRef.current.remove();
                 mapInstanceRef.current = null;
@@ -197,74 +117,72 @@ export function useMapTiler(props) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [apiKey, style, reportMapStatus]);
 
-    // 2. Synkronisering av blå highlight-grenser
-    useEffect(() => {
-        const map = mapInstanceRef.current;
-        if (!map) return;
-        updateMapHighlight(map, highlightGeometry);
-    }, [highlightGeometry]);
-
-    // 3. Synkronisering av Værmarkører ("Dumme" markører uten klikk-logikk)
-    useEffect(() => {
-        const map = mapInstanceRef.current;
-        if (!map) return;
-        
-        // Vi sender inn null for onLocationClick for å gjøre dem "dumme"
-        renderWeatherMarkers({ 
-            map, 
-            markersRef, 
-            weatherPoints, 
-            onLocationClick: null 
-        });
-    }, [weatherPoints]);
-
-    // 4. Synkronisering av kartutsnitt (FlyTo / FitBounds)
+    // 2. Bevegelse (FlyTo / FitBounds)
     useEffect(() => {
         const map = mapInstanceRef.current;
         if (!map || lat == null || lon == null) return;
 
-        // PRIORITET 1: Geometri-basert FitBounds (for land/regioner)
-        const geometryBounds = getBoundsFromGeometry(highlightGeometry);
+        // Bruk ID eller koordinater som unik nøkkel for å unngå "fighting" med manuell zoom
+        const currentLocationId = activeLocation?.id || `${lat},${lon}`;
         
-        if (geometryBounds) {
-            isProgrammaticMove.current = true;
-            map.fitBounds(geometryBounds, {
-                padding: 80,
-                maxZoom: FIT_BOUNDS_MAX_ZOOM,
-                duration: FIT_BOUNDS_DURATION
-            });
-            return;
-        }
+        // Tillat re-run hvis vi har fått ny geometri/bbox, selv om ID er lik
+        const hasNewContext = highlightGeometry || bboxToFit;
+        if (lastProcessedLocationId.current === currentLocationId && !hasNewContext) return;
+        
+        lastProcessedLocationId.current = currentLocationId;
+        isProgrammaticMove.current = true;
 
-        // PRIORITET 2: Standard Bounding Box fra søk
+        const isCountry = activeLocation?.type === "country" || 
+                         activeLocation?.name?.toLowerCase() === "norge" ||
+                         activeLocation?.name?.toLowerCase() === "usa";
+
+        // PRIORITET 1: Bounding Box fra søkeresultat (Fikser USA/Danmark umiddelbart)
         if (bboxToFit) {
-            isProgrammaticMove.current = true;
             map.fitBounds(bboxToFit, {
-                padding: FIT_BOUNDS_PADDING,
-                maxZoom: FIT_BOUNDS_MAX_ZOOM,
-                duration: FIT_BOUNDS_DURATION
+                padding: FIT_BOUNDS_PADDING_PX,
+                maxZoom: isCountry ? MAP_ZOOM_LEVELS.COUNTRY : MAP_ZOOM_LEVELS.STREET,
+                duration: ANIMATION_DURATION_MS
             });
-            return;
-        }
-
-        // PRIORITET 3: Enkeltpunkt (FlyTo)
-        const center = map.getCenter();
-        const currentZoom = map.getZoom();
-        const hasMoved = 
-            Math.abs(center.lat - lat) > SIGNIFICANT_MOVE_THRESHOLD ||
-            Math.abs(center.lng - lon) > SIGNIFICANT_MOVE_THRESHOLD ||
-            Math.abs(currentZoom - zoom) > SIGNIFICANT_ZOOM_THRESHOLD;
-
-        if (hasMoved) {
-            isProgrammaticMove.current = true;
+        } 
+        // PRIORITET 2: Geometri fra Polygon-oppslag (Nøyaktig highlight-utsnitt)
+        else if (highlightGeometry) {
+            const SW_NE = getBoundsFromGeometry(highlightGeometry);
+            if (SW_NE) {
+                map.fitBounds(SW_NE, {
+                    padding: FIT_BOUNDS_PADDING_PX,
+                    maxZoom: isCountry ? MAP_ZOOM_LEVELS.COUNTRY : MAP_ZOOM_LEVELS.DEFAULT,
+                    duration: ANIMATION_DURATION_MS
+                });
+            }
+        } 
+        // PRIORITET 3: Fallback til punkt-navigering
+        else {
             map.flyTo({
                 center: [lon, lat],
-                zoom: zoom,
-                speed: 1.2,
+                zoom: zoom, 
+                speed: FLY_TO_SPEED,
                 essential: true
             });
         }
-    }, [lat, lon, zoom, bboxToFit, highlightGeometry]);
+    }, [lat, lon, zoom, bboxToFit, highlightGeometry, activeLocation]);
+
+    // 3. Highlight og Markører
+    useEffect(() => {
+        if (mapInstanceRef.current) {
+            updateMapHighlight(mapInstanceRef.current, highlightGeometry);
+        }
+    }, [highlightGeometry]);
+
+    useEffect(() => {
+        if (mapInstanceRef.current) {
+            renderWeatherMarkers({ 
+                map: mapInstanceRef.current, 
+                markersRef, 
+                weatherPoints, 
+                onLocationClick: null 
+            });
+        }
+    }, [weatherPoints]);
 
     return mapContainerRef;
 }

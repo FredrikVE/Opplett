@@ -1,138 +1,81 @@
 import tzLookup from "tz-lookup";
 
 export default class MapTilerRepository {
-	
-	constructor(mapTilerDataSource) {
-		this.dataSource = mapTilerDataSource;
-
-		// cache for polygon-geometri
-		this.geometryCache = new Map();
-	}
-
-	// Sikrer at koordinater er innenfor gyldige grenser.
-	#sanitize(lat, lon) {
-
-		const numericLat = Number(lat);
-		const numericLon = Number(lon);
-
-		const clampedLat = Math.max(-90, Math.min(90, numericLat));
-		const normalizedLon = ((numericLon + 180) % 360 + 360) % 360 - 180;
-
-		return {
-			lat: clampedLat,
-			lon: normalizedLon
-		};
-	}
-
-	// Henter grunnkonfigurasjon for kartet (API-nøkkel og stil).
-	getMapConfig() {
-
-		const config = this.dataSource.getBaseConfig();
-
-		console.log("[DEBUG Repo] Map config hentet:", config);
-
-		return config;
-	}
-
-	async getFeaturedCities(countryCode = "no") {
-        const featured = {
-            "no": ["Oslo", "Bergen", "Trondheim", "Stavanger", "Tromsø", "Kristiansand", "Drammen"],
-            "se": ["Stockholm", "Göteborg", "Malmö"],
-            "dk": ["København", "Aarhus", "Odense"]
-        };
-
-        const cityNames = featured[countryCode.toLowerCase()] || [];
-        
-        // Kjør søk for hver by for å få koordinater/ID-er (Dette er ikke jalla, det er caching)
-        const cityData = await Promise.all(
-            cityNames.map(name => this.getSuggestions(name))
-        );
-
-        return cityData.map(results => results[0]).filter(Boolean);
+    constructor(mapTilerDataSource) {
+        this.dataSource = mapTilerDataSource;
+        this.geometryCache = new Map();
     }
 
-	// Henter forslag til søkefeltet.
-	async getSuggestions(query, signal, proximity) {
+    /**
+     * Henter API-nøkkel og stil-URL fra data-kilden.
+     */
+    getMapConfig() {
+        return this.dataSource.getBaseConfig();
+    }
 
-		console.log("[DEBUG Repo] Søker etter:", query);
+    /**
+     * Henter forslag basert på søketekst.
+     * Vasker koordinater og sikrer at vi har en tidssone.
+     */
+    async getSuggestions(query, signal, proximity) {
+        const rawResults = await this.dataSource.search(query, signal, proximity);
 
-		const rawResults = await this.dataSource.search(query, signal, proximity);
+        return rawResults.map(item => {
+            const { lat, lon } = this.#sanitize(item.lat, item.lon);
+            
+            // Bruker eksisterende tidssone eller slår den opp basert på koordinater
+            let timezone = item.timezone || null;
+            if (!timezone) {
+                try {
+                    timezone = tzLookup(lat, lon);
+                } catch {
+                    timezone = null;
+                }
+            }
 
-		const suggestions = [];
+            return {
+                ...item,
+                lat,
+                lon,
+                timezone
+            };
+        });
+    }
 
-		for (let i = 0; i < rawResults.length; i++) {
+    /**
+     * Reverse geocoding (koordinater -> sted)
+     */
+    async getCoordinates(lat, lon) {
+        const query = `${lon},${lat}`;
+        const results = await this.getSuggestions(query, null);
+        return results?.[0] || null;
+    }
 
-			const item = rawResults[i];
+    /**
+     * Henter og cacher GeoJSON-geometri (for polygon-tegning på kart)
+     */
+    async getLocationGeometry(id) {
+        if (!id) return null;
+        if (this.geometryCache.has(id)) return this.geometryCache.get(id);
 
-			const sanitizedCoords = this.#sanitize(item.lat, item.lon);
+        const geojson = await this.dataSource.getLocationGeometry(id);
+        this.geometryCache.set(id, geojson);
+        return geojson;
+    }
 
-			const lat = sanitizedCoords.lat;
-			const lon = sanitizedCoords.lon;
+    /**
+     * Sikrer at koordinater holder seg innenfor globale grenser (-90/90 og -180/180)
+     */
+    #sanitize(lat, lon) {
+        const numericLat = Number(lat);
+        const numericLon = Number(lon);
 
-			let timezone = item.timezone;
+        const clampedLat = Math.max(-90, Math.min(90, numericLat));
+        const normalizedLon = ((numericLon + 180) % 360 + 360) % 360 - 180;
 
-			if (!timezone) {
-				try {
-					timezone = tzLookup(lat, lon);
-				} catch {
-					timezone = null;
-				}
-			}
-
-			const suggestion = {
-				...item,
-				lat,
-				lon,
-				timezone
-			};
-
-			suggestions.push(suggestion);
-		}
-
-		console.log("[DEBUG Repo] Forslag funnet:", suggestions.length);
-
-		return suggestions;
-	}
-
-	// Reverse geocoding for å finne navn på et spesifikt punkt
-	async getCoordinates(lat, lon) {
-
-		console.log("[DEBUG Repo] Reverse lookup:", lat, lon);
-
-		const query = `${lon},${lat}`;
-
-		const results = await this.getSuggestions(query, null);
-
-		if (!results || results.length === 0) {
-
-			console.log("[DEBUG Repo] Ingen koordinat-resultater.");
-
-			return null;
-		}
-
-		const firstResult = results[0];
-
-		console.log("[DEBUG Repo] Reverse lookup resultat:", firstResult);
-
-		return firstResult;
-	}
-
-	async getLocationGeometry(id) {
-
-		if (!id) return null;
-
-		// cache-hit
-		if (this.geometryCache.has(id)) {
-			return this.geometryCache.get(id);
-		}
-
-		console.log("[DEBUG Repo] Henter geometri for:", id);
-
-		const geojson = await this.dataSource.getLocationGeometry(id);
-
-		// cache lagring
-		this.geometryCache.set(id, geojson);
-
-		return geojson;
-	}
+        return {
+            lat: clampedLat,
+            lon: normalizedLon
+        };
+    }
 }

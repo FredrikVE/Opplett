@@ -1,73 +1,59 @@
-//src/ui/utils/MapUtils/ExtractCityPoints.js
+// src/ui/utils/MapUtils/ExtractCityPoints.js
 import { syncAbstractMarkersFromLayout, getFeaturePriorityScore } from "./MarkerLayoutUtils";
 
-export function extractCityPoints({map, markerLayout, activeMarkers, activeLocation}) {
+/**
+ * Henter ut relevante punkter fra kartet for å vise værikoner.
+ * Kombinerer brukerens valgte posisjon med byer som MapTiler finner i kartutsnittet.
+ */
+export function extractCityPoints({ map, markerLayout, activeMarkers, activeLocation }) {
+    if (!map || !markerLayout) return [];
 
-    if (!map) return [];
-
-    const abstractMarkers = syncAbstractMarkersFromLayout(
-        markerLayout,
-        activeMarkers
-    );
+    // 1. Synkroniser markører fra MapTiler's MarkerLayout
+    const abstractMarkers = syncAbstractMarkersFromLayout(markerLayout, activeMarkers);
 
     const mappedPoints = [];
     const seen = new Set();
 
-    const selectedType = activeLocation?.type ?? null;
-    const selectedBounds = activeLocation?.bounds ?? null;
-    const pointLat = activeLocation?.lat;
-    const pointLon = activeLocation?.lon;
+    // 2. Legg til det valgte punktet (SSOT) – MED MINDRE det er et land.
+    const isCountry = activeLocation?.type === "country";
+    const hasCoords = activeLocation?.lat != null && activeLocation?.lon != null;
 
-    const shouldIncludeSelectedPoint =
-        pointLat != null && pointLon != null;
-
-    if (shouldIncludeSelectedPoint) {
-
+    if (hasCoords && !isCountry) {
         mappedPoints.push({
-            id: activeLocation?.id ?? null,
-            name: activeLocation?.name || "Valgt posisjon",
-            lat: pointLat,
-            lon: pointLon,
-            type: selectedType,
-            bounds: selectedBounds,
-            countryCode: activeLocation?.countryCode ?? null,
-            context: activeLocation?.context ?? [],
-            isPriority: true
+            ...activeLocation,
+            isPriority: true 
         });
 
-        seen.add(`selected:${pointLat.toFixed(4)}:${pointLon.toFixed(4)}`);
+        // Bruker rå koordinater som streng for unik identifikasjon
+        seen.add(`selected:${activeLocation.lat}:${activeLocation.lon}`);
     }
 
+    // 3. Sorter byer fra kartet etter viktighet
     const sortedMarkers = [...abstractMarkers].sort((a, b) => {
-        return getFeaturePriorityScore(a.features?.[0]) -
-               getFeaturePriorityScore(b.features?.[0]);
+        return getFeaturePriorityScore(a.features?.[0]) - getFeaturePriorityScore(b.features?.[0]);
     });
 
+    // 4. Map features til lokasjonsobjekter
     for (const abstractMarker of sortedMarkers) {
-
         const feature = abstractMarker.features?.[0];
         const props = feature?.properties || {};
         const geometry = feature?.geometry;
 
         if (!geometry || !props.name) continue;
 
-        const fLon = geometry.coordinates[0];
-        const fLat = geometry.coordinates[1];
-
-        const dedupeKey = `${props.name}:${fLat.toFixed(4)}:${fLon.toFixed(4)}`;
+        const [fLon, fLat] = geometry.coordinates;
+        
+        // Unik nøkkel basert på navn og rå koordinater for å unngå duplikater
+        const dedupeKey = `${props.name}:${fLat}:${fLon}`;
 
         if (seen.has(dedupeKey)) continue;
 
         mappedPoints.push({
             id: feature.id ?? null,
             name: props.name,
-            lon: fLon,
             lat: fLat,
+            lon: fLon,
             type: props.class || "city",
-            rank: Number(props.rank ?? 9999),
-            layerId: feature.layer?.id ?? null,
-            countryCode: props.iso_a2 || props.country_code || null,
-            context: feature.context || [],
             isPriority: false
         });
 

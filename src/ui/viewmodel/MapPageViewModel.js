@@ -4,260 +4,190 @@ import useSearchViewModel from "./SearchViewModel.js";
 import { calculateMapView } from "../utils/MapUtils/MapZoomHelper.js";
 import { MAP_ZOOM_LEVELS } from "../utils/MapUtils/MapZoomLevels.js";
 
-export default function useMapPageViewModel(mapTilerRepository, searchLocationUseCase, getMapWeatherUseCase, getLocationGeometryUseCase, getCountryCitiesUseCase, activeLocation, onLocationChange, onResetToDeviceLocation) {
-    const DEBOUNCE_DELAY_MS = 500;
+export default function useMapPageViewModel(mapTilerRepository, searchLocationUseCase, getMapWeatherUseCase, getLocationGeometryUseCase, activeLocation, onLocationChange, onResetToDeviceLocation) {
+	const DEBOUNCE_DELAY_MS = 500;
 
-    // =========================
-    // STATE
-    // =========================
-    const [mapView, setMapView] = useState({
-        bbox: null,
-        zoom: MAP_ZOOM_LEVELS.DEFAULT,
-        lat: activeLocation.lat,
-        lon: activeLocation.lon
-    });
-    
-    const [bboxToFit, setBboxToFit] = useState(null);
-    const [highlightGeometry, setHighlightGeometry] = useState(null);
-    const [mapPoints, setMapPoints] = useState([]);
-    const [weatherPoints, setWeatherPoints] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
+	// =========================
+	// STATE
+	// =========================
+	const [mapView, setMapView] = useState({
+		bbox: null,
+		zoom: MAP_ZOOM_LEVELS.DEFAULT,
+		lat: activeLocation.lat,
+		lon: activeLocation.lon
+	});
+	
+	const [bboxToFit, setBboxToFit] = useState(null);
+	const [highlightGeometry, setHighlightGeometry] = useState(null);
+	const [mapPoints, setMapPoints] = useState([]);
+	const [weatherPoints, setWeatherPoints] = useState([]);
+	const [isLoading, setIsLoading] = useState(false);
 
-    // =========================
-    // SSOT SYNKRONISERING
-    // =========================
-    // Sørger for at kartet flytter seg når activeLocation endres (f.eks. via søk i andre faner)
-    useEffect(() => {
-        if (activeLocation.lat && activeLocation.lon) {
-            setMapView(prev => ({
-                ...prev,
-                lat: activeLocation.lat,
-                lon: activeLocation.lon
-            }));
-        }
-    }, [activeLocation.lat, activeLocation.lon]);
+	// =========================
+	// SSOT SYNKRONISERING
+	// =========================
+	useEffect(() => {
+		if (activeLocation.lat && activeLocation.lon) {
+			setMapView(prev => ({
+				...prev,
+				lat: activeLocation.lat,
+				lon: activeLocation.lon
+			}));
+		}
+	}, [activeLocation.lat, activeLocation.lon]);
 
-    // =========================
-    // SEARCH VIEWMODEL
-    // =========================
-    const searchViewModel = useSearchViewModel(
-        searchLocationUseCase,
-        onLocationChange,
-        { lat: activeLocation.lat, lon: activeLocation.lon },
-        onResetToDeviceLocation
-    );
+	// =========================
+	// SEARCH VIEWMODEL
+	// =========================
+	const searchViewModel = useSearchViewModel(
+		searchLocationUseCase,
+		onLocationChange,
+		{ lat: activeLocation.lat, lon: activeLocation.lon },
+		onResetToDeviceLocation
+	);
 
-    // =========================
-    // MAP CONFIG
-    // =========================
-    const { apiKey, style } = useMemo(() => {
-        return mapTilerRepository.getMapConfig();
-    }, [mapTilerRepository]);
+	// =========================
+	// MAP CONFIG
+	// =========================
+	const { apiKey, style } = useMemo(() => {
+		return mapTilerRepository.getMapConfig();
+	}, [mapTilerRepository]);
 
-    const tz = activeLocation.timezone;
+	const tz = activeLocation.timezone;
 
-    // =========================
-    // MAP CHANGE HANDLER
-    // =========================
-    const onMapChange = useCallback((lat, lon, bbox, currentZoom, points) => {
-        setBboxToFit(null);
+	// =========================
+	// MAP CHANGE HANDLER
+	// =========================
+	const onMapChange = useCallback((lat, lon, bbox, currentZoom, points) => {
+		// Nullstiller bboxToFit så snart brukeren begynner å bevege kartet selv
+		setBboxToFit(null);
 
-        setMapPoints(prevPoints => {
-            // SJEKK: Er de eksisterende punktene våre "Featured Cities" fra et land-søk?
-            // Vi kan gjenkjenne dem ved at de ofte er flere enn det kartet rapporterer på høyt zoomnivå.
-            const isCountryView = activeLocation?.type === "country";
-            
-            if (isCountryView && prevPoints.length > 5 && points.length < 5) {
-                // Hvis vi er i land-modus og kartet prøver å gi oss færre enn 5 punkter (f.eks bare "Norge"),
-                // så beholder vi de byene vi allerede har hentet.
-                return prevPoints;
-            }
+		// Nå lar vi ALLTID kartet styre hvilke punkter som vises
+		setMapPoints(points || []);
 
-            // Ellers lar vi kartet styre (standard oppførsel for vanlig panorering)
-            return points || [];
-        });
+		setMapView({
+			bbox,
+			zoom: currentZoom,
+			lat,
+			lon
+		});
+	}, []);
 
-        setMapView({
-            bbox,
-            zoom: currentZoom,
-            lat,
-            lon
-        });
-    }, [activeLocation?.type]); // Viktig å ha med type i dependencies
+	// =========================
+	// WEATHER FETCH LOGIKK
+	// =========================
+	useEffect(() => {
+		if (!mapPoints || mapPoints.length === 0 || !tz) {
+			setWeatherPoints([]);
+			return;
+		}
 
-    // =========================
-    // WEATHER FETCH LOGIKK
-    // =========================
-    useEffect(() => {
-        // Vi trenger punkter og tidssone for å starte
-        if (!mapPoints || mapPoints.length === 0 || !tz) {
-            return;
-        }
+		let cancelled = false;
 
-        let cancelled = false;
+		const timer = setTimeout(async () => {
+			if (cancelled) return;
 
-        const timer = setTimeout(async () => {
-            if (cancelled) return;
+			setIsLoading(true);
+			try {
+				const results = await getMapWeatherUseCase.execute(mapPoints, tz);
+				if (!cancelled) {
+					setWeatherPoints(results || []);
+				}
+			} catch (error) {
+				console.error("[VM] Feil ved henting av vær for kart:", error);
+			} finally {
+				if (!cancelled) setIsLoading(false);
+			}
+		}, DEBOUNCE_DELAY_MS);
 
-            setIsLoading(true);
-            try {
-                // Henter værdata for alle identifiserte punkter i kartutsnittet
-                const results = await getMapWeatherUseCase.execute(mapPoints, tz);
-                
-                if (!cancelled) {
-                    setWeatherPoints(results || []);
-                }
-            } catch (error) {
-                console.error("[VM] Feil ved henting av vær for kart:", error);
-            } finally {
-                if (!cancelled) {
-                    setIsLoading(false);
-                }
-            }
-        }, DEBOUNCE_DELAY_MS);
+		return () => {
+			cancelled = true;
+			clearTimeout(timer);
+		};
+	}, [mapPoints, tz, getMapWeatherUseCase]);
 
-        return () => {
-            cancelled = true;
-            clearTimeout(timer);
-        };
-    }, [mapPoints, tz, getMapWeatherUseCase]);
+	// =======================================================
+	// HighlightGeometri (Blå grenser for land/kommune)
+	// =======================================================
+	useEffect(() => {
+		if (!activeLocation?.id) {
+			setHighlightGeometry(null);
+			return;
+		}
 
-    // =======================================================
-    // UseEffect hook for HighlightGeometri på og kartgrenser
-    // =======================================================
-    useEffect(() => {
+		let cancelled = false;
+		const loadGeometry = async () => {
+			try {
+				const geo = await getLocationGeometryUseCase.execute(activeLocation.id);
+				if (!cancelled) setHighlightGeometry(geo);
+			} catch (err) {
+				console.error("[VM] Klarte ikke hente highlight-geometri:", err);
+				if (!cancelled) setHighlightGeometry(null);
+			}
+		};
 
-        if (!activeLocation?.id) {
-            setHighlightGeometry(null);
-            return;
-        }
+		loadGeometry();
+		return () => { cancelled = true; };
+	}, [activeLocation.id, getLocationGeometryUseCase]);
 
-        let cancelled = false;
+	// =========================
+	// HANDLERS
+	// =========================
 
-        const loadGeometry = async () => {
+	const handleSuggestionSelected = (selected) => {
+		setWeatherPoints([]);
+		setMapPoints([]);
+		
+		onLocationChange(selected);
 
-            try {
+		const { zoom, bbox } = calculateMapView(selected);
+		
+		setBboxToFit(bbox);
+		setMapView({
+			bbox: bbox,
+			zoom: zoom,
+			lat: selected.lat,
+			lon: selected.lon
+		});
 
-                const geo = await getLocationGeometryUseCase.execute(activeLocation.id);
-                console.log("[VM] Highlight geojson:", geo);
+		searchViewModel.onSuggestionSelected(selected);
+	};
 
-                if (!cancelled) {
-                    setHighlightGeometry(geo);
-                }
+	const handleResetToDeviceLocation = () => {
+		setWeatherPoints([]);
+		setMapPoints([]);
+		setBboxToFit(null);
 
-            }
-            catch (err) {
+		onResetToDeviceLocation();
 
-                console.error("[VM] Klarte ikke hente highlight-geometri:", err);
+		setMapView({
+			bbox: null,
+			zoom: MAP_ZOOM_LEVELS.DEFAULT,
+			lat: activeLocation.lat,
+			lon: activeLocation.lon
+		});
 
-                if (!cancelled) {
-                    setHighlightGeometry(null);
-                }
-            }
-        };
+		searchViewModel.onResetLocation();
+	};
 
-        loadGeometry();
-
-        return () => {
-            cancelled = true;
-        };
-
-    }, [activeLocation.id, getLocationGeometryUseCase]);
-
-    // NY EFFECT: Hent byer når et land velges
-    useEffect(() => {
-        // Vi sjekker om det er et land (basert på type fra søkeresultatet)
-        if (activeLocation?.type === "country" && activeLocation?.countryCode) {
-            let cancelled = false;
-
-            const fetchCities = async () => {
-                setIsLoading(true);
-                try {
-                    const cities = await getCountryCitiesUseCase.execute(activeLocation.countryCode);
-                    if (!cancelled) {
-                        // Ved å sette disse i mapPoints, vil weather-effekten din 
-                        // nedenfor automatisk trigge og hente vær for dem!
-                        setMapPoints(cities); 
-                    }
-                } catch (error) {
-                    console.error("[VM] Klarte ikke hente byer for land:", error);
-                } finally {
-                    if (!cancelled) setIsLoading(false);
-                }
-            };
-
-            fetchCities();
-            return () => { cancelled = true; };
-        }
-    }, [activeLocation.id, activeLocation.type, activeLocation.countryCode, getCountryCitiesUseCase]);
-
-    // =========================
-    // HANDLERS
-    // =========================
-
-    const handleSuggestionSelected = (selected) => {
-        // Tømmer forrige værikoner så de ikke henger igjen på feil plass under flytting
-        setWeatherPoints([]);
-        setMapPoints([]);     // <-- LEGG TIL DENNE
-        
-        // Oppdaterer global SSOT i App.jsx
-        onLocationChange(selected);
-
-        // Bruker hjelpefunksjonen til å finne korrekt zoom/utsnitt for stedstypen
-        const { zoom, bbox } = calculateMapView(selected);
-        
-        setBboxToFit(bbox);
-        setMapView({
-            bbox: bbox,
-            zoom: zoom,
-            lat: selected.lat,
-            lon: selected.lon
-        });
-
-        searchViewModel.onSuggestionSelected(selected);
-    };
-
-    const handleResetToDeviceLocation = () => {
-        setWeatherPoints([]);
-        setBboxToFit(null);
-
-        // Nullstiller manuelt valg i App.jsx (slik at GPS overtar)
-        onResetToDeviceLocation();
-
-        // Tvinger kartet til å flytte seg til de nåværende GPS-koordinatene
-        setMapView({
-            bbox: null,
-            zoom: MAP_ZOOM_LEVELS.DEFAULT,
-            lat: activeLocation.lat,
-            lon: activeLocation.lon
-        });
-
-        searchViewModel.onResetLocation();
-    };
-
-    return {
-        apiKey,
-        style,
-        zoom: mapView.zoom,
-        bboxToFit,
-        location: activeLocation,
-        
-        //highlight for kartgrenser på landsnivå, kommunenivå og fylkesnivå.
-        highlightGeometry,
-
-        mapCenter: {
-            lat: mapView.lat ?? activeLocation.lat,
-            lon: mapView.lon ?? activeLocation.lon
-        },
-        weatherPoints,
-        isLoading,
-        onMapChange,
-
-        // Søke-funksjonalitet
-        query: searchViewModel.query,
-        suggestions: searchViewModel.suggestions,
-        onSearchChange: searchViewModel.onSearchChange,
-        onSuggestionSelected: handleSuggestionSelected,
-        onResetToDeviceLocation: handleResetToDeviceLocation
-    };
+	return {
+		apiKey,
+		style,
+		zoom: mapView.zoom,
+		bboxToFit,
+		location: activeLocation,
+		highlightGeometry,
+		mapCenter: {
+			lat: mapView.lat ?? activeLocation.lat,
+			lon: mapView.lon ?? activeLocation.lon
+		},
+		weatherPoints,
+		isLoading,
+		onMapChange,
+		query: searchViewModel.query,
+		suggestions: searchViewModel.suggestions,
+		onSearchChange: searchViewModel.onSearchChange,
+		onSuggestionSelected: handleSuggestionSelected,
+		onResetToDeviceLocation: handleResetToDeviceLocation
+	};
 }
