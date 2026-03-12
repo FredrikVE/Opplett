@@ -23,6 +23,7 @@ export const LOCATION_TYPES = {
     COUNTY: "county",
     MUNICIPALITY: "municipality",
     CITY: "place",
+    //CITY: "city",
     LOCALITY: "locality",
     NEIGHBOURHOOD: "neighbourhood",
     ADDRESS: "address"

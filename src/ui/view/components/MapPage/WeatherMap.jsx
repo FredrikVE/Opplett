@@ -1,10 +1,8 @@
-// src/ui/view/components/MapPage/WeatherMap.jsx
 import { useEffect, useRef, useCallback } from "react";
 import * as maptilersdk from "@maptiler/sdk";
 import { MarkerLayout } from "@maptiler/marker-layout";
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 
-// Utils
 import { MAP_ANIMATION, MAP_MARKER_CONFIG, MAP_ZOOM_LEVELS, MAP_CAMERA } from "../../../utils/MapUtils/MapConfig.js";
 import { extractCityPoints } from "../../../utils/MapUtils/ExtractCityPoints.js";
 import { updateMapHighlight } from "../../../utils/MapUtils/MapHighlight.js";
@@ -14,124 +12,79 @@ import { getFeaturePriorityScore } from "../../../utils/MapUtils/MarkerLayoutUti
 export default function WeatherMap({ apiKey, style, mapTarget, weatherPoints, onMapChange, activeLocation, highlightGeometry }) {
     const mapContainerRef = useRef(null);
     const mapInstanceRef = useRef(null);
-    const markersRef = useRef([]);
     const markerLayoutRef = useRef(null);
-    const activeAbstractMarkersRef = useRef(new Map());
+    const markersRef = useRef([]);
     const lastMovedId = useRef(null);
+    const isInternalMove = useRef(false);
 
-    /* =========================
-       STATUS RAPPORTERING
-    ========================= */
-    const reportMapStatus = useCallback(() => {
+    const reportMapStatus = useCallback((triggerSource) => {
         const map = mapInstanceRef.current;
+        if (!map || !map.isStyleLoaded() || !markerLayoutRef.current) return;
 
-        if (!map || !map.isStyleLoaded() || !markerLayoutRef.current) {
+        // Hvis kartet flytter seg pga. mapTarget (søk/reset), venter vi til det er ferdig
+        if (isInternalMove.current) {
+            console.log(`[WeatherMap] 🤫 Ignorerer statusrapport under flytting (${triggerSource})`);
             return;
         }
 
-        //Oppdater MarkerLayout før vi henter punkter
         markerLayoutRef.current.update();
-
         const points = extractCityPoints({
             map,
             markerLayout: markerLayoutRef.current,
-            activeMarkers: activeAbstractMarkersRef.current,
+            activeMarkers: new Map(),
             activeLocation
         });
 
-        const center = map.getCenter();
-
-        onMapChange(
-            center.lat,
-            center.lng,
-            map.getBounds(),
-            map.getZoom(),
-            points
-        );
+        onMapChange(map.getCenter().lat, map.getCenter().lng, map.getBounds(), map.getZoom(), points);
     }, [onMapChange, activeLocation]);
 
-    /* =========================
-       INITIALISER KART
-    ========================= */
     useEffect(() => {
-        if (!mapContainerRef.current || mapInstanceRef.current) {
-            return;
-        }
-
+        if (!mapContainerRef.current || mapInstanceRef.current) return;
         maptilersdk.config.apiKey = apiKey;
-
         const map = new maptilersdk.Map({
             container: mapContainerRef.current,
             style: style,
             center: [activeLocation?.lon ?? 0, activeLocation?.lat ?? 0],
             zoom: MAP_ZOOM_LEVELS.DISTRICT,
             attributionControl: false,
-            navigationControl: true
         });
 
         map.on("load", () => {
-
-            //Åpner label layers for alle zoomnivåer
-            MAP_MARKER_CONFIG.LABEL_LAYERS.forEach(layer => {
-                if (map.getLayer(layer)) {
-                    map.setLayerZoomRange(layer, 0, 24);
-                }
-            });
-
             markerLayoutRef.current = new MarkerLayout(map, {
                 layers: MAP_MARKER_CONFIG.LABEL_LAYERS,
-                //max: MAP_MARKER_CONFIG.MAX_COUNT,
                 max: MAP_MARKER_CONFIG.MAX_LAYOUT_MARKERS,
-                sortingProperty: (f) => getFeaturePriorityScore(f)
+                sortingProperty: getFeaturePriorityScore
             });
-
-            reportMapStatus();
+            reportMapStatus("MAP_LOAD");
         });
 
-        //Brukerbevegelser
-        map.on("moveend", reportMapStatus);
-
-        //Sørger for oppdatering etter zoom / label redraw
-        map.on("idle", reportMapStatus);
+        // Viktig: Vi lytter på idle for å hente værpunkter når alt er i ro
+        map.on("idle", () => {
+            isInternalMove.current = false; // Flytting ferdig, nå kan vi rapportere
+            reportMapStatus("EVENT_IDLE");
+        });
 
         mapInstanceRef.current = map;
+        return () => { if (mapInstanceRef.current) mapInstanceRef.current.remove(); };
+    }, [apiKey, style]);
 
-        return () => {
-            if (mapInstanceRef.current) {
-                mapInstanceRef.current.remove();
-                mapInstanceRef.current = null;
-            }
-        };
-    }, [apiKey, style, activeLocation, reportMapStatus]);
-
-    /* =========================
-       SYNKRONISER KAMERA
-    ========================= */
     useEffect(() => {
         const map = mapInstanceRef.current;
+        if (!map || !map.isStyleLoaded() || !mapTarget) return;
 
-        if (!map || !map.isStyleLoaded() || !mapTarget) {
-            return;
-        }
+        if (lastMovedId.current === mapTarget.id) return;
 
-        if (lastMovedId.current === mapTarget.id) {
-            return;
-        }
-
+        console.log(`[WeatherMap] 🚀 Starter programmert flytt: ${mapTarget.id}`);
         lastMovedId.current = mapTarget.id;
+        isInternalMove.current = true; // Lås rapportering til vi lander (idle)
 
-        //if (mapTarget.type === "bounds") {
         if (mapTarget.type === MAP_CAMERA.BOUNDS) {
             map.fitBounds(mapTarget.data, {
-                padding: mapTarget.isArea
-                    ? MAP_ANIMATION.PADDING.AREA
-                    : MAP_ANIMATION.PADDING.POINT,
+                padding: mapTarget.isArea ? MAP_ANIMATION.PADDING.AREA : MAP_ANIMATION.PADDING.POINT,
                 duration: MAP_ANIMATION.DURATION_MS,
                 essential: true
             });
-        } 
-        
-        else {
+        } else {
             map.flyTo({
                 center: [mapTarget.data.lon, mapTarget.data.lat],
                 zoom: mapTarget.data.zoom,
@@ -141,31 +94,16 @@ export default function WeatherMap({ apiKey, style, mapTarget, weatherPoints, on
         }
     }, [mapTarget]);
 
-    /* =========================
-       HIGHLIGHT GEOMETRY
-    ========================= */
     useEffect(() => {
-        if (mapInstanceRef.current) {
-            updateMapHighlight(mapInstanceRef.current, highlightGeometry);
-        }
+        if (mapInstanceRef.current) updateMapHighlight(mapInstanceRef.current, highlightGeometry);
     }, [highlightGeometry]);
 
-    /* =========================
-       VÆR MARKERS
-    ========================= */
     useEffect(() => {
-        if (!mapInstanceRef.current) return;
-
-        renderWeatherMarkers({
-            map: mapInstanceRef.current,
-            markersRef,
-            weatherPoints
-        });
+        if (mapInstanceRef.current) {
+            renderWeatherMarkers({ map: mapInstanceRef.current, markersRef, weatherPoints });
+        }
     }, [weatherPoints]);
 
-    /* =========================
-       RENDER
-    ========================= */
     return (
         <div className="map-page-wrap">
             <div ref={mapContainerRef} className="map" />

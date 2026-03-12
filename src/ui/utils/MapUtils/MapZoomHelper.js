@@ -1,14 +1,16 @@
 // src/ui/utils/MapUtils/MapZoomHelper.js
-import { MAP_ZOOM_LEVELS } from "./MapConfig";
+import { MAP_ZOOM_LEVELS, LOCATION_TYPES } from "./MapConfig";
 
 export function calculateMapView(selected) {
     const { type, bounds } = selected;
-    
-    // 1. Definer typer som ofte har "støy" i bounding boksene sine (f.eks. fjerne øyer).
-    // Ved å skippe bbox her, tvinger vi kartet til å bruke 'targetZoom' først, 
-    // helt til highlightGeometry (polygonet) lastes og gir oss det perfekte utsnittet.
-    const skipBoundsTypes = ["country", "continent", "major_landform"];
-    
+
+    // Typer som ofte har "støy" i bbox (fjerne øyer osv.)
+    const skipBoundsTypes = [
+        LOCATION_TYPES.COUNTRY,
+        LOCATION_TYPES.CONTINENT,
+        LOCATION_TYPES.MAJOR_LANDFORM
+    ];
+
     let targetBbox = null;
     if (bounds && !skipBoundsTypes.includes(type)) {
         targetBbox = [
@@ -19,31 +21,34 @@ export function calculateMapView(selected) {
         ];
     }
 
-    // 2. Map type til standard zoom-nivåer fra MapZoomLevels.js
     let targetZoom = MAP_ZOOM_LEVELS.DEFAULT;
 
     switch (type) {
-        case "country":
-        case "major_landform":
+        case LOCATION_TYPES.COUNTRY:
+        case LOCATION_TYPES.MAJOR_LANDFORM:
             targetZoom = MAP_ZOOM_LEVELS.COUNTRY;
             break;
-        case "region":
+
+        case LOCATION_TYPES.REGION:
             targetZoom = MAP_ZOOM_LEVELS.REGION;
             break;
-        case "subregion":
-        case "county":
+
+        case LOCATION_TYPES.SUBREGION:
+        case LOCATION_TYPES.COUNTY:
             targetZoom = MAP_ZOOM_LEVELS.COUNTY;
             break;
-        case "city":
-        case "municipality":
+
+        case LOCATION_TYPES.CITY:
+        case LOCATION_TYPES.MUNICIPALITY:
             targetZoom = MAP_ZOOM_LEVELS.DISTRICT;
             break;
+
         default:
             targetZoom = MAP_ZOOM_LEVELS.DEFAULT;
     }
 
-    return { 
-        zoom: targetZoom, 
-        bbox: targetBbox 
+    return {
+        zoom: targetZoom,
+        bbox: targetBbox
     };
 }
