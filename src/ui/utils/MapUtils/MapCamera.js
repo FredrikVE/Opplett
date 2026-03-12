@@ -1,7 +1,7 @@
 //src/ui/utils/MapUtils/MapCamera.js
 import { MAP_CAMERA, isAreaLocation, shouldUseSearchBounds, getDefaultZoomForLocationType } from "./MapConfig.js";
 
-const roundCoord = (value) => Number(value ?? 0).toFixed(4);
+const roundCoord = (value) => Number(value ?? 0);
 
 export function normalizeBounds(bounds) {
     if (!bounds) return null;

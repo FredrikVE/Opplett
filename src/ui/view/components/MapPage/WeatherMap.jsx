@@ -48,7 +48,9 @@ export default function WeatherMap({ apiKey, style, mapTarget, weatherPoints, on
 	}, []);
 
 	const collectVisibleWeatherPoints = useCallback((map, markerLayout) => {
-		if (!map || !markerLayout) return [];
+		if (!map || !markerLayout) {
+			return [];
+		}
 
 		const abstractMarkers = syncAbstractMarkersFromLayout(
 			markerLayout,
@@ -66,20 +68,18 @@ export default function WeatherMap({ apiKey, style, mapTarget, weatherPoints, on
 		const map = mapInstanceRef.current;
 		const markerLayout = markerLayoutRef.current;
 
-		if (!map || !markerLayout || !map.isStyleLoaded()) return;
+		if (!map || !markerLayout || !map.isStyleLoaded()) {
+			return;
+		}
 
 		if (isInternalMoveRef.current) {
-			console.log(
-				`[WeatherMap] 🤫 Ignorerer statusrapport under flytting (${triggerSource})`
-			);
+			console.log(`[WeatherMap] 🤫 Ignorerer statusrapport under flytting (${triggerSource})`);
 			return;
 		}
 
 		const points = collectVisibleWeatherPoints(map, markerLayout);
 
-		console.log(
-			`[WeatherMap] 📍 reportMapStatus(${triggerSource}) -> ${points?.length ?? 0} punkter`
-		);
+		console.log(`[WeatherMap] 📍 reportMapStatus(${triggerSource}) -> ${points?.length ?? 0} punkter`);
 
 		onMapChangeRef.current({
 			viewport: buildViewportSnapshot(map),
@@ -88,7 +88,9 @@ export default function WeatherMap({ apiKey, style, mapTarget, weatherPoints, on
 	}, [buildViewportSnapshot, collectVisibleWeatherPoints]);
 
 	const initializeMap = useCallback(() => {
-		if (!mapContainerRef.current || mapInstanceRef.current) return;
+		if (!mapContainerRef.current || mapInstanceRef.current) {
+			return;
+		}
 
 		maptilersdk.config.apiKey = apiKey;
 
@@ -139,13 +141,17 @@ export default function WeatherMap({ apiKey, style, mapTarget, weatherPoints, on
 	const moveMapToTarget = useCallback(() => {
 		const map = mapInstanceRef.current;
 
-		if (!map || !map.isStyleLoaded() || !mapTarget) return;
-		if (lastMovedIdRef.current === mapTarget.id) return;
+		if (!map || !map.isStyleLoaded() || !mapTarget) {
+			return;
+		}
+
+		if (lastMovedIdRef.current === mapTarget.id) {
+			return;
+		}
 
 		lastMovedIdRef.current = mapTarget.id;
 		isInternalMoveRef.current = true;
 
-		// Viktig: kast gamle layout-markører når kameraet skal til ny lokasjon
 		activeLayoutMarkersRef.current.clear();
 
 		console.log(`[WeatherMap] 🚀 Starter programmert flytt: ${mapTarget.id}`);
@@ -170,12 +176,17 @@ export default function WeatherMap({ apiKey, style, mapTarget, weatherPoints, on
 	}, [mapTarget]);
 
 	const syncHighlightOnMap = useCallback(() => {
-		if (!mapInstanceRef.current) return;
+		if (!mapInstanceRef.current) {
+			return;
+		}
+
 		syncMapHighlight(mapInstanceRef.current, highlightGeometry);
 	}, [highlightGeometry]);
 
 	const syncWeatherMarkersOnMap = useCallback(() => {
-		if (!mapInstanceRef.current) return;
+		if (!mapInstanceRef.current) {
+			return;
+		}
 
 		renderWeatherMarkers({
 			map: mapInstanceRef.current,
@@ -197,6 +208,7 @@ export default function WeatherMap({ apiKey, style, mapTarget, weatherPoints, on
 
 	const onMountedInitializeMap = useCallback(() => {
 		initializeMap();
+
 		return () => {
 			destroyMap();
 		};
@@ -221,10 +233,7 @@ export default function WeatherMap({ apiKey, style, mapTarget, weatherPoints, on
 	useEffect(onOnMapChangeChangedSyncRef, [onOnMapChangeChangedSyncRef]);
 	useEffect(onMountedInitializeMap, [onMountedInitializeMap]);
 	useEffect(onMapTargetChangedMoveMap, [onMapTargetChangedMoveMap]);
-	useEffect(
-		onHighlightGeometryChangedSyncHighlight,
-		[onHighlightGeometryChangedSyncHighlight]
-	);
+	useEffect(onHighlightGeometryChangedSyncHighlight, [onHighlightGeometryChangedSyncHighlight]);
 	useEffect(onWeatherPointsChangedSyncMarkers, [onWeatherPointsChangedSyncMarkers]);
 
 	/* =========================================================
