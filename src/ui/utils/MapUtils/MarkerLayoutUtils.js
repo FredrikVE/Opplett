@@ -2,18 +2,23 @@
  * Definerer prioritering basert på MapTiler-lagnavn.
  * Jo lavere verdi, jo høyere prioritet i hierarkiet.
  */
+// I src/ui/utils/MapUtils/MarkerLayoutUtils.js
+
 export function getLayerPriority(layerId) {
     if (!layerId) return 99;
 
-    if (layerId.includes("Country") || layerId.includes("Continent")) return 0;
-    if (layerId.includes("Capital")) return 1;
-    if (layerId.includes("City")) return 2;
-    if (layerId.includes("Town")) return 3;
-    if (layerId.includes("Place")) return 4;
+    //BYER MÅ VINNE over land-navn for at vi skal få vær-ikonene vi vil ha
+    if (layerId.includes("Capital")) return 0;
+    if (layerId.includes("City")) return 1;
+    if (layerId.includes("Town")) return 2;
+    if (layerId.includes("Place")) return 3;
+    
+    //Sett Land og Kontinent veldig lavt, slik at de bare brukes som "nødløsning"
+    if (layerId.includes("Country")) return 80; 
+    if (layerId.includes("Continent")) return 90;
 
     return 99;
 }
-
 /**
  * Beregner en poengsum for prioritering av punkter (features).
  * Brukes av MarkerLayout for å avgjøre hvilke punkter som skal "vinne" kollisjonsdeteksjonen.
