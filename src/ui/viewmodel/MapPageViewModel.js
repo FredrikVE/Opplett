@@ -92,8 +92,10 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 		setViewport(viewport ?? null);
 		setMapPoints(points || []);
 
-		// Brukeren har tatt kontroll over kameraet
-		setSearchBbox((prev) => (prev ? null : prev));
+		//Brukeren har tatt kontroll over kameraet
+		setSearchBbox((prev) => (
+			prev ? null : prev
+		));
 
 		console.log(`[MapPageVM] 📥 onMapChange (Punkter: ${points?.length ?? 0})`);
 	}, 
@@ -171,26 +173,31 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 
 	const mapTarget = useMemo(() => {
 		return candidateMapTarget ?? stableMapTargetRef.current;
-	}, [candidateMapTarget]);
+	}, 
+	[candidateMapTarget]);
 
 	const currentZoom = useMemo(() => {
 		return viewport?.zoom ?? mapTarget?.data?.zoom ?? null;
-	}, [viewport, mapTarget]);
+	}, 
+	[viewport, mapTarget]);
 
 	const mapConfig = useMemo(() => {
 		return mapTilerRepository.getMapConfig();
-	}, [mapTilerRepository]);
+	}, 
+	[mapTilerRepository]);
 
 	/* =========================================================
 	   EFFECT ACTIONS
 	========================================================= */
 	const fetchHighlightGeometry = useCallback(async (locationId) => {
 		return await getLocationGeometryUseCase.execute(locationId);
-	}, [getLocationGeometryUseCase]);
+	}, 
+	[getLocationGeometryUseCase]);
 
 	const fetchWeatherPoints = useCallback(async (points, timezone) => {
 		return await getMapWeatherUseCase.execute(points, timezone);
-	}, [getMapWeatherUseCase]);
+	}, 
+	[getMapWeatherUseCase]);
 
 	const syncStableMapTarget = useCallback(() => {
 		if (candidateMapTarget?.id) {
@@ -227,6 +234,7 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 			cancelled = true;
 		};
 	}, 
+
     [activeLocation?.id, fetchHighlightGeometry, resetHighlightState, setHighlightLoading, setHighlightSuccess, setHighlightError]);
 
 
@@ -256,11 +264,15 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 				if (!cancelled) {
 					setWeatherPoints(results || []);
 				}
-			} catch (error) {
+			} 
+			
+			catch (error) {
 				if (!cancelled) {
 					console.error("[MapVM] Vær-feil:", error);
 				}
-			} finally {
+			} 
+			
+			finally {
 				if (!cancelled) {
 					setIsLoading(false);
 				}

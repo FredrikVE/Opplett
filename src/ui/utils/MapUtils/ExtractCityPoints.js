@@ -1,9 +1,11 @@
-//src/ui/utils/MapUtils/ExtractCityPoints.js
 import { getFeaturePriorityScore } from "./MarkerLayoutUtils.js";
 import { getMapConstraints } from "./MapConfig.js";
 
 export function extractCityPointsFromMarkers({ abstractMarkers, zoom, activeLocation }) {
-    if (!abstractMarkers?.length) return [];
+    if (!abstractMarkers?.length) {
+        console.log("[ExtractCityPoints] Ingen abstractMarkers");
+        return [];
+    }
 
     const { maxMarkers, minDistance } = getMapConstraints(zoom);
     const mappedPoints = [];
@@ -11,6 +13,16 @@ export function extractCityPointsFromMarkers({ abstractMarkers, zoom, activeLoca
 
     const horizontalMult = 2.2;
     const verticalMult = 1.0;
+
+    console.log("[ExtractCityPoints] START", {
+        activeLocationName: activeLocation?.name,
+        activeLocationType: activeLocation?.type,
+        activeCountryCode: activeLocation?.countryCode,
+        zoom,
+        abstractMarkerCount: abstractMarkers.length,
+        maxMarkers,
+        minDistance
+    });
 
     function isTooClose(lat, lon) {
         return mappedPoints.some((point) => {
@@ -35,19 +47,54 @@ export function extractCityPointsFromMarkers({ abstractMarkers, zoom, activeLoca
         const props = feature?.properties || {};
         const [lon, lat] = feature?.geometry?.coordinates ?? [];
 
-        if (lat == null || lon == null) continue;
-
-        const activeCountryCode = activeLocation?.countryCode?.toLowerCase();
-        const itemCountryCode = (props.iso_a2 || props.country_code)?.toLowerCase();
-
-        if (activeCountryCode && itemCountryCode && activeCountryCode !== itemCountryCode) {
+        if (lat == null || lon == null) {
+            console.log("[ExtractCityPoints] SKIP ugyldig koordinat", {
+                name: props.name
+            });
             continue;
         }
 
-        if (isTooClose(lat, lon)) continue;
+        const activeCountryCode = activeLocation?.countryCode?.toLowerCase?.();
+        const itemCountryCode = (props.iso_a2 || props.country_code)?.toLowerCase?.();
+
+        if (activeCountryCode && itemCountryCode && activeCountryCode !== itemCountryCode) {
+            console.log("[ExtractCityPoints] SKIP feil land", {
+                name: props.name,
+                activeCountryCode,
+                itemCountryCode,
+                layerId: feature?.layer?.id,
+                rank: props.rank
+            });
+            continue;
+        }
+
+        if (isTooClose(lat, lon)) {
+            console.log("[ExtractCityPoints] SKIP for nær", {
+                name: props.name,
+                lat,
+                lon
+            });
+            continue;
+        }
 
         const exactKey = `${lat}:${lon}`;
-        if (seen.has(exactKey)) continue;
+        if (seen.has(exactKey)) {
+            console.log("[ExtractCityPoints] SKIP duplikat", {
+                name: props.name,
+                lat,
+                lon
+            });
+            continue;
+        }
+
+        console.log("[ExtractCityPoints] ADD", {
+            name: props.name,
+            lat,
+            lon,
+            layerId: feature?.layer?.id,
+            rank: props.rank,
+            itemCountryCode
+        });
 
         mappedPoints.push({
             id: feature.id,
@@ -58,6 +105,11 @@ export function extractCityPointsFromMarkers({ abstractMarkers, zoom, activeLoca
 
         seen.add(exactKey);
     }
+
+    console.log("[ExtractCityPoints] DONE", {
+        resultCount: mappedPoints.length,
+        names: mappedPoints.map((p) => p.name)
+    });
 
     return mappedPoints;
 }

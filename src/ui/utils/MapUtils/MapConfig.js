@@ -107,7 +107,9 @@ export function getMapConstraints(zoom) {
 
     if (zoom < 4) {
         maxMarkers = 10;
-    } else if (zoom < 7) {
+    } 
+    
+    else if (zoom < 7) {
         maxMarkers = 12;
     }
 
