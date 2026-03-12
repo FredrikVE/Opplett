@@ -1,27 +1,26 @@
-// src/ui/utils/MapUtils/ExtractCityPoints.js
-import { syncAbstractMarkersFromLayout, getFeaturePriorityScore } from "./MarkerLayoutUtils";
-import { getMapConstraints } from "./MapConfig";
+//src/ui/utils/MapUtils/ExtractCityPoints.js
+import { getFeaturePriorityScore } from "./MarkerLayoutUtils.js";
+import { getMapConstraints } from "./MapConfig.js";
 
-export function extractCityPoints({ map, markerLayout, activeMarkers, activeLocation }) {
-    if (!map || !markerLayout) return [];
+export function extractCityPointsFromMarkers({ abstractMarkers, zoom, activeLocation }) {
+    if (!abstractMarkers?.length) return [];
 
-    const abstractMarkers = syncAbstractMarkersFromLayout(markerLayout, activeMarkers);
+    const { maxMarkers, minDistance } = getMapConstraints(zoom);
     const mappedPoints = [];
     const seen = new Set();
-    
-    const zoom = map.getZoom();
-    
-    // HENTER SSOT
-    const { maxMarkers, minDistance } = getMapConstraints(zoom);
 
-    const horizontalMult = 2.2; 
+    const horizontalMult = 2.2;
     const verticalMult = 1.0;
 
     function isTooClose(lat, lon) {
-        return mappedPoints.some(p => {
-            const dLat = Math.abs(p.lat - lat);
-            const dLon = Math.abs(p.lon - lon);
-            return dLat < (minDistance * verticalMult) && dLon < (minDistance * horizontalMult);
+        return mappedPoints.some((point) => {
+            const dLat = Math.abs(point.lat - lat);
+            const dLon = Math.abs(point.lon - lon);
+
+            return (
+                dLat < (minDistance * verticalMult) &&
+                dLon < (minDistance * horizontalMult)
+            );
         });
     }
 
@@ -30,29 +29,33 @@ export function extractCityPoints({ map, markerLayout, activeMarkers, activeLoca
     });
 
     for (const abstractMarker of sortedMarkers) {
-        // Bruker maxMarkers fra SSOT
         if (mappedPoints.length >= maxMarkers) break;
 
         const feature = abstractMarker.features?.[0];
         const props = feature?.properties || {};
-        const [fLon, fLat] = feature.geometry.coordinates;
+        const [lon, lat] = feature?.geometry?.coordinates ?? [];
 
-        // Landfilter
+        if (lat == null || lon == null) continue;
+
         const activeCountryCode = activeLocation?.countryCode?.toLowerCase();
         const itemCountryCode = (props.iso_a2 || props.country_code)?.toLowerCase();
-        if (activeCountryCode && itemCountryCode && activeCountryCode !== itemCountryCode) continue;
 
-        if (isTooClose(fLat, fLon)) continue;
+        if (activeCountryCode && itemCountryCode && activeCountryCode !== itemCountryCode) {
+            continue;
+        }
 
-        const exactKey = `${fLat}:${fLon}`;
+        if (isTooClose(lat, lon)) continue;
+
+        const exactKey = `${lat}:${lon}`;
         if (seen.has(exactKey)) continue;
 
         mappedPoints.push({
             id: feature.id,
             name: props.name,
-            lat: fLat,
-            lon: fLon
+            lat,
+            lon
         });
+
         seen.add(exactKey);
     }
 
