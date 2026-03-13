@@ -50,14 +50,19 @@ export const MAP_MARKER_CONFIG = {
     MAX_LAYOUT_MARKERS: 60,
     MAX_WEATHER_MARKERS: 25,
 
-    // Vi lytter kun på by-/stedslag.
-    // Land- og kontinentlabels skal ikke brukes som værikoner.
     LABEL_LAYERS: [
         "Capital city labels",
         "City labels",
         "Town labels",
         "Place labels"
-    ]
+    ],
+
+    LABEL_LAYER_ZOOM_RANGE: {
+        MIN: 1,
+        MAX: 24
+    },
+
+    IDLE_REPORT_DEBOUNCE_MS: 300
 };
 
 export const MAP_MARKER_DISTRIBUTION = {
