@@ -3,7 +3,8 @@
 /**
  * Beregner geografiske yttergrenser (BBox) basert på GeoJSON-geometri.
  * Prioriterer den største landmassen for å unngå for vidt utsnitt på land med fjerne øyer.
- * * @param {Object} geojson - GeoJSON FeatureCollection
+ *
+ * @param {Object} geojson - GeoJSON FeatureCollection
  * @returns {Array|null} - [[SW_lng, SW_lat], [NE_lng, NE_lat]]
  */
 export function getBoundsFromGeometry(geojson) {
@@ -11,20 +12,49 @@ export function getBoundsFromGeometry(geojson) {
         return null;
     }
 
-    //Trekker ut alle ytre ringer (linjer) fra Polygon og MultiPolygon
+    /**
+     * Beregner et enkelt polygon-areal med "shoelace formula".
+     * Vi bruker absoluttverdi siden vi bare er ute etter størrelse.
+     *
+     * @param {Array<Array<number>>} ring
+     * @returns {number}
+     */
+    function getRingArea(ring) {
+        if (!Array.isArray(ring) || ring.length < 4) {
+            return 0;
+        }
+
+        let area = 0;
+
+        for (let i = 0; i < ring.length - 1; i++) {
+            const [x1, y1] = ring[i];
+            const [x2, y2] = ring[i + 1];
+
+            area += (x1 * y2) - (x2 * y1);
+        }
+
+        return Math.abs(area / 2);
+    }
+
+    /**
+     * Trekker ut alle ytre ringer fra Polygon og MultiPolygon.
+     */
     const outerRings = [];
 
-    geojson.features.forEach(feature => {
+    geojson.features.forEach((feature) => {
         const { type, coordinates } = feature.geometry || {};
 
-        if (type === "Polygon") {
-            //Første array i et Polygon er alltid den ytre ringen (den ytre grensen)
+        if (type === "Polygon" && Array.isArray(coordinates?.[0])) {
+            // Første ring er alltid ytre ring
             outerRings.push(coordinates[0]);
-        } 
-        else if (type === "MultiPolygon") {
-            //Et MultiPolygon består av flere Polygons, vi henter ytre ring fra alle
-            coordinates.forEach(polygonCoords => {
-                outerRings.push(polygonCoords[0]);
+        }
+
+        else if (type === "MultiPolygon" && Array.isArray(coordinates)) {
+            coordinates.forEach((polygonCoords) => {
+                if (Array.isArray(polygonCoords?.[0])) {
+                    // Første ring i hvert polygon er ytre ring
+                    outerRings.push(polygonCoords[0]);
+                }
             });
         }
     });
@@ -33,32 +63,37 @@ export function getBoundsFromGeometry(geojson) {
         return null;
     }
 
-    // Finn den største landmassen (ringen med flest koordinater)
-    // Dette fungerer som en god proxy for "fastlandet" (f.eks. for å ignorere småøyer)
-    const mainlandRing = outerRings.reduce((largest, current) => 
-        current.length > largest.length ? current : largest
-    );
+    /**
+     * Finn ringen med størst faktisk areal,
+     * ikke bare flest koordinatpunkter.
+     */
+    const mainlandRing = outerRings.reduce((largest, current) => {
+        return getRingArea(current) > getRingArea(largest) ? current : largest;
+    });
 
-    //Velg hvilke koordinater som skal brukes for utregning
-    //Bruker kun fastlandet hvis det er komplekst nok (> 10 punkter), 
-    //ellers slår vi sammen alt (nyttig for små kommuner/bydeler)
-    const pointsToCalculate = mainlandRing.length > 10 
-        ? mainlandRing 
+    /**
+     * Hvis største ring er stor nok, bruk bare den.
+     * Hvis geometrien er liten/enkel, bruk alle ringer samlet.
+     * Dette gir bedre utsnitt for små områder, men mer stabile utsnitt for land.
+     */
+    const pointsToCalculate = mainlandRing.length > 10
+        ? mainlandRing
         : outerRings.flat();
 
-    //Finn ytterpunktene (Min/Max)
-    const longitudes = pointsToCalculate.map(p => p[0]);
-    const latitudes = pointsToCalculate.map(p => p[1]);
+    if (!pointsToCalculate.length) {
+        return null;
+    }
 
-    //Definerer hjørnene i bounding boksen eksplisitt
+    const longitudes = pointsToCalculate.map((point) => point[0]);
+    const latitudes = pointsToCalculate.map((point) => point[1]);
+
     const SW_lng = Math.min(...longitudes);
     const SW_lat = Math.min(...latitudes);
     const NE_lng = Math.max(...longitudes);
     const NE_lat = Math.max(...latitudes);
 
-    //Returnerer i formatet MapTiler/Mapbox forventer for fitBounds
     return [
-        [SW_lng, SW_lat], 
+        [SW_lng, SW_lat],
         [NE_lng, NE_lat]
     ];
 }

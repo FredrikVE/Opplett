@@ -6,6 +6,7 @@ import LoadingSpinner from "../components/Common/LoadingSpinner/LoadingSpinner.j
 export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREENS }) {
     const { location, mapTarget, apiKey, style, weatherPoints, isLoading, onMapChange, highlightGeometry, currentZoom } = viewModel;
 
+    console.log("Zoomlevel: ", currentZoom);
     return (
         <div className="map-screen">
             <header className="map-header">

@@ -4,6 +4,7 @@ import { getWeatherIconFileName } from "../../../utils/CommonUtils/weatherIcons.
 export default function WeatherSymbolLabel({ point }) {
 
 	const iconFile = getWeatherIconFileName(point.weatherSymbol);
+	console.log("Sted som viseer værsymbol: ", point.name);
 
 	return (
 		<div className="map-weather-marker">

@@ -1,4 +1,5 @@
 //src/ui/utils/MapUtils/MapConfig.js
+
 export const MAP_CAMERA = {
     BOUNDS: "bounds",
     CENTER: "center"
@@ -46,35 +47,36 @@ export const MAP_ANIMATION = {
 };
 
 export const MAP_MARKER_CONFIG = {
-    MAX_LAYOUT_MARKERS: 60, // Økt for å fange opp flere potensielle byer
-    MAX_WEATHER_MARKERS: 25, 
+    MAX_LAYOUT_MARKERS: 60,
+    MAX_WEATHER_MARKERS: 25,
 
-    // Lagene vi lytter på. MarkerLayout vil filtrere disse internt.
+    // Vi lytter kun på by-/stedslag.
+    // Land- og kontinentlabels skal ikke brukes som værikoner.
     LABEL_LAYERS: [
         "Capital city labels",
         "City labels",
         "Town labels",
-        "Place labels",
-        "Country labels",
-        "Continent labels"
+        "Place labels"
     ]
 };
 
 export const MAP_MARKER_DISTRIBUTION = {
-    BASE_DISTANCE_DEGREES: 45, // Justert litt ned for å tillate litt tettere ikoner generelt
-    
-    GLOBAL_ZOOM_THRESHOLD: 4.5, 
+    BASE_DISTANCE_DEGREES: 45,
+
+    // Kan fortsatt være nyttig som generell terskel,
+    // men brukes ikke lenger til landsfiltrering.
+    GLOBAL_ZOOM_THRESHOLD: 4.5,
 
     MAX_DISTANCE_CAP_DEGREES: 3.0,
 
     MARKER_LIMITS: {
         AREA: {
-            FAR: 12,
-            MID: 16,
+            FAR: 14,
+            MID: 20,
             DEFAULT: MAP_MARKER_CONFIG.MAX_WEATHER_MARKERS
         },
         POINT: {
-            FAR: 10,
+            FAR: 12,
             MID: 18,
             DEFAULT: MAP_MARKER_CONFIG.MAX_WEATHER_MARKERS
         }
@@ -86,9 +88,8 @@ export const MAP_MARKER_DISTRIBUTION = {
     },
 
     MIN_DISTANCE_CAP_DEGREES: {
-        AREA: 0.8,
-        // Denne er KRITISK: 0.01 tillater at byer vises tett når man er zoomet inn.
-        POINT: 0.01 
+        AREA: 0.55,
+        POINT: 0.01
     },
 
     SPACING_MULTIPLIERS: {
@@ -97,7 +98,7 @@ export const MAP_MARKER_DISTRIBUTION = {
             VERTICAL: 0.8
         },
         POINT: {
-            HORIZONTAL: 1.8, // Justert ned fra 2.2 for å få plass til flere byer i bredden
+            HORIZONTAL: 1.8,
             VERTICAL: 0.9
         }
     }
@@ -128,17 +129,22 @@ export function getDefaultZoomForLocationType(type) {
         case LOCATION_TYPES.COUNTRY:
         case LOCATION_TYPES.MAJOR_LANDFORM:
             return MAP_ZOOM_LEVELS.COUNTRY;
+
         case LOCATION_TYPES.REGION:
             return MAP_ZOOM_LEVELS.REGION;
+
         case LOCATION_TYPES.SUBREGION:
         case LOCATION_TYPES.COUNTY:
             return MAP_ZOOM_LEVELS.COUNTY;
+
         case LOCATION_TYPES.CITY:
         case LOCATION_TYPES.MUNICIPALITY:
             return MAP_ZOOM_LEVELS.DISTRICT;
+
         case LOCATION_TYPES.ADDRESS:
         case LOCATION_TYPES.NEIGHBOURHOOD:
             return MAP_ZOOM_LEVELS.STREET;
+
         default:
             return MAP_ZOOM_LEVELS.DEFAULT;
     }
@@ -152,23 +158,30 @@ export function getMapConstraints(zoom, locationType) {
         ? MAP_MARKER_DISTRIBUTION.MARKER_LIMITS.AREA
         : MAP_MARKER_DISTRIBUTION.MARKER_LIMITS.POINT;
 
-    // Ved zoom > 8 (by-nivå) fjerner vi nesten alle restriksjoner på avstand
-    const minDistanceCap = (zoom > 8 && !isArea) 
-        ? 0.001 
-        : (isArea ? MAP_MARKER_DISTRIBUTION.MIN_DISTANCE_CAP_DEGREES.AREA : MAP_MARKER_DISTRIBUTION.MIN_DISTANCE_CAP_DEGREES.POINT);
+    const minDistanceCap =
+        (zoom > 8 && !isArea)
+            ? 0.001
+            : (
+                isArea
+                    ? MAP_MARKER_DISTRIBUTION.MIN_DISTANCE_CAP_DEGREES.AREA
+                    : MAP_MARKER_DISTRIBUTION.MIN_DISTANCE_CAP_DEGREES.POINT
+            );
 
     let maxMarkers = limitPolicy.DEFAULT;
+
     if (zoom < MAP_MARKER_DISTRIBUTION.ZOOM_BREAKPOINTS.FAR) {
         maxMarkers = limitPolicy.FAR;
-    } else if (zoom < MAP_MARKER_DISTRIBUTION.ZOOM_BREAKPOINTS.MID) {
+    } 
+    
+    else if (zoom < MAP_MARKER_DISTRIBUTION.ZOOM_BREAKPOINTS.MID) {
         maxMarkers = limitPolicy.MID;
     }
 
-    const rawMinDistance = MAP_MARKER_DISTRIBUTION.BASE_DISTANCE_DEGREES / Math.pow(2, zoom);
+    const rawMinDistance =
+        MAP_MARKER_DISTRIBUTION.BASE_DISTANCE_DEGREES / Math.pow(2, zoom);
 
-    // Her sørger vi for at vi ikke kveler by-ikoner ved høye zoomnivåer
     const minDistance = Math.min(
-        Math.max(rawMinDistance, minDistanceCap), 
+        Math.max(rawMinDistance, minDistanceCap),
         MAP_MARKER_DISTRIBUTION.MAX_DISTANCE_CAP_DEGREES
     );
 

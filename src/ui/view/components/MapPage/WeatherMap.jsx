@@ -17,7 +17,8 @@ export default function WeatherMap({ apiKey, style, mapTarget, weatherPoints, on
 	const mapInstanceRef = useRef(null);
 	const markerLayoutRef = useRef(null);
 	const activeLayoutMarkersRef = useRef(new Map());
-	const markersRef = useRef([]);
+	//const markersRef = useRef([]);
+	const markersRef = useRef(new Map());
 	const lastMovedIdRef = useRef(null);
 	const isInternalMoveRef = useRef(false);
 
