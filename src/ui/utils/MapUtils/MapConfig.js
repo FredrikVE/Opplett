@@ -67,12 +67,11 @@ export const MAP_MARKER_CONFIG = {
 
 export const MAP_MARKER_DISTRIBUTION = {
     BASE_DISTANCE_DEGREES: 45,
-
-    // Kan fortsatt være nyttig som generell terskel,
-    // men brukes ikke lenger til landsfiltrering.
     GLOBAL_ZOOM_THRESHOLD: 4.5,
-
     MAX_DISTANCE_CAP_DEGREES: 3.0,
+    LOW_ZOOM_THRESHOLD: 4.0,
+    LOW_ZOOM_DISTANCE_MULTIPLIER: 0.3,
+    LOW_ZOOM_MIN_DISTANCE_CAP: 0.01,
 
     MARKER_LIMITS: {
         AREA: {
@@ -155,6 +154,63 @@ export function getDefaultZoomForLocationType(type) {
     }
 }
 
+
+export function getMapConstraints(zoom, locationType) {
+    const isArea = isAreaLocation(locationType);
+    const isGlobalView = zoom < MAP_MARKER_DISTRIBUTION.GLOBAL_ZOOM_THRESHOLD;
+    const isLowZoom = zoom < MAP_MARKER_DISTRIBUTION.LOW_ZOOM_THRESHOLD;
+
+    const limitPolicy = isArea
+        ? MAP_MARKER_DISTRIBUTION.MARKER_LIMITS.AREA
+        : MAP_MARKER_DISTRIBUTION.MARKER_LIMITS.POINT;
+
+    // Bestemmer minste tillatte avstand (cap)
+    let minDistanceCap = (zoom > 8 && !isArea)
+        ? 0.001
+        : (isArea
+            ? MAP_MARKER_DISTRIBUTION.MIN_DISTANCE_CAP_DEGREES.AREA
+            : MAP_MARKER_DISTRIBUTION.MIN_DISTANCE_CAP_DEGREES.POINT
+          );
+
+    // Overstyrer cap hvis vi er zoomet langt ut for å unngå at alt skjules
+    if (isLowZoom) {
+        minDistanceCap = MAP_MARKER_DISTRIBUTION.LOW_ZOOM_MIN_DISTANCE_CAP;
+    }
+
+    // Beregner antall markører
+    let maxMarkers = limitPolicy.DEFAULT;
+    
+    if (zoom < MAP_MARKER_DISTRIBUTION.ZOOM_BREAKPOINTS.FAR) {
+        maxMarkers = limitPolicy.FAR;
+    } 
+    
+    else if (zoom < MAP_MARKER_DISTRIBUTION.ZOOM_BREAKPOINTS.MID) {
+        maxMarkers = limitPolicy.MID;
+    }
+
+    // Beregner rå avstand med en reduksjonsfaktor for lav zoom
+    // Dette hindrer "eksponentiell utvasking" av punkter når zoom synker
+    const zoomMultiplier = isLowZoom 
+        ? MAP_MARKER_DISTRIBUTION.LOW_ZOOM_DISTANCE_MULTIPLIER 
+        : 1.0;
+
+    const rawMinDistance = 
+        (MAP_MARKER_DISTRIBUTION.BASE_DISTANCE_DEGREES / Math.pow(2, zoom)) * zoomMultiplier;
+
+    // Endelig avstandsberegning
+    const minDistance = Math.min(
+        Math.max(rawMinDistance, minDistanceCap),
+        MAP_MARKER_DISTRIBUTION.MAX_DISTANCE_CAP_DEGREES
+    );
+
+    return {
+        maxMarkers,
+        minDistance,
+        isGlobalView
+    };
+}
+
+/*
 export function getMapConstraints(zoom, locationType) {
     const isArea = isAreaLocation(locationType);
     const isGlobalView = zoom < MAP_MARKER_DISTRIBUTION.GLOBAL_ZOOM_THRESHOLD;
@@ -196,6 +252,7 @@ export function getMapConstraints(zoom, locationType) {
         isGlobalView
     };
 }
+*/
 
 export function getMapSpacingMultipliers(locationType) {
     return isAreaLocation(locationType)

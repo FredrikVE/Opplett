@@ -14,8 +14,8 @@ export function getLayerPriority(layerId) {
     if (layerId.includes("Place")) return 3;
 
     // Fallback hvis slike lag likevel skulle slippe inn
-    if (layerId.includes("Country")) return 80;
-    if (layerId.includes("Continent")) return 90;
+    //if (layerId.includes("Country")) return 80;
+    //if (layerId.includes("Continent")) return 90;
 
     return 99;
 }
