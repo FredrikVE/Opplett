@@ -120,8 +120,6 @@ export default function WeatherMap({ apiKey, style, mapTarget, weatherPoints, on
 
 			markerLayoutRef.current = new MarkerLayout(map, {
 				layers: MAP_MARKER_CONFIG.LABEL_LAYERS,
-				max: MAP_MARKER_CONFIG.MAX_LAYOUT_MARKERS,
-				sortingProperty: getFeaturePriorityScore
 			});
 
 			requestAnimationFrame(() => {

@@ -28,7 +28,8 @@ export const LOCATION_TYPES = {
 
 export const MAP_ZOOM_LEVELS = {
     CONTINENT: 2,
-    COUNTRY: 4,
+    COUNTRY: 3,     //endret til 3 her..
+    //COUNTRY: 4,     //Passe for danmark og nederland, men litt close for norge og sverige og finland
     REGION: 6,
     SUB_REGION: 7,
     COUNTY: 8,
@@ -179,7 +180,7 @@ export function getMapConstraints(zoom, locationType) {
 
     // Beregner antall markører
     let maxMarkers = limitPolicy.DEFAULT;
-    
+
     if (zoom < MAP_MARKER_DISTRIBUTION.ZOOM_BREAKPOINTS.FAR) {
         maxMarkers = limitPolicy.FAR;
     } 

@@ -66,6 +66,46 @@ function buildCameraId(location, mode, type, data) {
     return `${locationKey}-${mode}-${roundCoord(data.lat)},${roundCoord(data.lon)},${data.zoom}`;
 }
 
+
+export function resolveMapCamera({ location, geometryBounds, searchBounds }) {
+    const normalizedGeometry = normalizeBounds(geometryBounds);
+    const normalizedSearch =
+        normalizeBounds(searchBounds) ?? getSearchBoundsForLocation(location);
+
+    // 👇 Her er magien vi legger til for å stoppe utzoomingen!
+    const skipBounds = ["country", "continent", "major_landform"].includes(location?.type);
+
+    if (normalizedGeometry && !skipBounds) {
+        return {
+            id: buildCameraId(location, "geometry", MAP_CAMERA.BOUNDS, normalizedGeometry),
+            type: MAP_CAMERA.BOUNDS,
+            data: normalizedGeometry,
+            isArea: true
+        };
+    }
+
+    if (normalizedSearch && !skipBounds) {
+        return {
+            id: buildCameraId(location, "search", MAP_CAMERA.BOUNDS, normalizedSearch),
+            type: MAP_CAMERA.BOUNDS,
+            data: normalizedSearch,
+            isArea: isAreaLocation(location?.type)
+        };
+    }
+
+    // Når skipBounds er true for Norge, tvinger vi den hit (som gir zoomnivå 4)
+    const center = buildFallbackCenter(location);
+
+    return {
+        id: buildCameraId(location, "center", MAP_CAMERA.CENTER, center),
+        type: MAP_CAMERA.CENTER,
+        data: center,
+        isArea: isAreaLocation(location?.type)
+    };
+}
+
+
+/*
 export function resolveMapCamera({ location, geometryBounds, searchBounds }) {
     const normalizedGeometry = normalizeBounds(geometryBounds);
     const normalizedSearch =
@@ -98,3 +138,4 @@ export function resolveMapCamera({ location, geometryBounds, searchBounds }) {
         isArea: isAreaLocation(location?.type)
     };
 }
+*/
