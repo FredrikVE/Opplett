@@ -3,29 +3,13 @@ import * as maptilersdk from "@maptiler/sdk";
 import { MarkerLayout } from "@maptiler/marker-layout";
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 
-import {
-	MAP_ANIMATION,
-	MAP_MARKER_CONFIG,
-	MAP_ZOOM_LEVELS,
-	MAP_CAMERA
-} from "../../../utils/MapUtils/MapConfig.js";
+import { MAP_ANIMATION, MAP_MARKER_CONFIG, MAP_ZOOM_LEVELS, MAP_CAMERA } from "../../../utils/MapUtils/MapConfig.js";
 import { extractCityPointsFromMarkers } from "../../../utils/MapUtils/ExtractCityPoints.js";
 import { syncMapHighlight } from "../../../utils/MapUtils/MapHighlight.js";
 import { renderWeatherMarkers } from "../../../utils/MapUtils/WeatherMarkers.jsx";
-import {
-	syncAbstractMarkersFromLayout,
-	getFeaturePriorityScore
-} from "../../../utils/MapUtils/MarkerLayoutUtils.js";
+import { syncAbstractMarkersFromLayout, getFeaturePriorityScore } from "../../../utils/MapUtils/MarkerLayoutUtils.js";
 
-export default function WeatherMap({
-	apiKey,
-	style,
-	mapTarget,
-	weatherPoints,
-	onMapChange,
-	activeLocation,
-	highlightGeometry
-}) {
+export default function WeatherMap({ apiKey, style, mapTarget, weatherPoints, onMapChange, activeLocation, highlightGeometry }) {
 	/* =========================================================
 	   REFS
 	========================================================= */
@@ -98,9 +82,7 @@ export default function WeatherMap({
 
 		const points = collectVisibleWeatherPoints(map, markerLayout);
 
-		console.log(
-			`[WeatherMap] 📍 reportMapStatus(${triggerSource}) -> ${points?.length ?? 0} punkter`
-		);
+		console.log(`[WeatherMap] 📍 reportMapStatus(${triggerSource}) -> ${points?.length ?? 0} punkter`);
 
 		onMapChangeRef.current({
 			viewport: buildViewportSnapshot(map),
@@ -190,7 +172,7 @@ export default function WeatherMap({
 				try {
 					entry.marker?.remove();
 				}
-				
+
 				catch (error) {
 					console.warn("[WeatherMap] Feil ved fjerning av marker:", error);
 				}
@@ -313,10 +295,7 @@ export default function WeatherMap({
 	useEffect(onOnMapChangeChangedSyncRef, [onOnMapChangeChangedSyncRef]);
 	useEffect(onMountedInitializeMap, [onMountedInitializeMap]);
 	useEffect(onMapTargetChangedMoveMap, [onMapTargetChangedMoveMap]);
-	useEffect(
-		onHighlightGeometryChangedSyncHighlight,
-		[onHighlightGeometryChangedSyncHighlight]
-	);
+	useEffect(onHighlightGeometryChangedSyncHighlight, [onHighlightGeometryChangedSyncHighlight]);
 	useEffect(onWeatherPointsChangedSyncMarkers, [onWeatherPointsChangedSyncMarkers]);
 
 	/* =========================================================
