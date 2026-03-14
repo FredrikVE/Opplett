@@ -5,26 +5,16 @@ import { getBoundsFromGeometry } from "../utils/MapUtils/MapBoundsHelper.js";
 import { resolveMapCamera } from "../utils/MapUtils/MapCamera.js";
 import { isAreaLocation } from "../utils/MapUtils/MapConfig.js";
 
-export default function useMapPageViewModel(
-	mapTilerRepository,
-	searchLocationUseCase,
-	getMapWeatherUseCase,
-	getLocationGeometryUseCase,
-	activeLocation,
-	onLocationChange,
-	onResetToDeviceLocation
-) {
+export default function useMapPageViewModel(mapTilerRepository, searchLocationUseCase, getMapWeatherUseCase, getLocationGeometryUseCase, activeLocation, onLocationChange, onResetToDeviceLocation) {
 
 	/* =========================================================
 	   CONFIG
 	========================================================= */
-
 	const DEBOUNCE_DELAY_MS = 500;
 
 	/* =========================================================
 	   STATE
 	========================================================= */
-
 	const [highlightState, setHighlightState] = useState({
 		status: "idle",
 		locationId: null,
@@ -39,7 +29,6 @@ export default function useMapPageViewModel(
 	/* =========================================================
 	   COMMANDS
 	========================================================= */
-
 	const clearWeatherPoints = useCallback(() => {
 		setWeatherPoints([]);
 		//setMapPoints([]);
@@ -96,7 +85,6 @@ export default function useMapPageViewModel(
 	/* =========================================================
 	   CHILD VIEWMODELS
 	========================================================= */
-
 	const searchViewModel = useSearchViewModel(
 		searchLocationUseCase,
 		onLocationChange,
@@ -107,7 +95,6 @@ export default function useMapPageViewModel(
 	/* =========================================================
 	   COMPUTED
 	========================================================= */
-
 	const highlightGeometry =
 		activeLocation?.id === highlightState.locationId
 			? highlightState.geojson
@@ -133,7 +120,6 @@ export default function useMapPageViewModel(
 	/* =========================================================
 	   EFFECT HELPERS
 	========================================================= */
-
 	const fetchHighlightGeometry = useCallback(async (locationId) => {
 		return await getLocationGeometryUseCase.execute(locationId);
 	}, [getLocationGeometryUseCase]);
@@ -145,7 +131,6 @@ export default function useMapPageViewModel(
 	/* =========================================================
 	   EFFECTS
 	========================================================= */
-
 	useEffect(() => {
 
 		if (!activeLocation?.id) {
@@ -183,15 +168,9 @@ export default function useMapPageViewModel(
 			cancelled = true;
 		};
 
-	}, [
-		activeLocation?.id,
-		activeLocation?.type,
-		fetchHighlightGeometry,
-		resetHighlightState,
-		setHighlightLoading,
-		setHighlightSuccess,
-		setHighlightError
-	]);
+	}, 
+	
+	[activeLocation?.id, activeLocation?.type, fetchHighlightGeometry, resetHighlightState, setHighlightLoading, setHighlightSuccess, setHighlightError]);
 
 	useEffect(() => {
 
@@ -242,11 +221,8 @@ export default function useMapPageViewModel(
 			clearTimeout(timer);
 		};
 
-	}, [
-		mapPoints,
-		activeLocation?.timezone,
-		fetchWeatherPoints
-	]);
+	}, 
+	[mapPoints, activeLocation?.timezone, fetchWeatherPoints]);
 
 	/* =========================================================
 	   PUBLIC API
