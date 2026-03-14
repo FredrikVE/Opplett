@@ -1,9 +1,9 @@
 // src/ui/view/components/MapPage/hooks/useMapTilerInit.js
 import { useEffect, useRef, useState } from "react";
 import * as maptilersdk from "@maptiler/sdk";
-import { MAP_DEFAULTS, MAP_ZOOM_LEVELS } from "../../../../utils/MapUtils/MapConfig.js";
+import { MAP_DEFAULTS, MAP_ZOOM_LEVELS } from "../../../../utils/MapUtils/Constants/MapConstants.js";
 
-export function useMapTilerInit(mapContainerRef, apiKey, style, mapTarget, activeLocation) {
+export function useMapInit(mapContainerRef, apiKey, style, mapTarget, activeLocation) {
     const [mapInstance, setMapInstance] = useState(null);
     const isInitialized = useRef(false);
 
@@ -40,7 +40,9 @@ export function useMapTilerInit(mapContainerRef, apiKey, style, mapTarget, activ
             setMapInstance(null);
         };
         
-    }, [apiKey, style, mapContainerRef]);
+    }, 
+    //[apiKey, style, mapContainerRef]);
+    [apiKey, style]);
 
     return mapInstance;
 }

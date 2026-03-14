@@ -1,5 +1,5 @@
-//src/ui/utils/MapUtils/MapHighlight.js
-import { MAP_HIGHLIGHT } from "./MapConfig.js";
+//src/ui/utils/MapUtils/HighlightBorder/MapHighlight.js
+import { MAP_HIGHLIGHT } from "../Constants/MapConstants.js";
 
 const EMPTY_GEOJSON = {
     type: "FeatureCollection",
@@ -68,7 +68,9 @@ export function syncMapHighlight(map, geojson) {
 
     try {
         source.setData(geojson ?? EMPTY_GEOJSON);
-    } catch (error) {
+    } 
+    
+    catch (error) {
         console.warn("[MapHighlight] Kunne ikke oppdatere highlight:", error);
     }
 }

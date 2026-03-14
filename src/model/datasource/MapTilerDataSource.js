@@ -13,20 +13,17 @@ export default class MapTilerDataSource {
 		}
 	}
 
-	/**
-	 * Henter grunnkonfigurasjon for kartet.
-	 */
+	//Henter grunnkonfigurasjon for kartet.
 	getBaseConfig() {
 		return {
 			apiKey: this.#apiKey,
-			style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${this.#apiKey}`
+			//style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${this.#apiKey}`
+			style: `https://api.maptiler.com/maps/streets-v4/style.json?key=${this.#apiKey}`
 		};
 	}
 
-	/**
-	 * Utfører søk (fremover eller bakover geokoding).
-	 */
-
+	
+	//Utfører søk (fremover eller bakover geokoding).
 	async search(query, signal, proximity) {
 		if (!query) return [];
 
@@ -42,7 +39,7 @@ export default class MapTilerDataSource {
 		url.searchParams.set("language", "no");
 		url.searchParams.set("limit", isCoords ? "1" : `${this.#limit}`);
 
-		// Tvinger API-et til å kun returnere geografiske områder, ikke butikker/POI
+		//Tvinger API-et til å kun returnere geografiske områder, ikke butikker/POI
 		if (!isCoords) {
 			url.searchParams.set("types", this.#allowedTypes.join(","));
 		}
@@ -64,9 +61,8 @@ export default class MapTilerDataSource {
 	}
 
 
-	/**
-	 * Henter full GeoJSON-geometri for et spesifikt sted (brukes til polygon-tegning).
-	 */
+
+	//Henter full GeoJSON-geometri for et spesifikt sted (brukes til polygon-tegning).
 	async getLocationGeometry(id) {
 		if (!id) return null;
 		
@@ -78,9 +74,7 @@ export default class MapTilerDataSource {
 		return response.json();
 	}
 
-	/**
-	 * Mapper rå-features fra MapTiler til vår interne domenemodell.
-	 */
+	//Mapper rå-features fra MapTiler til vår interne domenemodell
 	#mapFeatureToLocation(f) {
 		const [lon, lat] = f.center;
 

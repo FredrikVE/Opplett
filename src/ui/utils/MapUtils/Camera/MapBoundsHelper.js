@@ -1,4 +1,4 @@
-//src/ui/utils/MapUtils/MapBoundsHelper.js
+//src/ui/utils/MapUtils/Camera/MapBoundsHelper.js
 
 /**
  * Beregner geografiske yttergrenser (BBox) basert på GeoJSON-geometri.

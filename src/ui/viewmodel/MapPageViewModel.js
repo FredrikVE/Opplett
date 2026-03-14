@@ -1,9 +1,9 @@
 // src/ui/viewmodel/MapPageViewModel.js
 import { useEffect, useState, useCallback } from "react";
 import useSearchViewModel from "./SearchViewModel.js";
-import { getBoundsFromGeometry } from "../utils/MapUtils/MapBoundsHelper.js";
-import { resolveMapCamera } from "../utils/MapUtils/MapCamera.js";
-import { isAreaLocation } from "../utils/MapUtils/MapConfig.js";
+import { getBoundsFromGeometry } from "../utils/MapUtils/Camera/MapBoundsHelper.js";
+import { resolveMapCamera } from "../utils/MapUtils/Camera/CameraPolicy.js";
+import { isAreaLocation } from "../utils/MapUtils/Camera/MapLocationLogic.js";
 
 export default function useMapPageViewModel(mapTilerRepository, searchLocationUseCase, getMapWeatherUseCase, getLocationGeometryUseCase, activeLocation, onLocationChange, onResetToDeviceLocation) {
 
@@ -95,8 +95,7 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 	/* =========================================================
 	   COMPUTED
 	========================================================= */
-	const highlightGeometry =
-		activeLocation?.id === highlightState.locationId
+	const highlightGeometry = activeLocation?.id === highlightState.locationId
 			? highlightState.geojson
 			: null;
 
@@ -197,7 +196,6 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 				if (!cancelled) {
 					setWeatherPoints(results || []);
 				}
-
 			}
 			catch (error) {
 
