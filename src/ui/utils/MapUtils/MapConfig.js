@@ -27,15 +27,30 @@ export const LOCATION_TYPES = {
 };
 
 export const MAP_ZOOM_LEVELS = {
-    CONTINENT: 2,
-    COUNTRY: 3,     //endret til 3 her..
-    //COUNTRY: 4,     //Passe for danmark og nederland, men litt close for norge og sverige og finland
-    REGION: 6,
-    SUB_REGION: 7,
-    COUNTY: 8,
-    DISTRICT: 10,
-    DEFAULT: 12,
-    STREET: 14
+
+    // Global scale
+    WORLD: 2,
+    WORLD_CLOSE: 2.5,
+
+    // Country scale
+    COUNTRY: 3,
+    COUNTRY_CLOSE: 3.5,
+
+    // Regional scale
+    REGION_WIDE: 4,
+    REGION: 5,
+    SUB_REGION: 6,
+
+    // Local scale
+    COUNTY: 7,
+    DISTRICT: 8,
+    CITY: 9,
+
+    // Street scale
+    STREET: 12,
+    ADDRESS: 14,
+
+    DEFAULT: 12
 };
 
 export const MAP_ANIMATION = {
