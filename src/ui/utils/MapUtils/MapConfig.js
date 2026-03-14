@@ -1,4 +1,10 @@
 //src/ui/utils/MapUtils/MapConfig.js
+export const MAP_DEFAULTS = {
+    CENTER_LON: 10,
+    CENTER_LAT: 60,
+    PITCH: 0,
+    BEARING: 0
+};
 
 export const MAP_CAMERA = {
     BOUNDS: "bounds",
