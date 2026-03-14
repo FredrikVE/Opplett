@@ -222,11 +222,17 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 
 		fetchHighlightGeometry(locationId)
 			.then((geojson) => {
-				if (cancelled) return;
+				if (cancelled) {
+					return;
+				}
+
 				setHighlightSuccess(locationId, geojson);
 			})
 			.catch(() => {
-				if (cancelled) return;
+				if (cancelled) {
+					return;
+				}
+				
 				setHighlightError(locationId);
 			});
 

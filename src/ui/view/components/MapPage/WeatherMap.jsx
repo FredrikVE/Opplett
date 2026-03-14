@@ -117,9 +117,29 @@ export default function WeatherMap({ apiKey, style, mapTarget, weatherPoints, on
 					map.setLayerZoomRange(layerId, minimumLabelZoom, maximumLabelZoom);
 				}
 			});
+			/*
+			markerLayoutRef.current = new MarkerLayout(map, {
+				layers: MAP_MARKER_CONFIG.LABEL_LAYERS,
+			});
+			*/
 
 			markerLayoutRef.current = new MarkerLayout(map, {
 				layers: MAP_MARKER_CONFIG.LABEL_LAYERS,
+
+				// inspirert av MapTiler-eksempelet
+				markerSize: [40, 70],
+				offset: [0, -10],
+				markerAnchor: "center",
+
+				max: MAP_MARKER_CONFIG.MAX_LAYOUT_MARKERS,
+				sortingProperty: getFeaturePriorityScore,
+				sortingOrder: "ascending",
+
+				// viktig: filtrer her i stedet for senere
+				filter: (feature) => {
+					const cls = feature?.properties?.class;
+					return ["city", "town", "village"].includes(cls);
+				}
 			});
 
 			requestAnimationFrame(() => {
@@ -215,7 +235,6 @@ export default function WeatherMap({ apiKey, style, mapTarget, weatherPoints, on
 		}
 
 		console.log(`[WeatherMap] 🚀 Starter programmert flytt: ${mapTarget.id}`);
-
 		if (mapTarget.type === MAP_CAMERA.BOUNDS) {
 			map.fitBounds(mapTarget.data, {
 				padding: mapTarget.isArea

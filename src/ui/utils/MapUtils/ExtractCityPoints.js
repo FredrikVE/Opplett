@@ -5,7 +5,10 @@ import { getFeaturePriorityScore } from "./MarkerLayoutUtils.js";
  * Trekker ut relevante bypunkter fra MapTiler MarkerLayout basert på zoom og lokasjon.
  */
 export function extractCityPointsFromMarkers({ abstractMarkers, zoom, activeLocation }) {
-    if (!abstractMarkers?.length) return [];
+
+    if (!abstractMarkers || abstractMarkers.length === 0) {
+        return [];
+    }
 
     const { maxMarkers, minDistance } = getMapConstraints(zoom, activeLocation?.type);
     const { HORIZONTAL, VERTICAL } = getMapSpacingMultipliers(activeLocation?.type);
@@ -13,37 +16,79 @@ export function extractCityPointsFromMarkers({ abstractMarkers, zoom, activeLoca
     const mappedPoints = [];
     const seen = new Set();
 
-    // 1. Sorter etter prioritet (Hovedstad -> By -> Tettsted)
-    const sortedMarkers = [...abstractMarkers].sort((a, b) => 
-        getFeaturePriorityScore(a.features?.[0]) - getFeaturePriorityScore(b.features?.[0])
-    );
+    /**
+     * MarkerLayout kan returnere markører i vilkårlig rekkefølge.
+     * Vi sorterer derfor etter prioritet:
+     *
+     * Capital → City → Town → Village
+     */
+    const sortedMarkers = [...abstractMarkers].sort((a, b) => {
 
-    // 2. Gå gjennom markørene og plukk de beste
+        const aFeature = a?.features?.[0];
+        const bFeature = b?.features?.[0];
+
+        return (
+            getFeaturePriorityScore(aFeature) -
+            getFeaturePriorityScore(bFeature)
+        );
+    });
+
+    /**
+     * Iterer gjennom markørene og velg de beste
+     */
     for (const abstractMarker of sortedMarkers) {
-        if (mappedPoints.length >= maxMarkers) break;
 
-        const feature = abstractMarker.features?.[0];
-        const [lon, lat] = feature?.geometry?.coordinates ?? [];
+        if (mappedPoints.length >= maxMarkers) {
+            break;
+        }
+
+        const feature = abstractMarker?.features?.[0];
+        const coordinates = feature?.geometry?.coordinates;
         const props = feature?.properties;
 
-        // Hopp over ugyldige data
-        if (!props || lat == null || lon == null) continue;
+        if (!feature || !coordinates || !props) {
+            continue;
+        }
 
-        // Unngå eksakte duplikater
+        const [lon, lat] = coordinates;
+
+        if (lat == null || lon == null) {
+            continue;
+        }
+
+        /**
+         * Unngå eksakte duplikater
+         */
         const exactKey = `${lat.toFixed(4)}:${lon.toFixed(4)}`;
-        if (seen.has(exactKey)) continue;
 
-        // Sjekk om byen er for nærme en vi allerede har lagt til
-        const isTooClose = mappedPoints.some(p => 
-            Math.abs(p.lat - lat) < (minDistance * VERTICAL) &&
-            Math.abs(p.lon - lon) < (minDistance * HORIZONTAL)
-        );
+        if (seen.has(exactKey)) {
+            continue;
+        }
 
-        if (isTooClose) continue;
+        /**
+         * Avstandssjekk
+         * Hindrer at byer ligger for tett
+         */
+        const tooClose = mappedPoints.some((point) => {
 
-        // Godkjent! Legg til i listen.
+            const dLat = Math.abs(point.lat - lat);
+            const dLon = Math.abs(point.lon - lon);
+
+            return (
+                dLat < (minDistance * VERTICAL) &&
+                dLon < (minDistance * HORIZONTAL)
+            );
+        });
+
+        if (tooClose) {
+            continue;
+        }
+
+        /**
+         * Godkjent by
+         */
         mappedPoints.push({
-            id: feature.id,
+            id: feature.id ?? exactKey,
             name: props.name || props.name_en || "Ukjent sted",
             lat,
             lon

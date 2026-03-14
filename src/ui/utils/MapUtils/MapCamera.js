@@ -4,24 +4,17 @@ import { MAP_CAMERA, isAreaLocation, shouldUseSearchBounds, getDefaultZoomForLoc
 const roundCoord = (value) => Number(value ?? 0);
 
 export function normalizeBounds(bounds) {
-    if (!bounds) return null;
+    if (!bounds) {
+        return null;
+    }
 
     // [west, south, east, north]
-    if (
-        Array.isArray(bounds) &&
-        bounds.length === 4 &&
-        bounds.every((v) => typeof v === "number")
-    ) {
+    if ( Array.isArray(bounds) && bounds.length === 4 && bounds.every((v) => typeof v === "number")) {
         return bounds;
     }
 
     // [[west, south], [east, north]]
-    if (
-        Array.isArray(bounds) &&
-        bounds.length === 2 &&
-        Array.isArray(bounds[0]) &&
-        Array.isArray(bounds[1])
-    ) {
+    if (Array.isArray(bounds) && bounds.length === 2 && Array.isArray(bounds[0]) && Array.isArray(bounds[1])) {
         const [[west, south], [east, north]] = bounds;
         return [west, south, east, north];
     }
@@ -41,8 +34,14 @@ export function normalizeBounds(bounds) {
 
 export function getSearchBoundsForLocation(location) {
     const bounds = normalizeBounds(location?.bounds);
-    if (!bounds) return null;
-    if (!shouldUseSearchBounds(location?.type)) return null;
+    if (!bounds) {
+        return null;
+    }
+
+    if (!shouldUseSearchBounds(location?.type)) {
+        return null;
+    }
+
     return bounds;
 }
 
@@ -69,10 +68,9 @@ function buildCameraId(location, mode, type, data) {
 
 export function resolveMapCamera({ location, geometryBounds, searchBounds }) {
     const normalizedGeometry = normalizeBounds(geometryBounds);
-    const normalizedSearch =
-        normalizeBounds(searchBounds) ?? getSearchBoundsForLocation(location);
+    const normalizedSearch = normalizeBounds(searchBounds) ?? getSearchBoundsForLocation(location);
 
-    // 👇 Her er magien vi legger til for å stoppe utzoomingen!
+    //Her er magien vi legger til for å stoppe utzoomingen!
     const skipBounds = ["country", "continent", "major_landform"].includes(location?.type);
 
     if (normalizedGeometry && !skipBounds) {
@@ -104,12 +102,10 @@ export function resolveMapCamera({ location, geometryBounds, searchBounds }) {
     };
 }
 
-
 /*
 export function resolveMapCamera({ location, geometryBounds, searchBounds }) {
     const normalizedGeometry = normalizeBounds(geometryBounds);
-    const normalizedSearch =
-        normalizeBounds(searchBounds) ?? getSearchBoundsForLocation(location);
+    const normalizedSearch = normalizeBounds(searchBounds) ?? getSearchBoundsForLocation(location);
 
     if (normalizedGeometry) {
         return {
