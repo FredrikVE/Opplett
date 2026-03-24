@@ -13,7 +13,7 @@ export function getFeaturePriorityScore(feature) {
 	}
 
 	const props = feature.properties ?? {};
-	const layerTier = getLayerPriority(feature.layer?.id ?? "") * 10;
+	const layerTier = getLayerPriority(feature.layer?.id) * 10;
 	const rank = Number(props.rank ?? props.scalerank ?? 5);
 
 	return layerTier + (Number.isFinite(rank) ? rank : 5);

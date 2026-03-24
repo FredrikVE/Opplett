@@ -1,31 +1,23 @@
-//src/ui/view/components/MapPage/hooks/useVisiblePlacePoints.js
+// src/ui/view/components/MapPage/hooks/useLocationPoints.js
 import { useEffect, useRef } from "react";
 import { MarkerLayout } from "@maptiler/marker-layout";
 import { MAP_MARKER_CONFIG } from "../../../../utils/MapUtils/Constants/MapConstants.js";
 import { distributeWeatherPoints } from "../../../../utils/MapUtils/Icons/DistributeWeatherPoints.js";
 import { getFeaturePriorityScore } from "../../../../utils/MapUtils/Icons/CalculateFeaturePriority.js";
-import { updateWeatherMarkers } from "../../../../utils/MapUtils/Icons/UpdateWeatherMarkers.js";
-
 
 export function useLocationPoints(map, activeLocation, onMapChange) {
-	const markerLayoutRef = useRef(null);
-	const layoutMarkersRef = useRef(new Map());
+	const layoutRef = useRef(null);
+	const activeMarkersRef = useRef(new Map());
 
 	useEffect(() => {
 		if (!map) {
 			return;
 		}
 
-		const currentLayoutMarkers = layoutMarkersRef.current;
-		const { MIN, MAX } = MAP_MARKER_CONFIG.LABEL_LAYER_ZOOM_RANGE;
+		const activeMarkers = activeMarkersRef.current;
 
-		MAP_MARKER_CONFIG.LABEL_LAYERS.forEach((layerId) => {
-			if (map.getLayer(layerId)) {
-				map.setLayerZoomRange(layerId, MIN, MAX);
-			}
-		});
-
-		markerLayoutRef.current = new MarkerLayout(map, {
+		// Opprett MarkerLayout — MapTiler håndterer collision detection
+		layoutRef.current = new MarkerLayout(map, {
 			layers: MAP_MARKER_CONFIG.LABEL_LAYERS,
 			markerAnchor: "center",
 			max: MAP_MARKER_CONFIG.MAX_LAYOUT_MARKERS,
@@ -33,57 +25,73 @@ export function useLocationPoints(map, activeLocation, onMapChange) {
 			sortingOrder: "ascending"
 		});
 
+		/**
+		 * Full update: kaller layout.update() og synker til activeMarkers.
+		 * Kjøres på "moveend" og ved init.
+		 */
 		const handleFullUpdate = () => {
-			if (!markerLayoutRef.current) {
+			const layout = layoutRef.current;
+			if (!layout) {
 				return;
 			}
 
-			const abstractMarkers = updateWeatherMarkers(
-				markerLayoutRef.current,
-				currentLayoutMarkers
-			);
+			const status = layout.update();
 
-			const points = distributeWeatherPoints(
-				abstractMarkers,
-				map.getZoom(),
-				activeLocation
-			);
+			if (status) {
+				// Sync marker store (inlinet fra UpdateWeatherMarkers.js)
+				status.removed?.forEach((am) => activeMarkers.delete(am.id));
+				status.updated?.forEach((am) => activeMarkers.set(am.id, am));
+				status.new?.forEach((am) => activeMarkers.set(am.id, am));
+			}
+
+			// Distribuer punkter for værhenting
+			const allMarkers = Array.from(activeMarkers.values());
+			const points = distributeWeatherPoints(allMarkers, map.getZoom());
 
 			onMapChange({
 				viewport: {
 					lat: map.getCenter().lat,
 					lon: map.getCenter().lng,
 					zoom: map.getZoom(),
-					bounds: map.getBounds().toArray()
+					bounds: map.getBounds().toArray(),
 				},
-				points
+				points,
 			});
 		};
 
+		/**
+		 * Soft update: oppdaterer kun posisjoner uten full recalc.
+		 * Kjøres på "move" (mange ganger per sekund under pan/zoom).
+		 */
 		const handleSoftUpdate = () => {
-			if (!markerLayoutRef.current) {
+			const layout = layoutRef.current;
+			if (!layout) {
 				return;
 			}
 
-			currentLayoutMarkers.forEach((marker) => {
+			activeMarkers.forEach((marker) => {
 				try {
-					markerLayoutRef.current.softUpdateAbstractMarker(marker);
-				} catch (error) {
-					console.warn("[useVisiblePlacePoints] softUpdateAbstractMarker feilet:", error);
+					layout.softUpdateAbstractMarker(marker);
+				} 
+
+				catch (err) {
+					console.warn("[useLocationPoints] softUpdate feilet:", err);
 				}
 			});
 		};
 
+		// Events som MapTiler-dokumentasjonen anbefaler
 		map.on("move", handleSoftUpdate);
-		map.on("idle", handleFullUpdate);
+		map.on("moveend", handleFullUpdate);
 
+		// Initial update
 		handleFullUpdate();
 
 		return () => {
 			map.off("move", handleSoftUpdate);
-			map.off("idle", handleFullUpdate);
-			markerLayoutRef.current = null;
-			currentLayoutMarkers.clear();
+			map.off("moveend", handleFullUpdate);
+			layoutRef.current = null;
+			activeMarkers.clear();
 		};
 	}, [map, activeLocation, onMapChange]);
 }
