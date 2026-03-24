@@ -12,7 +12,7 @@ import { MAP_MARKER_CONFIG } from "../../../../utils/MapUtils/Constants/MapConst
 import { distributeWeatherPoints } from "../../../../utils/MapUtils/Icons/DistributeWeatherPoints.js";
 import { getFeaturePriorityScore } from "../../../../utils/MapUtils/Icons/CalculateFeaturePriority.js";
 
-export function useLocationPoints(map, activeLocation, highlightGeometry, onMapChange) {
+export function useLocationPoints(map, highlightGeometry, onMapChange) {
 	const layoutRef = useRef(null);
 	const activeMarkersRef = useRef(new Map());
 
