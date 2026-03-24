@@ -25,7 +25,8 @@ export default function WeatherMap({ apiKey, style, mapTarget, weatherPoints, on
 	useMapHighlight(map, highlightGeometry);
 
 	// Finn synlige byer → rapporter punkter for værhenting
-	useLocationPoints(map, activeLocation, onMapChange);
+	// highlightGeometry brukes til å prioritere byer innenfor valgt område
+	useLocationPoints(map, activeLocation, highlightGeometry, onMapChange);
 
 	// Tegn værmarkører
 	useWeatherMarkers(map, weatherPoints);
