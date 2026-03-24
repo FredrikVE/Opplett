@@ -29,8 +29,8 @@ function zoomFromBounds(bounds) {
 
 	if (avgDiff > 50) return 2;
 	if (avgDiff > 25) return 3;
-	if (avgDiff > 12) return 4;
-	if (avgDiff > 6) return 5;
+	if (avgDiff > 10) return 4;
+	if (avgDiff > 5) return 5;
 	if (avgDiff > 3) return 6;
 	if (avgDiff > 1.5) return 7;
 	if (avgDiff > 0.8) return 8;
