@@ -27,7 +27,9 @@ export function getMapConstraints(zoom, locationType) {
 
 	if (zoom < MAP_MARKER_DISTRIBUTION.ZOOM_BREAKPOINTS.FAR) {
 		maxMarkers = limitPolicy.FAR;
-	} else if (zoom < MAP_MARKER_DISTRIBUTION.ZOOM_BREAKPOINTS.MID) {
+	} 
+	
+	else if (zoom < MAP_MARKER_DISTRIBUTION.ZOOM_BREAKPOINTS.MID) {
 		maxMarkers = limitPolicy.MID;
 	}
 

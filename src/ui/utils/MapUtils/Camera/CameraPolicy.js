@@ -1,5 +1,5 @@
 // src/ui/utils/MapUtils/Camera/CameraPolicy.js
-import { MAP_ZOOM_LIMITS } from "../Constants/MapConstants.js";
+import { MAP_ZOOM_LIMITS, MAP_ZOOM_LEVELS } from "../Constants/MapConstants.js";
 
 /**
  * Mapper lokasjonstype til zoom-nivå.
@@ -27,10 +27,12 @@ function getZoomForType(type) {
 
 		case "neighbourhood":
 		case "address":
-			return 13;
+			return 12;
 
 		default:
-			return 10;
+			//return 10;
+			return MAP_ZOOM_LEVELS.DEFAULT;
+
 	}
 }
 
