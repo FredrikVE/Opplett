@@ -9,7 +9,7 @@ export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREE
 	return (
 		<div className="map-screen">
 			<header className="map-header">
-				<h1>{viewModel.location.name || "Værkart"}</h1>
+				<h1>{viewModel.activeLocation.name || "Værkart"}</h1>
 			</header>
 
 			<SearchField
@@ -38,7 +38,8 @@ export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREE
 					mapTarget={viewModel.mapTarget}
 					weatherPoints={viewModel.weatherPoints}
 					onMapChange={viewModel.onMapChange}
-					activeLocation={viewModel.location}
+					activeLocation={viewModel.activeLocation}
+					deviceCoords={viewModel.deviceCoords}
 					highlightGeometry={viewModel.highlightGeometry}
 					countryCode={viewModel.countryCode}
 				/>

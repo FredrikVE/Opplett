@@ -11,7 +11,7 @@ import { getBoundsFromGeometry } from "../utils/MapUtils/Camera/MapBoundsHelper.
 const IDLE_HIGHLIGHT = { status: "idle", locationId: null, geojson: null };
 const DEBOUNCE_DELAY_MS = 500;
 
-export default function useMapPageViewModel(mapTilerRepository, searchLocationUseCase, getMapWeatherUseCase, getLocationGeometryUseCase, activeLocation, onLocationChange, onResetToDeviceLocation) {
+export default function useMapPageViewModel(mapTilerRepository, searchLocationUseCase, getMapWeatherUseCase, getLocationGeometryUseCase, activeLocation, deviceCoords, onLocationChange, onResetToDeviceLocation) {
 
 	/* =========================
 		DERIVED INPUT
@@ -226,7 +226,8 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 		onMapChange,
 		currentZoom,
 
-		location: activeLocation,
+		activeLocation,
+		deviceCoords,
 		countryCode,
 
 		highlightGeometry,

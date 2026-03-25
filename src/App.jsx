@@ -1,7 +1,7 @@
 // src/App.jsx
-import { useState, useMemo } from "react"; // Lagt til useMemo
+import { useState, useMemo } from "react";
 import { useGeolocation } from "./geolocation/useGeolocation.js";
-import { resolveTimezone } from "./ui/utils/TimeZoneUtils/timeFormatters.js"; // Viktig import for SSOT
+import { resolveTimezone } from "./ui/utils/TimeZoneUtils/timeFormatters.js"; // Viktig import for SSOT mtp tidsoner
 
 // Stilark
 import "./ui/style/App.css";
@@ -22,6 +22,7 @@ import "./ui/style/UVNowBar.css";
 import "./ui/style/WindArrow.css";
 import "./ui/style/FilterDropDown.css";
 import "./ui/style/MapPage.css";
+import "./ui/style/DeviceLocationDot.css"
 
 //Navigation
 import { NAV_SCREENS } from "./navigation/navGraph.js";
@@ -106,7 +107,7 @@ export default function App() {
             bounds: manualLocation?.bounds ?? null,
             type: manualLocation?.type ?? null,
             countryCode: manualLocation?.countryCode ?? null,
-            id: manualLocation?.id ?? null // <--- LEGG TIL DENNE!
+            id: manualLocation?.id ?? null
         };
     }, 
 	[manualLocation, coords]);
@@ -140,6 +141,7 @@ export default function App() {
         getMapWeatherUseCase,
         getLocationGeometryUseCase,
         activeLocation, 		//SSOT objektet
+        coords,                    //User location til blue dot
         handleLocationChange,
         handleResetToDeviceLocation 
     );

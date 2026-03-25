@@ -7,9 +7,10 @@ import { useMapCamera } from "./hooks/useMapCamera.js";
 import { useMapHighlight } from "./hooks/useMapHighlight.js";
 import { useLocationPoints } from "./hooks/useLocationPoints.js";
 import { useWeatherMarkers } from "./hooks/useWeatherMarkers.jsx";
+import { useDeviceLocationDot } from "./hooks/useDeviceLocationDot.js";
 
 export default function WeatherMap(props) {
-	const {mapStyle, mapTarget, weatherPoints, onMapChange, activeLocation, highlightGeometry, countryCode } = props;
+	const {mapStyle, mapTarget, weatherPoints, onMapChange, activeLocation, deviceCoords, highlightGeometry, countryCode } = props;
 	
 	const mapContainerRef = useRef(null);
 
@@ -18,6 +19,7 @@ export default function WeatherMap(props) {
 	useMapHighlight(map, highlightGeometry);
 	useLocationPoints(map, countryCode, onMapChange);
 	useWeatherMarkers(map, weatherPoints);
+	useDeviceLocationDot(map, deviceCoords);
 
 	return (
 		<div className="map-page-wrap">
