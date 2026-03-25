@@ -7,7 +7,7 @@
 //   - resolveMapCamera tar kun { location }
 //   - Fjernet viewport.zoom fallback (currentZoom er enklere)
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import useSearchViewModel from "./SearchViewModel.js";
 import { resolveMapCamera } from "../utils/MapUtils/Camera/CameraPolicy.js";
 import { isAreaLocation } from "../utils/MapUtils/Camera/MapLocationLogic.js";
@@ -20,7 +20,8 @@ export default function useMapPageViewModel(
 	getLocationGeometryUseCase,
 	activeLocation,
 	onLocationChange,
-	onResetToDeviceLocation
+	onResetToDeviceLocation,
+	userCoords
 ) {
 	/* =========================================================
 	   CONFIG
@@ -37,6 +38,7 @@ export default function useMapPageViewModel(
 	});
 
 	const [mapPoints, setMapPoints] = useState([]);
+	const [viewportBounds, setViewportBounds] = useState(null);
 	const [weatherPoints, setWeatherPoints] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [currentZoom, setCurrentZoom] = useState(null);
@@ -60,6 +62,9 @@ export default function useMapPageViewModel(
 	const onMapChange = useCallback(({ viewport, points }) => {
 		setCurrentZoom(viewport?.zoom ?? null);
 		setMapPoints(points || []);
+		if (viewport?.bounds) {
+			setViewportBounds(viewport.bounds);
+		}
 	}, []);
 
 	/* =========================================================
@@ -79,6 +84,12 @@ export default function useMapPageViewModel(
 		activeLocation?.id === highlightState.locationId
 			? highlightState.geojson
 			: null;
+
+	console.log("[MapVM] Highlight:", highlightGeometry ? `AKTIV for "${activeLocation?.name}" (${highlightState.locationId})` : "INGEN", 
+		"| state:", highlightState.status,
+		"| location.id:", activeLocation?.id,
+		"| state.locationId:", highlightState.locationId
+	);
 
 	// SSOT kamera — geometryBounds gir bedre sentrering for land
 	const geometryBounds = getBoundsFromGeometry(highlightGeometry);
@@ -163,6 +174,57 @@ export default function useMapPageViewModel(
 		};
 	}, [mapPoints, activeLocation?.timezone, getMapWeatherUseCase]);
 
+	// Fjern highlight når kartets viewport ikke lenger overlapper med landet.
+	// highlightConfirmedRef sikrer at vi ikke fjerner highlight før kartet
+	// faktisk har vist landet (minst én overlapp-sjekk har passert).
+	const highlightConfirmedRef = useRef(false);
+
+	// Reset confirmed-flagget når highlight endres
+	useEffect(() => {
+		if (!highlightGeometry) {
+			highlightConfirmedRef.current = false;
+		}
+	}, [highlightGeometry]);
+
+	useEffect(() => {
+		if (!highlightGeometry || !viewportBounds) return;
+
+		const geoBounds = getBoundsFromGeometry(highlightGeometry);
+		if (!geoBounds) return;
+
+		const [[geoW, geoS], [geoE, geoN]] = geoBounds;
+		const [[vpW, vpS], [vpE, vpN]] = viewportBounds;
+
+		const noOverlap =
+			vpE < geoW || vpW > geoE ||
+			vpN < geoS || vpS > geoN;
+
+		if (!noOverlap) {
+			// Viewporten overlapper med landet — bekreft at highlighten er "sett"
+			highlightConfirmedRef.current = true;
+			console.log("[MapVM] Overlap-sjekk: overlapper → beholder",
+				"| geo:", [geoW.toFixed(1), geoS.toFixed(1), geoE.toFixed(1), geoN.toFixed(1)].join(", "),
+				"| vp:", [vpW.toFixed(1), vpS.toFixed(1), vpE.toFixed(1), vpN.toFixed(1)].join(", ")
+			);
+			return;
+		}
+
+		// Ingen overlapp — men fjern bare hvis highlighten er bekreftet
+		// (kartet har faktisk vist landet minst én gang)
+		if (highlightConfirmedRef.current) {
+			console.log("[MapVM] Overlap-sjekk: INGEN OVERLAPP → fjerner highlight",
+				"| geo:", [geoW.toFixed(1), geoS.toFixed(1), geoE.toFixed(1), geoN.toFixed(1)].join(", "),
+				"| vp:", [vpW.toFixed(1), vpS.toFixed(1), vpE.toFixed(1), vpN.toFixed(1)].join(", ")
+			);
+			resetHighlightState();
+		} else {
+			console.log("[MapVM] Overlap-sjekk: ingen overlapp, men venter på flyTo",
+				"| geo:", [geoW.toFixed(1), geoS.toFixed(1), geoE.toFixed(1), geoN.toFixed(1)].join(", "),
+				"| vp:", [vpW.toFixed(1), vpS.toFixed(1), vpE.toFixed(1), vpN.toFixed(1)].join(", ")
+			);
+		}
+	}, [viewportBounds, highlightGeometry, resetHighlightState]);
+
 	/* =========================================================
 	   PUBLIC API
 	========================================================= */
@@ -170,6 +232,7 @@ export default function useMapPageViewModel(
 		apiKey: mapConfig.apiKey,
 		style: mapConfig.style,
 		location: activeLocation,
+		userCoords,
 		isLoading,
 		mapTarget,
 		highlightGeometry,
