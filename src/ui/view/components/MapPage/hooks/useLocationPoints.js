@@ -1,86 +1,141 @@
-// src/ui/view/components/MapPage/hooks/useLocationPoints.js
-//
-// Bruker MarkerLayout til å finne synlige byer/steder,
-// og rapporterer punkter for værhenting via onMapChange.
-
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { MarkerLayout } from "@maptiler/marker-layout";
 import { MAP_MARKER_CONFIG } from "../../../../utils/MapUtils/Constants/MapConstants.js";
 import { distributeWeatherPoints } from "../../../../utils/MapUtils/Icons/DistributeWeatherPoints.js";
 import { getFeaturePriorityScore } from "../../../../utils/MapUtils/Icons/CalculateFeaturePriority.js";
 
 export function useLocationPoints(map, countryCode, onMapChange) {
+
+	/* =========================
+		STATE (REFS)
+	========================= */
 	const layoutRef = useRef(null);
 	const activeMarkersRef = useRef(new Map());
 
-	useEffect(() => {
-		if (!map) return;
-
-		const activeMarkers = activeMarkersRef.current;
-
-		layoutRef.current = new MarkerLayout(map, {
+	/* =========================
+		COMMANDS
+	========================= */
+	const createLayout = useCallback(() => {
+		return new MarkerLayout(map, {
 			layers: MAP_MARKER_CONFIG.LABEL_LAYERS,
 			markerAnchor: "center",
 			max: MAP_MARKER_CONFIG.MAX_LAYOUT_MARKERS,
 			sortingProperty: getFeaturePriorityScore,
 		});
+	}, 
+	
+	[map]);
 
-		const handleFullUpdate = () => {
-			const layout = layoutRef.current;
-			if (!layout) return;
+	const applyLayoutDiff = useCallback((status, activeMarkers) => {
+		if (!status) {
+			return;
+		}
 
-			const status = layout.update();
+		status.removed?.forEach((am) => activeMarkers.delete(am.id));
+		status.updated?.forEach((am) => activeMarkers.set(am.id, am));
+		status.new?.forEach((am) => activeMarkers.set(am.id, am));
+	}, 
+	
+	[]);
 
-			if (status) {
-				status.removed?.forEach((am) => activeMarkers.delete(am.id));
-				status.updated?.forEach((am) => activeMarkers.set(am.id, am));
-				status.new?.forEach((am) => activeMarkers.set(am.id, am));
+	const computeWeatherPoints = useCallback((activeMarkers) => {
+		const allMarkers = Array.from(activeMarkers.values());
+
+		return distributeWeatherPoints(
+			allMarkers,
+			map.getZoom(),
+			map.getBounds().toArray(),
+			countryCode
+		);
+	}, 
+	
+	[map, countryCode]);
+
+	const emitMapChange = useCallback((points) => {
+		onMapChange({
+			viewport: {
+				lat: map.getCenter().lat,
+				lon: map.getCenter().lng,
+				zoom: map.getZoom(),
+				bounds: map.getBounds().toArray(),
+			},
+			points,
+		});
+	}, 
+	
+	[map, onMapChange]);
+
+	const runFullUpdate = useCallback(() => {
+		const layout = layoutRef.current;
+		if (!layout) return;
+
+		const activeMarkers = activeMarkersRef.current;
+
+		const status = layout.update();
+		applyLayoutDiff(status, activeMarkers);
+
+		const points = computeWeatherPoints(activeMarkers);
+		emitMapChange(points);
+
+	}, 
+
+	[applyLayoutDiff, computeWeatherPoints, emitMapChange]);
+
+	const runSoftUpdate = useCallback(() => {
+		const layout = layoutRef.current;
+		if (!layout) return;
+
+		const activeMarkers = activeMarkersRef.current;
+
+		activeMarkers.forEach((marker) => {
+			try {
+				layout.softUpdateAbstractMarker(marker);
+			} catch (error) {
+				console.warn("[useLocationPoints] softUpdate feilet:", error);
 			}
+		});
+	}, 
 
-			const allMarkers = Array.from(activeMarkers.values());
-			const points = distributeWeatherPoints(
-				allMarkers,
-				map.getZoom(),
-				map.getBounds().toArray(),
-				countryCode
-			);
+	[]);
 
-			onMapChange({
-				viewport: {
-					lat: map.getCenter().lat,
-					lon: map.getCenter().lng,
-					zoom: map.getZoom(),
-					bounds: map.getBounds().toArray(),
-				},
-				points,
-			});
-		};
+	const destroyLayout = useCallback(() => {
+		layoutRef.current = null;
+		activeMarkersRef.current.clear();
+	}, 
+	
+	[]);
 
-		const handleSoftUpdate = () => {
-			const layout = layoutRef.current;
-			if (!layout) return;
+	/* =========================
+		EFFECT (EVENT STYLE)
+	========================= */
 
-			activeMarkers.forEach((marker) => {
-				try {
-					layout.softUpdateAbstractMarker(marker);
-				} catch (err) {
-					console.warn("[useLocationPoints] softUpdate feilet:", err);
-				}
-			});
-		};
+	const onMapReadyInitializeLayout = useCallback(() => {
+		if (!map) {
+			return;
+		}
 
-		map.on("move", handleSoftUpdate);
-		map.on("moveend", handleFullUpdate);
-		map.on("idle", handleFullUpdate);
+		layoutRef.current = createLayout();
 
-		handleFullUpdate();
+		map.on("move", runSoftUpdate);
+		map.on("moveend", runFullUpdate);
+		map.on("idle", runFullUpdate);
+
+		runFullUpdate();
 
 		return () => {
-			map.off("move", handleSoftUpdate);
-			map.off("moveend", handleFullUpdate);
-			map.off("idle", handleFullUpdate);
-			layoutRef.current = null;
-			activeMarkers.clear();
+			map.off("move", runSoftUpdate);
+			map.off("moveend", runFullUpdate);
+			map.off("idle", runFullUpdate);
+
+			destroyLayout();
 		};
-	}, [map, countryCode, onMapChange]);
+
+	}, [map, createLayout, runSoftUpdate, runFullUpdate, destroyLayout]);
+
+	/* =========================
+		EFFECT BINDING
+	========================= */
+	useEffect(onMapReadyInitializeLayout, [
+		onMapReadyInitializeLayout
+	]);
 }

@@ -1,86 +1,123 @@
-// src/ui/view/components/MapPage/hooks/useWeatherMarkers.jsx
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import * as maptilersdk from "@maptiler/sdk";
 import { createRoot } from "react-dom/client";
 import WeatherSymbolLabel from "../WeatherSymbolLabel.jsx";
 
+/* =========================
+	HELPERS (OUTSIDE HOOK)
+========================= */
+
 function disposeMarkerEntry(entry) {
 	try {
 		entry.marker?.remove();
-	} 
-	
-	catch (error) {
+	} catch (error) {
 		console.warn("[useWeatherMarkers] marker remove failed:", error);
 	}
 
 	queueMicrotask(() => {
 		try {
 			entry.root?.unmount();
-		} 
-
-		catch (error) {
+		} catch (error) {
 			console.warn("[useWeatherMarkers] root unmount failed:", error);
 		}
 	});
 }
 
+/* =========================
+	HOOK
+========================= */
+
 export function useWeatherMarkers(map, weatherPoints) {
+
+	/* =========================
+		STATE (REFS)
+	========================= */
+
 	const markersRef = useRef(new Map());
 
-	useEffect(() => {
-		if (!map) {
+	/* =========================
+		COMMANDS
+	========================= */
+
+	const createMarker = useCallback((point) => {
+		const container = document.createElement("div");
+		container.className = "map-weather-marker-container";
+
+		const root = createRoot(container);
+		root.render(<WeatherSymbolLabel point={point} />);
+
+		const marker = new maptilersdk.Marker({
+			element: container,
+			anchor: "center"
+		})
+			.setLngLat([point.lon, point.lat])
+			.addTo(map);
+
+		return { marker, root, container };
+	}, [map]);
+
+	const updateMarker = useCallback((entry, point) => {
+		entry.marker.setLngLat([point.lon, point.lat]);
+		entry.root.render(<WeatherSymbolLabel point={point} />);
+	}, []);
+
+	const removeMarker = useCallback((id, markers) => {
+		const entry = markers.get(id);
+		if (!entry) {
 			return;
 		}
 
+		disposeMarkerEntry(entry);
+		markers.delete(id);
+	}, []);
+
+	/* =========================
+		EFFECT (EVENT STYLE)
+	========================= */
+
+	const onWeatherPointsChangedSyncMarkers = useCallback(() => {
+		if (!map) return;
+
 		const markers = markersRef.current;
+
 		const nextIds = new Set(
 			weatherPoints?.map((p) => p.id).filter(Boolean) ?? []
 		);
 
-		// Legg til nye / oppdater eksisterende
+		/* === UPSERT MARKERS === */
 		for (const point of weatherPoints ?? []) {
-			if (!point?.id) {
-				continue;
-			}
+			if (!point?.id) continue;
 
 			const existing = markers.get(point.id);
+
 			if (existing) {
-				existing.marker.setLngLat([point.lon, point.lat]);
-				existing.root.render(<WeatherSymbolLabel point={point} />);
+				updateMarker(existing, point);
 				continue;
 			}
 
-			const container = document.createElement("div");
-			container.className = "map-weather-marker-container";
-
-			const root = createRoot(container);
-			root.render(<WeatherSymbolLabel point={point} />);
-
-			const marker = new maptilersdk.Marker({
-				element: container,
-				anchor: "center"
-			})
-				.setLngLat([point.lon, point.lat])
-				.addTo(map);
-
-			markers.set(point.id, { marker, root, container });
+			const entry = createMarker(point);
+			markers.set(point.id, entry);
 		}
 
-		//Fjern markører som ikke lenger er synlige
-		for (const [id, entry] of markers) {
-			if (nextIds.has(id)) {
-				continue;
-			}
-
-			disposeMarkerEntry(entry);
-			markers.delete(id);
+		/* === REMOVE STALE MARKERS === */
+		for (const [id] of markers) {
+			if (nextIds.has(id)) continue;
+			removeMarker(id, markers);
 		}
 
+		/* === CLEANUP === */
 		return () => {
 			for (const [, entry] of markers) {
 				disposeMarkerEntry(entry);
 			}
 			markers.clear();
 		};
-	}, [map, weatherPoints]);
+
+	}, [map, weatherPoints, createMarker, updateMarker, removeMarker]);
+
+	/* =========================
+		EFFECT BINDING
+	========================= */
+	useEffect(onWeatherPointsChangedSyncMarkers, 
+		[onWeatherPointsChangedSyncMarkers]);
 }
