@@ -1,9 +1,8 @@
+//src/ui/view/components/MapPage/hooks/useMapCamera.js
 import { useEffect, useRef, useCallback } from "react";
-import { MAP_ANIMATION, MAP_ZOOM_LIMITS } from "../../../../utils/MapUtils/Constants/MapConstants.js";
 
-/* =========================
-	HOOK
-========================= */
+const CAMERA_FLY_SPEED = 1.2;
+const MAX_CAMERA_ZOOM = 14;
 
 export function useMapCamera(map, mapTarget) {
 
@@ -12,8 +11,8 @@ export function useMapCamera(map, mapTarget) {
 	const flyToTarget = useCallback((target) => {
 		map.flyTo({
 			center: [target.lon, target.lat],
-			zoom: Math.min(target.zoom, MAP_ZOOM_LIMITS.MAX),
-			speed: MAP_ANIMATION.FLY_SPEED,
+			zoom: Math.min(target.zoom, MAX_CAMERA_ZOOM),
+			speed: CAMERA_FLY_SPEED,
 			essential: true,
 		});
 	}, 

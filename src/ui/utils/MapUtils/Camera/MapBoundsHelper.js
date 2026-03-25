@@ -24,11 +24,18 @@ export function isPointInGeometry(lon, lat, geojson) {
 
 	for (const feature of geojson.features) {
 		const { type, coordinates } = feature.geometry || {};
+
 		if (type === "Polygon") {
-			if (isPointInRing(lon, lat, coordinates[0])) return true;
-		} else if (type === "MultiPolygon") {
+			if (isPointInRing(lon, lat, coordinates[0])) {
+				return true;
+			}
+		} 
+		
+		else if (type === "MultiPolygon") {
 			for (const poly of coordinates) {
-				if (isPointInRing(lon, lat, poly[0])) return true;
+				if (isPointInRing(lon, lat, poly[0])) {
+					return true;
+				}
 			}
 		}
 	}
@@ -49,7 +56,9 @@ export function getBoundsFromGeometry(geojson) {
 	}
 
 	function getRingArea(ring) {
-		if (!Array.isArray(ring) || ring.length < 4) return 0;
+		if (!Array.isArray(ring) || ring.length < 4) {
+			return 0;
+		}
 
 		let area = 0;
 		for (let i = 0; i < ring.length - 1; i++) {
@@ -67,7 +76,9 @@ export function getBoundsFromGeometry(geojson) {
 
 		if (type === "Polygon" && Array.isArray(coordinates?.[0])) {
 			outerRings.push(coordinates[0]);
-		} else if (type === "MultiPolygon" && Array.isArray(coordinates)) {
+		} 
+
+		else if (type === "MultiPolygon" && Array.isArray(coordinates)) {
 			coordinates.forEach((polygonCoords) => {
 				if (Array.isArray(polygonCoords?.[0])) {
 					outerRings.push(polygonCoords[0]);
@@ -76,7 +87,9 @@ export function getBoundsFromGeometry(geojson) {
 		}
 	});
 
-	if (outerRings.length === 0) return null;
+	if (outerRings.length === 0) {
+		return null;
+	}
 
 	const mainlandRing = outerRings.reduce((largest, current) => {
 		return getRingArea(current) > getRingArea(largest) ? current : largest;

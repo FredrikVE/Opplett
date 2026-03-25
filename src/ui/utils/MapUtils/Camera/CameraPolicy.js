@@ -1,16 +1,13 @@
 //src/ui/utils/MapUtils/Camera/CameraPolicy.js
-import { MAP_ZOOM_LEVELS, MAP_ZOOM_LIMITS } from "../Constants/MapConstants.js";
+const ZOOM_LIMITS = {
+	MIN: 1,
+	MAX: 14,
+};
 
-/* =========================
-	CONSTANTS
-========================= */
-const AWAIT_GEOMETRY_TYPES = [
-	"country",
-	"continental_marine",
-	"major_landform"
-];
+const DEFAULT_ZOOM = 14;
+const STREET_ZOOM = 12;
 
-const TYPE_ZOOM_MAP = {
+const TYPE_ZOOM = {
 	continental_marine: 3,
 	major_landform: 3,
 	country: 4,
@@ -23,16 +20,22 @@ const TYPE_ZOOM_MAP = {
 	address: 13,
 };
 
+const AWAIT_GEOMETRY_TYPES = new Set([
+	"country",
+	"continental_marine",
+	"major_landform"
+]);
+
 const ZOOM_THRESHOLDS = [
-	{ maxDiff: 50, zoom: 2 },
-	{ maxDiff: 25, zoom: 3 },
-	{ maxDiff: 10, zoom: 4 },
-	{ maxDiff: 5, zoom: 5 },
-	{ maxDiff: 3, zoom: 6 },
-	{ maxDiff: 1.5, zoom: 7 },
-	{ maxDiff: 0.8, zoom: 8 },
-	{ maxDiff: 0.4, zoom: 9 },
-	{ maxDiff: 0.15, zoom: 10 },
+	{ maxDegrees: 50, zoom: 2 },
+	{ maxDegrees: 25, zoom: 3 },
+	{ maxDegrees: 10, zoom: 4 },
+	{ maxDegrees: 5, zoom: 5 },
+	{ maxDegrees: 3, zoom: 6 },
+	{ maxDegrees: 1.5, zoom: 7 },
+	{ maxDegrees: 0.8, zoom: 8 },
+	{ maxDegrees: 0.4, zoom: 9 },
+	{ maxDegrees: 0.15, zoom: 10 },
 ];
 
 /* =========================
@@ -40,8 +43,8 @@ const ZOOM_THRESHOLDS = [
 ========================= */
 function clampZoom(zoom) {
 	return Math.min(
-		Math.max(zoom, MAP_ZOOM_LIMITS.MIN),
-		MAP_ZOOM_LIMITS.MAX
+		Math.max(zoom, ZOOM_LIMITS.MIN),
+		ZOOM_LIMITS.MAX
 	);
 }
 
@@ -53,20 +56,20 @@ function zoomFromBounds(bounds) {
 	const avgDiff = (latDiff + lonDiff) / 2;
 
 	if (avgDiff <= 0) {
-		return MAP_ZOOM_LEVELS.DEFAULT;
+		return DEFAULT_ZOOM;
 	}
 
-	for (const { maxDiff, zoom } of ZOOM_THRESHOLDS) {
+	for (const { maxDegrees: maxDiff, zoom } of ZOOM_THRESHOLDS) {
 		if (avgDiff > maxDiff) {
 			return zoom;
 		}
 	}
 
-	return MAP_ZOOM_LEVELS.STREET;	// Street er 12
+	return STREET_ZOOM;
 }
 
 function zoomFromType(type) {
-	return TYPE_ZOOM_MAP[type] ?? MAP_ZOOM_LEVELS.DEFAULT;
+	return TYPE_ZOOM[type] ?? DEFAULT_ZOOM;
 }
 
 /* =========================
@@ -112,12 +115,13 @@ function centerFromBounds(bounds) {
 /* =========================
 	PUBLIC API
 ========================= */
+
 export function resolveMapCamera({ location, geometryBounds }) {
 	if (location?.lat == null || location?.lon == null) {
 		return null;
 	}
 
-	//GEOMETRY
+	// GEOMETRY
 	const geoBounds = normalizeBounds(geometryBounds);
 
 	if (geoBounds) {
@@ -131,10 +135,10 @@ export function resolveMapCamera({ location, geometryBounds }) {
 		};
 	}
 
-	//SEARCH
+	// SEARCH
 	const searchBounds = normalizeBounds(location.bounds);
 
-	if (searchBounds && !AWAIT_GEOMETRY_TYPES.includes(location.type)) {
+	if (searchBounds && !AWAIT_GEOMETRY_TYPES.has(location.type)) {
 		const { lat, lon } = centerFromBounds(searchBounds);
 
 		return {
@@ -145,12 +149,12 @@ export function resolveMapCamera({ location, geometryBounds }) {
 		};
 	}
 
-	//WAIT 
-	if (AWAIT_GEOMETRY_TYPES.includes(location.type) && location.id) {
+	// WAIT FOR GEOMETRY
+	if (AWAIT_GEOMETRY_TYPES.has(location.type) && location.id) {
 		return null;
 	}
 
-	//FALLBACK
+	// FALLBACK
 	return {
 		id: `${location.id ?? "gps"}-${location.type ?? "default"}`,
 		lat: location.lat,

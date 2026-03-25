@@ -1,7 +1,4 @@
-// src/ui/view/components/MapPage/WeatherMap.jsx
-//
-// Samler alle kart-hooks i riktig rekkefølge.
-
+//src/ui/view/components/MapPage/WeatherMap.jsx
 import { useRef } from "react";
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 

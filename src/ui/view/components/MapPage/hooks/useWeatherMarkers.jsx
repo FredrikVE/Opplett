@@ -1,11 +1,8 @@
+//src/ui/view/components/MapPage/hooks/useWeatherMarkers.jsx
 import { useEffect, useRef, useCallback } from "react";
 import * as maptilersdk from "@maptiler/sdk";
 import { createRoot } from "react-dom/client";
 import WeatherSymbolLabel from "../WeatherSymbolLabel.jsx";
-
-/* =========================
-	HELPERS (OUTSIDE HOOK)
-========================= */
 
 function disposeMarkerEntry(entry) {
 	try {
@@ -23,21 +20,9 @@ function disposeMarkerEntry(entry) {
 	});
 }
 
-/* =========================
-	HOOK
-========================= */
-
 export function useWeatherMarkers(map, weatherPoints) {
 
-	/* =========================
-		STATE (REFS)
-	========================= */
-
 	const markersRef = useRef(new Map());
-
-	/* =========================
-		COMMANDS
-	========================= */
 
 	const createMarker = useCallback((point) => {
 		const container = document.createElement("div");
@@ -54,12 +39,16 @@ export function useWeatherMarkers(map, weatherPoints) {
 			.addTo(map);
 
 		return { marker, root, container };
-	}, [map]);
+	}, 
+
+	[map]);
 
 	const updateMarker = useCallback((entry, point) => {
 		entry.marker.setLngLat([point.lon, point.lat]);
 		entry.root.render(<WeatherSymbolLabel point={point} />);
-	}, []);
+	}, 
+	
+	[]);
 
 	const removeMarker = useCallback((id, markers) => {
 		const entry = markers.get(id);
@@ -69,14 +58,14 @@ export function useWeatherMarkers(map, weatherPoints) {
 
 		disposeMarkerEntry(entry);
 		markers.delete(id);
-	}, []);
-
-	/* =========================
-		EFFECT (EVENT STYLE)
-	========================= */
+	}, 
+	
+	[]);
 
 	const onWeatherPointsChangedSyncMarkers = useCallback(() => {
-		if (!map) return;
+		if (!map) {
+			return;
+		}
 
 		const markers = markersRef.current;
 
@@ -84,9 +73,11 @@ export function useWeatherMarkers(map, weatherPoints) {
 			weatherPoints?.map((p) => p.id).filter(Boolean) ?? []
 		);
 
-		/* === UPSERT MARKERS === */
+		//Upsert markers
 		for (const point of weatherPoints ?? []) {
-			if (!point?.id) continue;
+			if (!point?.id) {
+				continue;
+			}
 
 			const existing = markers.get(point.id);
 
@@ -99,13 +90,15 @@ export function useWeatherMarkers(map, weatherPoints) {
 			markers.set(point.id, entry);
 		}
 
-		/* === REMOVE STALE MARKERS === */
+		//Remove stale markers
 		for (const [id] of markers) {
-			if (nextIds.has(id)) continue;
+			if (nextIds.has(id)) {
+				continue;
+			}
 			removeMarker(id, markers);
 		}
 
-		/* === CLEANUP === */
+		//Clean up med cleanup-function
 		return () => {
 			for (const [, entry] of markers) {
 				disposeMarkerEntry(entry);
@@ -113,11 +106,10 @@ export function useWeatherMarkers(map, weatherPoints) {
 			markers.clear();
 		};
 
-	}, [map, weatherPoints, createMarker, updateMarker, removeMarker]);
+	}, 
+	[map, weatherPoints, createMarker, updateMarker, removeMarker]);
 
-	/* =========================
-		EFFECT BINDING
-	========================= */
+	//Useffects
 	useEffect(onWeatherPointsChangedSyncMarkers, 
 		[onWeatherPointsChangedSyncMarkers]);
 }

@@ -1,25 +1,30 @@
+//src/ui/view/components/MapPage/hooks/useLocationPoints.js
 import { useEffect, useRef, useCallback } from "react";
 import { MarkerLayout } from "@maptiler/marker-layout";
-import { MAP_MARKER_CONFIG } from "../../../../utils/MapUtils/Constants/MapConstants.js";
 import { distributeWeatherPoints } from "../../../../utils/MapUtils/Icons/DistributeWeatherPoints.js";
 import { getFeaturePriorityScore } from "../../../../utils/MapUtils/Icons/CalculateFeaturePriority.js";
 
+const MAP_LABEL_LAYERS = [
+	"Capital city labels",
+	"City labels",
+	"Town labels",
+	"Place labels"
+];
+
+//Maks antall markers MarkerLayout får håndtere
+const MAX_LAYOUT_MARKERS = 60;
+
 export function useLocationPoints(map, countryCode, onMapChange) {
 
-	/* =========================
-		STATE (REFS)
-	========================= */
 	const layoutRef = useRef(null);
 	const activeMarkersRef = useRef(new Map());
 
-	/* =========================
-		COMMANDS
-	========================= */
+
 	const createLayout = useCallback(() => {
 		return new MarkerLayout(map, {
-			layers: MAP_MARKER_CONFIG.LABEL_LAYERS,
+			layers: MAP_LABEL_LAYERS,
 			markerAnchor: "center",
-			max: MAP_MARKER_CONFIG.MAX_LAYOUT_MARKERS,
+			max: MAX_LAYOUT_MARKERS,
 			sortingProperty: getFeaturePriorityScore,
 		});
 	}, 

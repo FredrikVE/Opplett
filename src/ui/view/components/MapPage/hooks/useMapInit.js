@@ -1,27 +1,28 @@
+//src/ui/view/components/MapPage/hooks/useMapInit.js
 import { useEffect, useRef, useState, useCallback } from "react";
 import * as maptilersdk from "@maptiler/sdk";
-import { MAP_DEFAULTS, MAP_ZOOM_LEVELS, MAP_MARKER_CONFIG } from "../../../../utils/MapUtils/Constants/MapConstants.js";
+
+const DEFAULT_ZOOM = 14;
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 14;
+
+const LABEL_LAYERS = [
+	"Capital city labels",
+	"City labels",
+	"Town labels",
+	"Place labels"
+];
 
 export function useMapInit(mapContainerRef, apiKey, style, activeLocation) {
 
-	/* =========================
-		STATE
-	========================= */
 	const [mapInstance, setMapInstance] = useState(null);
 	const isInitialized = useRef(false);
+	const initialLon = useRef(activeLocation?.lon);
+	const initialLat = useRef(activeLocation?.lat);
+	const initialZoom = useRef(DEFAULT_ZOOM);
 
-	/* =========================
-		INITIAL VALUES (FROZEN)
-	========================= */
-	const initialLon = useRef(activeLocation?.lon ?? MAP_DEFAULTS.CENTER_LON);
-	const initialLat = useRef(activeLocation?.lat ?? MAP_DEFAULTS.CENTER_LAT);
-	const initialZoom = useRef(MAP_ZOOM_LEVELS.DEFAULT);
-
-	/* =========================
-		COMMANDS
-	========================= */
 	const configureMapLabels = useCallback((map) => {
-		MAP_MARKER_CONFIG.LABEL_LAYERS.forEach((layer) => {
+		LABEL_LAYERS.forEach((layer) => {
 			if (map.getLayer(layer)) {
 				map.setLayerZoomRange(layer, 0, 24);
 			}
@@ -36,8 +37,8 @@ export function useMapInit(mapContainerRef, apiKey, style, activeLocation) {
 			style: style,
 			center: [initialLon.current, initialLat.current],
 			zoom: initialZoom.current,
-			maxZoom: MAP_ZOOM_LEVELS.DEFAULT,
-			minZoom: MAP_ZOOM_LEVELS.WORLD,
+			maxZoom: MAX_ZOOM,
+			minZoom: MIN_ZOOM,
 			attributionControl: false,
 			navigationControl: true,
 			geolocateControl: false,

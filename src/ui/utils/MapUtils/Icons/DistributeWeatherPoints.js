@@ -1,52 +1,46 @@
 // src/ui/utils/MapUtils/Icons/DistributeWeatherPoints.js
-//
-// Fordeler værpunkter jevnt utover kartet.
-//
-// Tre kilder, i prioritert rekkefølge:
-//   1. Hardkodede storbyer (for land i MajorCities.js)
-//   2. MarkerLayout-byer (fra kartets label-lag)
-//   3. Grid-punkter (siste fallback for ukjente land på lav zoom)
-//
-// Avstandsfiltrering sikrer jevn fordeling.
-
 import { getFeaturePriorityScore } from "./CalculateFeaturePriority.js";
-import { MAP_MARKER_DISTRIBUTION } from "../Constants/MapConstants.js";
 import { getMajorCities } from "./MajorCities.js";
 
-// ─── Konfigurasjoner ────────────────────────────────────
-
-const LOW_ZOOM_THRESHOLD = 3;
+/* =========================
+	CONFIG
+========================= */
 const GRID_STEPS = [0.2, 0.4, 0.6, 0.8];
 const GRID_JITTER = 0.08;
 
-// ─── Avstandsberegning ────────────────────────────────────
+const DISTRIBUTION = {
+	baseDistance: 45,
+	maxDistance: 3,
+	minDistance: 0.01,
+	lowZoomThreshold: 3,
+};
 
+/* =========================
+	ZOOM RULES
+========================= */
 function getMinDistance(zoom) {
-	const d = MAP_MARKER_DISTRIBUTION;
-
-	if (zoom <= d.LOW_ZOOM_THRESHOLD) {
+	if (zoom <= DISTRIBUTION.lowZoomThreshold) {
 		return Math.max(
-			(d.BASE_DISTANCE_DEGREES / Math.pow(2, zoom)) * d.LOW_ZOOM_DISTANCE_MULTIPLIER,
-			d.LOW_ZOOM_MIN_DISTANCE_CAP
+			(DISTRIBUTION.baseDistance / Math.pow(2, zoom)) * 0.3,
+			DISTRIBUTION.minDistance
 		);
 	}
 
 	return Math.min(
-		Math.max(d.BASE_DISTANCE_DEGREES / Math.pow(2, zoom), d.MIN_DISTANCE_CAP_DEGREES),
-		d.MAX_DISTANCE_CAP_DEGREES
+		Math.max(DISTRIBUTION.baseDistance / Math.pow(2, zoom), DISTRIBUTION.minDistance),
+		DISTRIBUTION.maxDistance
 	);
 }
 
 function getMaxMarkers(zoom) {
-	const { ZOOM_BREAKPOINTS, MARKER_LIMITS } = MAP_MARKER_DISTRIBUTION;
-
-	if (zoom <= ZOOM_BREAKPOINTS.FAR) return MARKER_LIMITS.FAR;
-	if (zoom <= ZOOM_BREAKPOINTS.MID) return MARKER_LIMITS.MID;
-	return MARKER_LIMITS.DEFAULT;
+	if (zoom <= 3) return 12;
+	if (zoom <= 6) return 18;
+	return 25;
 }
 
-// ─── Punkt-konvertering ──────────────────────────────────
-
+/* =========================
+	POINT CONVERSION
+========================= */
 function markerToPoint(marker) {
 	const feature = marker.features?.[0];
 	const coords = feature?.geometry?.coordinates;
@@ -74,14 +68,16 @@ function cityToPoint(city, index) {
 	};
 }
 
-// ─── Grid-generering ────────────────────────────────────
-
+/* =========================
+	GRID GENERATION
+========================= */
 function generateGridPoints(bounds) {
 	if (!bounds) return [];
 
 	const [[west, south], [east, north]] = bounds;
 	const latSpan = north - south;
 	const lonSpan = east - west;
+
 	const points = [];
 
 	for (const latStep of GRID_STEPS) {
@@ -102,8 +98,9 @@ function generateGridPoints(bounds) {
 	return points;
 }
 
-// ─── Filtrering ─────────────────────────────────────────
-
+/* =========================
+	FILTERING
+========================= */
 function filterByDistance(candidates, maxMarkers, minDistance) {
 	const result = [];
 
@@ -124,47 +121,45 @@ function filterByDistance(candidates, maxMarkers, minDistance) {
 	return result;
 }
 
-// ─── Kandidat-bygger ────────────────────────────────────
+/* =========================
+	CANDIDATE BUILDING
+========================= */
 
-function buildCandidates(markerPoints, countryCode, zoom, viewportBounds) {
-	// 1. Hardkodede storbyer — brukes ALLTID når de finnes
+function buildCandidates(markerPoints, countryCode, zoom, bounds) {
 	const majorCities = getMajorCities(countryCode);
 
+	//Prioriter hardkodede byer
 	if (majorCities.length > 0) {
-		const cityPoints = majorCities.map(cityToPoint);
-		return [...cityPoints, ...markerPoints];
+		return [...majorCities.map(cityToPoint), ...markerPoints];
 	}
 
-	// 2. Lav zoom uten hardkodede byer → grid som fallback
-	if (zoom < LOW_ZOOM_THRESHOLD) {
-		const gridPoints = generateGridPoints(viewportBounds);
-		return [...markerPoints, ...gridPoints];
+	//Lav zoom → grid fallback
+	if (zoom < DISTRIBUTION.lowZoomThreshold) {
+		return [...markerPoints, ...generateGridPoints(bounds)];
 	}
 
-	// 3. Normal zoom → kun MarkerLayout-byer
+	//Hvis normal bare vanlige markers
 	return markerPoints;
 }
 
-// ─── Hovedfunksjon ──────────────────────────────────────
-
-/**
- * @param {Array} abstractMarkers - Fra MarkerLayout.update()
- * @param {number} zoom - Nåværende zoom-nivå
- * @param {Array|null} viewportBounds - [[west,south],[east,north]]
- * @param {string|null} countryCode - ISO alpha-2 for aktivt land
- * @returns {Array<{ id, name, lat, lon }>}
- */
+/* =========================
+	PUBLIC API
+========================= */
 export function distributeWeatherPoints(abstractMarkers, zoom, viewportBounds, countryCode) {
 	const maxMarkers = getMaxMarkers(zoom);
 	const minDistance = getMinDistance(zoom);
 
-	// Konverter MarkerLayout-byer til punkter
 	const markerPoints = (abstractMarkers ?? [])
 		.map(markerToPoint)
 		.filter(Boolean)
 		.sort((a, b) => a._priority - b._priority);
 
-	const candidates = buildCandidates(markerPoints, countryCode, zoom, viewportBounds);
+	const candidates = buildCandidates(
+		markerPoints,
+		countryCode,
+		zoom,
+		viewportBounds
+	);
 
 	if (!candidates.length) return [];
 
