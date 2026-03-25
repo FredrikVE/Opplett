@@ -1,7 +1,7 @@
 // src/ui/view/components/MapPage/hooks/useMapInit.js
 import { useEffect, useRef, useState } from "react";
 import * as maptilersdk from "@maptiler/sdk";
-import { MAP_DEFAULTS, MAP_ZOOM_LEVELS } from "../../../../utils/MapUtils/Constants/MapConstants.js";
+import { MAP_DEFAULTS, MAP_ZOOM_LEVELS, MAP_MARKER_CONFIG } from "../../../../utils/MapUtils/Constants/MapConstants.js";
 
 export function useMapInit(mapContainerRef, apiKey, style, activeLocation) {
 	const [mapInstance, setMapInstance] = useState(null);
@@ -25,12 +25,22 @@ export function useMapInit(mapContainerRef, apiKey, style, activeLocation) {
 			style: style,
 			center: [initialLon.current, initialLat.current],
 			zoom: initialZoom.current,
+			minZoom: 2.5,
 			attributionControl: false,
 			navigationControl: true,
 			geolocateControl: false,
 		});
 
 		map.on("load", () => {
+			// Åpne label-lagene for alle zoom-nivåer.
+			// Uten dette returnerer MarkerLayout ingen byer under zoom ~3
+			// fordi kartstilen skjuler label-lagene på lav zoom.
+			MAP_MARKER_CONFIG.LABEL_LAYERS.forEach((layer) => {
+				if (map.getLayer(layer)) {
+					map.setLayerZoomRange(layer, 0, 24);
+				}
+			});
+
 			setMapInstance(map);
 		});
 
