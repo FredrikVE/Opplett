@@ -27,18 +27,30 @@ function clampZoom(zoom) {
  *   Russland (avgDiff ~87) → ~2     Norge (avgDiff ~18) → ~4
  *   Tyskland (avgDiff ~8)  → ~5     Danmark (avgDiff ~3) → ~7
  */
+
+
 function zoomFromBounds(bounds) {
 	const [west, south, east, north] = bounds;
+
 	const latDiff = Math.abs(north - south);
 	const lonDiff = Math.abs(east - west);
 	const avgDiff = (latDiff + lonDiff) / 2;
 
-	if (avgDiff <= 0) return MAP_ZOOM_LEVELS.DEFAULT;
+	if (avgDiff <= 0) {
+		return MAP_ZOOM_LEVELS.DEFAULT;
+	}
 
-	// log2(360 / avgDiff) gir ~2 for 87°, ~4.3 for 18°, ~6.9 for 3°
-	const zoom = Math.log2(360 / avgDiff) - 0.2;
+	if (avgDiff > 50) return 2;
+	if (avgDiff > 25) return 3;
+	if (avgDiff > 10) return 4;
+	if (avgDiff > 5) return 5;
+	if (avgDiff > 3) return 6;
+	if (avgDiff > 1.5) return 7;
+	if (avgDiff > 0.8) return 8;
+	if (avgDiff > 0.4) return 9;
+	if (avgDiff > 0.15) return 10;
 
-	return Math.round(Math.max(zoom, MAP_ZOOM_LIMITS.MIN));
+	return 12;
 }
 
 /**
