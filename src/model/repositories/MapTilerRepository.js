@@ -10,8 +10,8 @@ export default class MapTilerRepository {
     /**
      * Henter API-nøkkel og stil-URL fra data-kilden.
      */
-    getMapConfig() {
-        return this.dataSource.getBaseConfig();
+    getMapStyle() {
+        return this.dataSource.fetchMapStyle();
     }
 
     /**
@@ -56,10 +56,14 @@ export default class MapTilerRepository {
      * Henter og cacher GeoJSON-geometri (for polygon-tegning på kart)
      */
     async getLocationGeometry(id) {
-        if (!id) return null;
-        if (this.geometryCache.has(id)) return this.geometryCache.get(id);
+        if (!id) {
+            return null;
+        }
+        if (this.geometryCache.has(id)) {
+            return this.geometryCache.get(id);
+        }
 
-        const geojson = await this.dataSource.getLocationGeometry(id);
+        const geojson = await this.dataSource.fetchLocationGeometry(id);
         this.geometryCache.set(id, geojson);
         return geojson;
     }

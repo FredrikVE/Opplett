@@ -5,12 +5,11 @@ import WeatherMap from "../components/MapPage/WeatherMap.jsx";
 import LoadingSpinner from "../components/Common/LoadingSpinner/LoadingSpinner.jsx";
 
 export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREENS }) {
-	const { location, mapTarget, apiKey, style, weatherPoints, isLoading, onMapChange, highlightGeometry, countryCode } = viewModel;
-
+	
 	return (
 		<div className="map-screen">
 			<header className="map-header">
-				<h1>{location.name || "Værkart"}</h1>
+				<h1>{viewModel.location.name || "Værkart"}</h1>
 			</header>
 
 			<SearchField
@@ -28,21 +27,20 @@ export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREE
 			/>
 
 			<main className="map-content">
-				{isLoading && (
+				{viewModel.isLoading && (
 					<div className="map-loading-overlay">
 						<LoadingSpinner />
 					</div>
 				)}
 
 				<WeatherMap
-					apiKey={apiKey}
-					style={style}
-					mapTarget={mapTarget}
-					weatherPoints={weatherPoints}
-					onMapChange={onMapChange}
-					activeLocation={location}
-					highlightGeometry={highlightGeometry}
-					countryCode={countryCode}
+					style={viewModel.mapStyle}
+					mapTarget={viewModel.mapTarget}
+					weatherPoints={viewModel.weatherPoints}
+					onMapChange={viewModel.onMapChange}
+					activeLocation={viewModel.location}
+					highlightGeometry={viewModel.highlightGeometry}
+					countryCode={viewModel.countryCode}
 				/>
 			</main>
 		</div>

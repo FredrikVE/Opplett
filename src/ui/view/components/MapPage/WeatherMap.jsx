@@ -8,10 +8,12 @@ import { useMapHighlight } from "./hooks/useMapHighlight.js";
 import { useLocationPoints } from "./hooks/useLocationPoints.js";
 import { useWeatherMarkers } from "./hooks/useWeatherMarkers.jsx";
 
-export default function WeatherMap({ apiKey, style, mapTarget, weatherPoints, onMapChange, activeLocation, highlightGeometry, countryCode }) {
+export default function WeatherMap(props) {
+	const {mapStyle, mapTarget, weatherPoints, onMapChange, activeLocation, highlightGeometry, countryCode } = props;
+	
 	const mapContainerRef = useRef(null);
 
-	const map = useMapInit(mapContainerRef, apiKey, style, activeLocation);
+	const map = useMapInit(mapContainerRef, mapStyle, activeLocation);
 	useMapCamera(map, mapTarget);
 	useMapHighlight(map, highlightGeometry);
 	useLocationPoints(map, countryCode, onMapChange);

@@ -36,6 +36,7 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 	const [currentZoom, setCurrentZoom] = useState(null);
 
 	const highlightConfirmedRef = useRef(false);
+	const mapStyle = mapTilerRepository.getMapStyle();
 
 	/* =========================
 		COMMANDS
@@ -108,8 +109,6 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 		location: activeLocation,
 		geometryBounds,
 	});
-
-	const mapConfig = mapTilerRepository.getMapConfig();
 
 	/* =========================
 		EFFECTS – LOCATION
@@ -222,8 +221,7 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 	useEffect(onViewportChangedHandleHighlightVisibility, [onViewportChangedHandleHighlightVisibility]);
 
 	return {
-		apiKey: mapConfig.apiKey,
-		style: mapConfig.style,
+		mapStyle,
 		mapTarget,
 		onMapChange,
 		currentZoom,

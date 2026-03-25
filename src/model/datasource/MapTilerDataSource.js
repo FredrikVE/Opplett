@@ -14,13 +14,9 @@ export default class MapTilerDataSource {
 		}
 	}
 
-	//Henter grunnkonfigurasjon for kartet.
-	getBaseConfig() {
-		return {
-			apiKey: this.#apiKey,
-			//style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${this.#apiKey}`
-			style: `https://api.maptiler.com/maps/streets-v4/style.json?key=${this.#apiKey}`
-		};
+	//Henter grunnstil for kartet.
+	fetchMapStyle() {
+    	return `https://api.maptiler.com/maps/streets-v4/style.json?key=${this.#apiKey}`;
 	}
 
 	
@@ -64,8 +60,10 @@ export default class MapTilerDataSource {
 
 
 	//Henter full GeoJSON-geometri for et spesifikt sted (brukes til polygon-tegning).
-	async getLocationGeometry(id) {
-		if (!id) return null;
+	async fetchLocationGeometry(id) {
+		if (!id) {						//Trenger man egentlig denen sjekken når getLocationGeometry() i Repo gjør den
+			return null;
+		}
 		
 		const url = `${this.#baseUrl}/${id}.json?key=${this.#apiKey}`;
 		const response = await fetch(url);
