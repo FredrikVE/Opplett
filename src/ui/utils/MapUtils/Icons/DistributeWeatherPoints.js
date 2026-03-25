@@ -153,21 +153,21 @@ export function distributeWeatherPoints(
 	}
 	markerPoints.sort((a, b) => a._priority - b._priority);
 
-	// 2. På lav zoom: bruk hardkodede storbyer eller grid som fallback
+	// 2. Hardkodede storbyer for land som har dem
+	//    Brukes ALLTID ved land-søk (countryCode finnes) — ikke bare lav zoom.
+	//    Sikrer at Oslo, Helsinki, Stockholm etc. alltid vises.
+	//    På lav zoom uten hardkodede byer: grid som fallback.
+	const majorCities = getMajorCities(countryCode);
 	let candidates;
 
-	if (zoom < LOW_ZOOM_THRESHOLD) {
-		const majorCities = getMajorCities(countryCode);
-
-		if (majorCities.length > 0) {
-			// Hardkodede byer først, deretter MarkerLayout-byer som supplement
-			const cityPoints = majorCities.map(cityToPoint);
-			candidates = [...cityPoints, ...markerPoints];
-		} else {
-			// Ingen hardkodede byer → grid som fallback
-			const gridPoints = generateGridPoints(viewportBounds);
-			candidates = [...markerPoints, ...gridPoints];
-		}
+	if (majorCities.length > 0) {
+		// Hardkodede byer først (prioritet 0+), deretter MarkerLayout som supplement
+		const cityPoints = majorCities.map(cityToPoint);
+		candidates = [...cityPoints, ...markerPoints];
+	} else if (zoom < LOW_ZOOM_THRESHOLD) {
+		// Ingen hardkodede byer + lav zoom → grid som fallback
+		const gridPoints = generateGridPoints(viewportBounds);
+		candidates = [...markerPoints, ...gridPoints];
 	} else {
 		candidates = markerPoints;
 	}
