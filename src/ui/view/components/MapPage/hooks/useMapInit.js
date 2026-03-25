@@ -25,6 +25,7 @@ export function useMapInit(mapContainerRef, apiKey, style, activeLocation) {
 			style: style,
 			center: [initialLon.current, initialLat.current],
 			zoom: initialZoom.current,
+			maxZoom: MAP_ZOOM_LEVELS.DEFAULT,
 			minZoom: MAP_ZOOM_LEVELS.WORLD,
 			attributionControl: false,
 			navigationControl: true,

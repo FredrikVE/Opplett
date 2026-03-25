@@ -2,15 +2,22 @@
 //
 // Fordeler værpunkter jevnt utover kartet.
 //
-// Hybridstrategi:
-//   Zoom >= 3  →  Kun MarkerLayout-byer
-//   Zoom < 3   →  Hardkodede storbyer (RU, CA, US, CN, BR, AU, IN, AR)
-//                  + MarkerLayout-byer som supplement
-//                  + Grid-punkter som siste fallback
+// Tre kilder, i prioritert rekkefølge:
+//   1. Hardkodede storbyer (for land i MajorCities.js)
+//   2. MarkerLayout-byer (fra kartets label-lag)
+//   3. Grid-punkter (siste fallback for ukjente land på lav zoom)
+//
+// Avstandsfiltrering sikrer jevn fordeling.
 
 import { getFeaturePriorityScore } from "./CalculateFeaturePriority.js";
 import { MAP_MARKER_DISTRIBUTION } from "../Constants/MapConstants.js";
 import { getMajorCities } from "./MajorCities.js";
+
+// ─── Konfigurasjoner ────────────────────────────────────
+
+const LOW_ZOOM_THRESHOLD = 3;
+const GRID_STEPS = [0.2, 0.4, 0.6, 0.8];
+const GRID_JITTER = 0.08;
 
 // ─── Avstandsberegning ────────────────────────────────────
 
@@ -38,9 +45,9 @@ function getMaxMarkers(zoom) {
 	return MARKER_LIMITS.DEFAULT;
 }
 
-// ─── Konvertering ─────────────────────────────────────────
+// ─── Punkt-konvertering ──────────────────────────────────
 
-function toPoint(marker) {
+function markerToPoint(marker) {
 	const feature = marker.features?.[0];
 	const coords = feature?.geometry?.coordinates;
 	if (!coords) return null;
@@ -49,7 +56,7 @@ function toPoint(marker) {
 	const props = feature.properties ?? {};
 
 	return {
-		id: feature.id ?? `${lat.toFixed(4)}:${lon.toFixed(4)}`,
+		id: feature.id ?? `${lat.toFixed(6)}:${lon.toFixed(6)}`,
 		name: props.name || props.name_en || "Ukjent sted",
 		lat,
 		lon,
@@ -63,14 +70,11 @@ function cityToPoint(city, index) {
 		name: city.name,
 		lat: city.lat,
 		lon: city.lon,
-		_priority: index, // Hovedsteder først (de ligger først i listen)
+		_priority: index,
 	};
 }
 
-// ─── Grid-generering (fallback for ukjente store land) ───
-
-const GRID_STEPS = [0.2, 0.4, 0.6, 0.8];
-const JITTER = 0.08;
+// ─── Grid-generering ────────────────────────────────────
 
 function generateGridPoints(bounds) {
 	if (!bounds) return [];
@@ -82,17 +86,14 @@ function generateGridPoints(bounds) {
 
 	for (const latStep of GRID_STEPS) {
 		for (const lonStep of GRID_STEPS) {
-			const jitterLat = (Math.random() - 0.5) * JITTER * latSpan;
-			const jitterLon = (Math.random() - 0.5) * JITTER * lonSpan;
-
-			const lat = Math.max(-85, Math.min(85, south + latSpan * latStep + jitterLat));
-			const lon = west + lonSpan * lonStep + jitterLon;
+			const jitterLat = (Math.random() - 0.5) * GRID_JITTER * latSpan;
+			const jitterLon = (Math.random() - 0.5) * GRID_JITTER * lonSpan;
 
 			points.push({
 				id: `grid-${latStep}-${lonStep}`,
 				name: "",
-				lat,
-				lon: ((lon + 180) % 360 + 360) % 360 - 180,
+				lat: Math.max(-85, Math.min(85, south + latSpan * latStep + jitterLat)),
+				lon: ((west + lonSpan * lonStep + jitterLon + 180) % 360 + 360) % 360 - 180,
 				_priority: 100,
 			});
 		}
@@ -101,7 +102,7 @@ function generateGridPoints(bounds) {
 	return points;
 }
 
-// ─── Grådig avstandsfiltrering ────────────────────────────
+// ─── Filtrering ─────────────────────────────────────────
 
 function filterByDistance(candidates, maxMarkers, minDistance) {
 	const result = [];
@@ -123,57 +124,49 @@ function filterByDistance(candidates, maxMarkers, minDistance) {
 	return result;
 }
 
-// ─── Hovedfunksjon ────────────────────────────────────────
+// ─── Kandidat-bygger ────────────────────────────────────
 
-const LOW_ZOOM_THRESHOLD = 3;
+function buildCandidates(markerPoints, countryCode, zoom, viewportBounds) {
+	// 1. Hardkodede storbyer — brukes ALLTID når de finnes
+	const majorCities = getMajorCities(countryCode);
+
+	if (majorCities.length > 0) {
+		const cityPoints = majorCities.map(cityToPoint);
+		return [...cityPoints, ...markerPoints];
+	}
+
+	// 2. Lav zoom uten hardkodede byer → grid som fallback
+	if (zoom < LOW_ZOOM_THRESHOLD) {
+		const gridPoints = generateGridPoints(viewportBounds);
+		return [...markerPoints, ...gridPoints];
+	}
+
+	// 3. Normal zoom → kun MarkerLayout-byer
+	return markerPoints;
+}
+
+// ─── Hovedfunksjon ──────────────────────────────────────
 
 /**
  * @param {Array} abstractMarkers - Fra MarkerLayout.update()
  * @param {number} zoom - Nåværende zoom-nivå
- * @param {Object|null} highlightGeometry - Reservert (ikke brukt)
  * @param {Array|null} viewportBounds - [[west,south],[east,north]]
- * @param {string|null} countryCode - ISO alpha-2 for aktivt land (f.eks. "RU")
+ * @param {string|null} countryCode - ISO alpha-2 for aktivt land
  * @returns {Array<{ id, name, lat, lon }>}
  */
-export function distributeWeatherPoints(
-	abstractMarkers,
-	zoom,
-	highlightGeometry,
-	viewportBounds,
-	countryCode
-) {
+export function distributeWeatherPoints(abstractMarkers, zoom, viewportBounds, countryCode) {
 	const maxMarkers = getMaxMarkers(zoom);
 	const minDistance = getMinDistance(zoom);
 
-	// 1. Konverter MarkerLayout-byer til punkter
-	const markerPoints = [];
-	for (const marker of abstractMarkers ?? []) {
-		const point = toPoint(marker);
-		if (point) markerPoints.push(point);
-	}
-	markerPoints.sort((a, b) => a._priority - b._priority);
+	// Konverter MarkerLayout-byer til punkter
+	const markerPoints = (abstractMarkers ?? [])
+		.map(markerToPoint)
+		.filter(Boolean)
+		.sort((a, b) => a._priority - b._priority);
 
-	// 2. Hardkodede storbyer for land som har dem
-	//    Brukes ALLTID ved land-søk (countryCode finnes) — ikke bare lav zoom.
-	//    Sikrer at Oslo, Helsinki, Stockholm etc. alltid vises.
-	//    På lav zoom uten hardkodede byer: grid som fallback.
-	const majorCities = getMajorCities(countryCode);
-	let candidates;
-
-	if (majorCities.length > 0) {
-		// Hardkodede byer først (prioritet 0+), deretter MarkerLayout som supplement
-		const cityPoints = majorCities.map(cityToPoint);
-		candidates = [...cityPoints, ...markerPoints];
-	} else if (zoom < LOW_ZOOM_THRESHOLD) {
-		// Ingen hardkodede byer + lav zoom → grid som fallback
-		const gridPoints = generateGridPoints(viewportBounds);
-		candidates = [...markerPoints, ...gridPoints];
-	} else {
-		candidates = markerPoints;
-	}
+	const candidates = buildCandidates(markerPoints, countryCode, zoom, viewportBounds);
 
 	if (!candidates.length) return [];
 
-	// 3. Grådig filtrering — behold punkter som ikke overlapper
 	return filterByDistance(candidates, maxMarkers, minDistance);
 }

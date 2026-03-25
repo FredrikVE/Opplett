@@ -6,9 +6,7 @@ import WeatherMap from "../components/MapPage/WeatherMap.jsx";
 import LoadingSpinner from "../components/Common/LoadingSpinner/LoadingSpinner.jsx";
 
 export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREENS }) {
-	const { location, mapTarget, apiKey, style, weatherPoints, isLoading, onMapChange, highlightGeometry, currentZoom } = viewModel;
-	
-	console.log("Zoomlevel: ", currentZoom);
+	const { location, mapTarget, apiKey, style, weatherPoints, isLoading, onMapChange, highlightGeometry, countryCode } = viewModel;
 
 	return (
 		<div className="map-screen">
@@ -37,12 +35,6 @@ export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREE
 					</div>
 				)}
 
-				{currentZoom != null && (
-					<div className="zoom-indicator">
-						Zoom: {Math.round(currentZoom)}
-					</div>
-				)}
-
 				<WeatherMap
 					apiKey={apiKey}
 					style={style}
@@ -51,6 +43,7 @@ export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREE
 					onMapChange={onMapChange}
 					activeLocation={location}
 					highlightGeometry={highlightGeometry}
+					countryCode={countryCode}
 				/>
 			</main>
 		</div>

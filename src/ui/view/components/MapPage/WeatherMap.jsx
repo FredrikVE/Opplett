@@ -1,4 +1,6 @@
 // src/ui/view/components/MapPage/WeatherMap.jsx
+//
+// Samler alle kart-hooks i riktig rekkefølge.
 
 import { useRef } from "react";
 import "@maptiler/sdk/dist/maptiler-sdk.css";
@@ -9,14 +11,13 @@ import { useMapHighlight } from "./hooks/useMapHighlight.js";
 import { useLocationPoints } from "./hooks/useLocationPoints.js";
 import { useWeatherMarkers } from "./hooks/useWeatherMarkers.jsx";
 
-export default function WeatherMap(props) {
-	const { apiKey, style, mapTarget, weatherPoints, onMapChange, activeLocation, highlightGeometry } = props;
+export default function WeatherMap({ apiKey, style, mapTarget, weatherPoints, onMapChange, activeLocation, highlightGeometry, countryCode }) {
 	const mapContainerRef = useRef(null);
 
 	const map = useMapInit(mapContainerRef, apiKey, style, activeLocation);
 	useMapCamera(map, mapTarget);
 	useMapHighlight(map, highlightGeometry);
-	useLocationPoints(map, highlightGeometry, activeLocation?.countryCode, onMapChange);
+	useLocationPoints(map, countryCode, onMapChange);
 	useWeatherMarkers(map, weatherPoints);
 
 	return (

@@ -2,10 +2,10 @@
 //
 // ViewModel for kartsiden.
 //
-// Endringer:
-//   - Fjernet getBoundsFromGeometry-import og geometryBounds/searchBounds mellomvariabler
-//   - resolveMapCamera tar kun { location }
-//   - Fjernet viewport.zoom fallback (currentZoom er enklere)
+// Koordinerer tre ansvarsområder:
+//   1. Søk (delegert til SearchViewModel)
+//   2. Highlight av land/region (geometri, overlap-sjekk, auto-fjerning)
+//   3. Værhenting for synlige kartpunkter
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import useSearchViewModel from "./SearchViewModel.js";
@@ -13,35 +13,28 @@ import { resolveMapCamera } from "../utils/MapUtils/Camera/CameraPolicy.js";
 import { isAreaLocation } from "../utils/MapUtils/Camera/MapLocationLogic.js";
 import { getBoundsFromGeometry } from "../utils/MapUtils/Camera/MapBoundsHelper.js";
 
-export default function useMapPageViewModel(
-	mapTilerRepository,
-	searchLocationUseCase,
-	getMapWeatherUseCase,
-	getLocationGeometryUseCase,
-	activeLocation,
-	onLocationChange,
-	onResetToDeviceLocation,
-	userCoords
-) {
-	/* =========================================================
-	   CONFIG
-	========================================================= */
-	const DEBOUNCE_DELAY_MS = 500;
 
+export default function useMapPageViewModel(mapTilerRepository, searchLocationUseCase, getMapWeatherUseCase, getLocationGeometryUseCase, activeLocation, onLocationChange, onResetToDeviceLocation) {
+	
+	/* =========================================================
+	   CONSTANTS
+	========================================================= */
+	const IDLE_HIGHLIGHT = { status: "idle", locationId: null, geojson: null };
+	const DEBOUNCE_DELAY_MS = 500;
+	
 	/* =========================================================
 	   STATE
 	========================================================= */
-	const [highlightState, setHighlightState] = useState({
-		status: "idle",
-		locationId: null,
-		geojson: null,
-	});
-
+	const [highlightState, setHighlightState] = useState(IDLE_HIGHLIGHT);
 	const [mapPoints, setMapPoints] = useState([]);
 	const [viewportBounds, setViewportBounds] = useState(null);
 	const [weatherPoints, setWeatherPoints] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [currentZoom, setCurrentZoom] = useState(null);
+
+	// Har viewporten overlappet med geometrien minst én gang?
+	// Forhindrer at highlight fjernes før flyTo har landet.
+	const highlightConfirmedRef = useRef(false);
 
 	/* =========================================================
 	   COMMANDS
@@ -51,7 +44,7 @@ export default function useMapPageViewModel(
 	}, []);
 
 	const resetHighlightState = useCallback(() => {
-		setHighlightState({ status: "idle", locationId: null, geojson: null });
+		setHighlightState(IDLE_HIGHLIGHT);
 	}, []);
 
 	const handleResetToDeviceLocation = useCallback(() => {
@@ -85,15 +78,16 @@ export default function useMapPageViewModel(
 			? highlightState.geojson
 			: null;
 
-	console.log("[MapVM] Highlight:", highlightGeometry ? `AKTIV for "${activeLocation?.name}" (${highlightState.locationId})` : "INGEN", 
-		"| state:", highlightState.status,
-		"| location.id:", activeLocation?.id,
-		"| state.locationId:", highlightState.locationId
-	);
-
-	// SSOT kamera — geometryBounds gir bedre sentrering for land
 	const geometryBounds = getBoundsFromGeometry(highlightGeometry);
-	const mapTarget = resolveMapCamera({ location: activeLocation, geometryBounds });
+
+	const countryCode = highlightGeometry
+		? activeLocation?.countryCode ?? null
+		: null;
+
+	const mapTarget = resolveMapCamera({
+		location: activeLocation,
+		geometryBounds,
+	});
 
 	const mapConfig = mapTilerRepository.getMapConfig();
 
@@ -130,9 +124,7 @@ export default function useMapPageViewModel(
 				}
 			});
 
-		return () => {
-			cancelled = true;
-		};
+		return () => { cancelled = true; };
 	}, [activeLocation?.id, activeLocation?.type, getLocationGeometryUseCase, resetHighlightState]);
 
 	// Hent vær for synlige punkter (debounced)
@@ -157,11 +149,15 @@ export default function useMapPageViewModel(
 				if (!cancelled) {
 					setWeatherPoints(results || []);
 				}
-			} catch (error) {
+			} 
+			
+			catch (error) {
 				if (!cancelled) {
 					console.error("[MapVM] Vær-feil:", error);
 				}
-			} finally {
+			} 
+			
+			finally {
 				if (!cancelled) {
 					setIsLoading(false);
 				}
@@ -172,27 +168,24 @@ export default function useMapPageViewModel(
 			cancelled = true;
 			clearTimeout(timer);
 		};
-	}, [mapPoints, activeLocation?.timezone, getMapWeatherUseCase]);
+	}, 
+	
+	[mapPoints, activeLocation?.timezone, getMapWeatherUseCase]);
 
-	// Fjern highlight når kartets viewport ikke lenger overlapper med landet.
-	// highlightConfirmedRef sikrer at vi ikke fjerner highlight før kartet
-	// faktisk har vist landet (minst én overlapp-sjekk har passert).
-	const highlightConfirmedRef = useRef(false);
-
-	// Reset confirmed-flagget når highlight endres
+	// Reset confirmed-flagg ved ny highlight
 	useEffect(() => {
 		if (!highlightGeometry) {
 			highlightConfirmedRef.current = false;
 		}
-	}, [highlightGeometry]);
+	}, 
+	
+	[highlightGeometry]);
 
+	// Fjern highlight når brukeren scroller helt forbi landet
 	useEffect(() => {
-		if (!highlightGeometry || !viewportBounds) return;
+		if (!highlightGeometry || !viewportBounds || !geometryBounds) return;
 
-		const geoBounds = getBoundsFromGeometry(highlightGeometry);
-		if (!geoBounds) return;
-
-		const [[geoW, geoS], [geoE, geoN]] = geoBounds;
+		const [[geoW, geoS], [geoE, geoN]] = geometryBounds;
 		const [[vpW, vpS], [vpE, vpN]] = viewportBounds;
 
 		const noOverlap =
@@ -200,46 +193,38 @@ export default function useMapPageViewModel(
 			vpN < geoS || vpS > geoN;
 
 		if (!noOverlap) {
-			// Viewporten overlapper med landet — bekreft at highlighten er "sett"
 			highlightConfirmedRef.current = true;
-			console.log("[MapVM] Overlap-sjekk: overlapper → beholder",
-				"| geo:", [geoW.toFixed(1), geoS.toFixed(1), geoE.toFixed(1), geoN.toFixed(1)].join(", "),
-				"| vp:", [vpW.toFixed(1), vpS.toFixed(1), vpE.toFixed(1), vpN.toFixed(1)].join(", ")
-			);
 			return;
 		}
 
-		// Ingen overlapp — men fjern bare hvis highlighten er bekreftet
-		// (kartet har faktisk vist landet minst én gang)
 		if (highlightConfirmedRef.current) {
-			console.log("[MapVM] Overlap-sjekk: INGEN OVERLAPP → fjerner highlight",
-				"| geo:", [geoW.toFixed(1), geoS.toFixed(1), geoE.toFixed(1), geoN.toFixed(1)].join(", "),
-				"| vp:", [vpW.toFixed(1), vpS.toFixed(1), vpE.toFixed(1), vpN.toFixed(1)].join(", ")
-			);
 			resetHighlightState();
-		} else {
-			console.log("[MapVM] Overlap-sjekk: ingen overlapp, men venter på flyTo",
-				"| geo:", [geoW.toFixed(1), geoS.toFixed(1), geoE.toFixed(1), geoN.toFixed(1)].join(", "),
-				"| vp:", [vpW.toFixed(1), vpS.toFixed(1), vpE.toFixed(1), vpN.toFixed(1)].join(", ")
-			);
 		}
-	}, [viewportBounds, highlightGeometry, resetHighlightState]);
+	}, [viewportBounds, highlightGeometry, geometryBounds, resetHighlightState]);
 
 	/* =========================================================
 	   PUBLIC API
 	========================================================= */
 	return {
+		// Kart
 		apiKey: mapConfig.apiKey,
 		style: mapConfig.style,
-		location: activeLocation,
-		userCoords,
-		isLoading,
 		mapTarget,
-		highlightGeometry,
-		weatherPoints,
-		currentZoom,
 		onMapChange,
+		currentZoom,
 
+		// Lokasjon
+		location: activeLocation,
+		countryCode,
+
+		// Highlight
+		highlightGeometry,
+
+		// Vær
+		weatherPoints,
+		isLoading,
+
+		// Søk
 		query: searchViewModel.query,
 		suggestions: searchViewModel.suggestions,
 		onSearchChange: searchViewModel.onSearchChange,

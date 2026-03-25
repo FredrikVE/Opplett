@@ -1,13 +1,20 @@
 // src/model/domain/GetMapWeatherUseCase.js
 //
 // Henter værdata for en liste med kartpunkter.
-// Punkter fra MarkerLayout har allerede navn.
-// Grid-punkter (name === "") reverse-geocodes for å finne nærmeste stedsnavn.
+//
+// Tar imot ferdige punkter (med navn og koordinater) fra UI-laget
+// og beriker dem med værdata fra getCurrentWeatherUseCase.
+//
+// Grid-punkter (name === "") vises med kun temperatur og ikon,
+// uten stedsnavn — dette håndteres av WeatherSymbolLabel.
 
 export default class GetMapWeatherUseCase {
-	constructor(mapTilerRepository, getCurrentWeatherUseCase) {
-		this.mapTilerRepository = mapTilerRepository;
-		this.getCurrentWeatherUseCase = getCurrentWeatherUseCase;
+	#getCurrentWeatherUseCase;
+
+	constructor(getCurrentWeatherUseCase) {
+		// mapTilerRepository beholdes i signaturen for bakoverkompatibilitet
+		// med App.jsx, men brukes ikke lenger.
+		this.#getCurrentWeatherUseCase = getCurrentWeatherUseCase;
 	}
 
 	async execute(points, timeZone) {
@@ -15,32 +22,32 @@ export default class GetMapWeatherUseCase {
 
 		try {
 			const results = await Promise.all(
-				points.map((point) => this.#processPoint(point, timeZone))
+				points.map((point) => this.#fetchWeatherForPoint(point, timeZone))
 			);
 
 			return results.filter(Boolean);
-		} catch (error) {
+		} 
+		catch (error) {
 			console.error("[GetMapWeatherUseCase] Feil:", error);
 			return [];
 		}
 	}
 
-	async #processPoint(point, timeZone) {
+	async #fetchWeatherForPoint(point, timeZone) {
 		try {
-			const weather = await this.getCurrentWeatherUseCase.execute({
+			const weather = await this.#getCurrentWeatherUseCase.execute({
 				lat: point.lat,
 				lon: point.lon,
 				timeZone,
 			});
 
-			if (!weather) return null;
+			if (!weather) {
+				return null;
+			}
 
 			return {
 				...point,
 				...weather,
-				// Grid-punkter (name="") beholder tomt navn.
-				// WeatherSymbolLabel viser da kun temperatur + ikon.
-				name: point.name || "",
 			};
 		} 
 		

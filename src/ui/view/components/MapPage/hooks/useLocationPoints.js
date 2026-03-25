@@ -2,9 +2,6 @@
 //
 // Bruker MarkerLayout til å finne synlige byer/steder,
 // og rapporterer punkter for værhenting via onMapChange.
-//
-// highlightGeometry brukes til å prioritere byer innenfor
-// valgt område (f.eks. Helsinki foran Tallinn for Finland).
 
 import { useEffect, useRef } from "react";
 import { MarkerLayout } from "@maptiler/marker-layout";
@@ -12,7 +9,7 @@ import { MAP_MARKER_CONFIG } from "../../../../utils/MapUtils/Constants/MapConst
 import { distributeWeatherPoints } from "../../../../utils/MapUtils/Icons/DistributeWeatherPoints.js";
 import { getFeaturePriorityScore } from "../../../../utils/MapUtils/Icons/CalculateFeaturePriority.js";
 
-export function useLocationPoints(map, highlightGeometry, countryCode, onMapChange) {
+export function useLocationPoints(map, countryCode, onMapChange) {
 	const layoutRef = useRef(null);
 	const activeMarkersRef = useRef(new Map());
 
@@ -44,7 +41,6 @@ export function useLocationPoints(map, highlightGeometry, countryCode, onMapChan
 			const points = distributeWeatherPoints(
 				allMarkers,
 				map.getZoom(),
-				highlightGeometry,
 				map.getBounds().toArray(),
 				countryCode
 			);
@@ -86,5 +82,5 @@ export function useLocationPoints(map, highlightGeometry, countryCode, onMapChan
 			layoutRef.current = null;
 			activeMarkers.clear();
 		};
-	}, [map, highlightGeometry, countryCode, onMapChange]);
+	}, [map, countryCode, onMapChange]);
 }

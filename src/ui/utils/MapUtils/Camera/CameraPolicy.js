@@ -4,11 +4,11 @@
 // Returnerer alltid { id, lat, lon, zoom } — useMapCamera bruker kun flyTo.
 //
 // Strategi:
-//   1. Har vi geometryBounds (fra highlight)? → senter + zoom fra den
-//      (dette gir korrekt sentrering for land fordi geometrien
-//       prioriterer største landmasse, f.eks. fastlands-Norge)
-//   2. Område med søke-bounds? → senter + zoom fra bounds
-//   3. Fallback → geocoder-koordinat + type-basert zoom
+//   1. Geometri-bounds (fra highlight) → senter + zoom
+//   2. Søke-bounds (fra geocoder) → senter + zoom (ikke for land)
+//   3. Land/kontinent uten geometri → null (vent på geometri)
+//   4. Fallback → geocoder-koordinat + type-basert zoom
+
 import { MAP_ZOOM_LEVELS, MAP_ZOOM_LIMITS } from "../Constants/MapConstants.js";
 
 function clampZoom(zoom) {
@@ -16,9 +16,16 @@ function clampZoom(zoom) {
 }
 
 /**
- * Estimerer zoom fra bounds-størrelse [west, south, east, north].
- * Bruker gjennomsnittet av lat- og lon-differanse for å håndtere
- * langstrakte land (Sverige, Chile) bedre enn bare max.
+ * Estimerer zoom-nivå fra bounds-størrelse.
+ * Bruker en logaritmisk formel i stedet for hardkodede terskler.
+ *
+ * Logikken: ved zoom 0 vises ~360° av jorden.
+ * For hvert zoom-nivå halveres synlig område.
+ * Formelen inverterer dette: zoom ≈ log2(360 / avgDiff)
+ *
+ * Offset og faktor er justert empirisk for å gi naturlige resultater:
+ *   Russland (avgDiff ~87) → ~2     Norge (avgDiff ~18) → ~4
+ *   Tyskland (avgDiff ~8)  → ~5     Danmark (avgDiff ~3) → ~7
  */
 function zoomFromBounds(bounds) {
 	const [west, south, east, north] = bounds;
@@ -26,62 +33,57 @@ function zoomFromBounds(bounds) {
 	const lonDiff = Math.abs(east - west);
 	const avgDiff = (latDiff + lonDiff) / 2;
 
-	if (avgDiff > 50) return 2;
-	if (avgDiff > 25) return 3;
-	if (avgDiff > 10) return 4;
-	if (avgDiff > 5) return 5;
-	if (avgDiff > 3) return 6;
-	if (avgDiff > 1.5) return 7;
-	if (avgDiff > 0.8) return 8;
-	if (avgDiff > 0.4) return 9;
-	if (avgDiff > 0.15) return 10;
-	return 12;
+	if (avgDiff <= 0) return MAP_ZOOM_LEVELS.DEFAULT;
+
+	// log2(360 / avgDiff) gir ~2 for 87°, ~4.3 for 18°, ~6.9 for 3°
+	const zoom = Math.log2(360 / avgDiff) - 0.2;
+
+	return Math.round(Math.max(zoom, MAP_ZOOM_LIMITS.MIN));
 }
 
 /**
  * Type → zoom (fallback når bounds ikke finnes).
  */
+const TYPE_ZOOM_MAP = {
+	continental_marine: 3,
+	major_landform: 3,
+	country: 4,
+	region: 6,
+	subregion: 8,
+	county: 8,
+	municipality: 10,
+	place: 10,
+	neighbourhood: 13,
+	address: 13,
+};
+
 function zoomFromType(type) {
-	switch (type) {
-		case "continental_marine":
-		case "major_landform":
-			return 3;
-		case "country":
-			return 4;
-		case "region":
-			return 6;
-		case "subregion":
-		case "county":
-			return 8;
-		case "municipality":
-		case "place":
-			return 10;
-		case "neighbourhood":
-		case "address":
-			return 13;
-		default:
-			return MAP_ZOOM_LEVELS.DEFAULT; // 14 (GPS)
-	}
+	return TYPE_ZOOM_MAP[type] ?? MAP_ZOOM_LEVELS.DEFAULT;
 }
 
 /**
  * Normaliserer bounds til [west, south, east, north].
+ * Godtar tre formater:
+ *   - [west, south, east, north]
+ *   - [[west, south], [east, north]]
+ *   - { southwest: { lng, lat }, northeast: { lng, lat } }
  */
 function normalizeBounds(bounds) {
 	if (!bounds) return null;
 
-	// [west, south, east, north]
-	if (Array.isArray(bounds) && bounds.length === 4 && bounds.every(Number.isFinite)) {
-		return bounds;
+	if (Array.isArray(bounds)) {
+		if (bounds.length === 4 && bounds.every(Number.isFinite)) {
+			return bounds;
+		}
+		if (bounds.length === 2 && Array.isArray(bounds[0])) {
+			return [bounds[0][0], bounds[0][1], bounds[1][0], bounds[1][1]];
+		}
 	}
-	// [[west, south], [east, north]]
-	if (Array.isArray(bounds) && bounds.length === 2 && Array.isArray(bounds[0])) {
-		return [bounds[0][0], bounds[0][1], bounds[1][0], bounds[1][1]];
-	}
-	// { southwest: { lng, lat }, northeast: { lng, lat } }
+
 	if (bounds?.southwest && bounds?.northeast) {
 		return [bounds.southwest.lng, bounds.southwest.lat, bounds.northeast.lng, bounds.northeast.lat];
 	}
+
 	return null;
 }
 
@@ -92,12 +94,12 @@ function centerFromBounds(bounds) {
 	};
 }
 
-const SKIP_SEARCH_BOUNDS = ["country", "continental_marine", "major_landform"];
+// Land og kontinenter: bruk geometri-bounds, ikke søke-bounds
+// (søke-bounds inkluderer fjerne territorier som Svalbard, Hawaii)
+const AWAIT_GEOMETRY_TYPES = ["country", "continental_marine", "major_landform"];
 
 /**
  * @param {{ location, geometryBounds? }} params
- *   - location: activeLocation-objektet
- *   - geometryBounds: bounds fra highlight-geometri (valgfritt, fra getBoundsFromGeometry)
  * @returns {{ id, lat, lon, zoom } | null}
  */
 export function resolveMapCamera({ location, geometryBounds }) {
@@ -105,34 +107,32 @@ export function resolveMapCamera({ location, geometryBounds }) {
 		return null;
 	}
 
-	// 1. Geometri-bounds (fra highlight) → best mulig for land
-	//    Prioriterer største landmasse, unngår Svalbard/Bouvetøya
+	// 1. Geometri-bounds → best mulig sentrering
 	const geoBounds = normalizeBounds(geometryBounds);
 	if (geoBounds) {
 		const { lat, lon } = centerFromBounds(geoBounds);
 		return {
 			id: `${location.id ?? "gps"}-geo-${geoBounds.join(",")}`,
-			lat, lon,
+			lat,
+			lon,
 			zoom: clampZoom(zoomFromBounds(geoBounds)),
 		};
 	}
 
-	// 2. Søke-bounds (fra geocoder) — men ikke for land/kontinenter
-	//    (deres bounds inkluderer fjerne territorier)
+	// 2. Søke-bounds — men ikke for typer som venter på geometri
 	const searchBounds = normalizeBounds(location.bounds);
-	if (searchBounds && !SKIP_SEARCH_BOUNDS.includes(location.type)) {
+	if (searchBounds && !AWAIT_GEOMETRY_TYPES.includes(location.type)) {
 		const { lat, lon } = centerFromBounds(searchBounds);
 		return {
 			id: `${location.id ?? "gps"}-search-${searchBounds.join(",")}`,
-			lat, lon,
+			lat,
+			lon,
 			zoom: clampZoom(zoomFromBounds(searchBounds)),
 		};
 	}
 
-	// 3. For land/kontinenter uten geometri ennå: VENT.
-	//    Returnerer null slik at useMapCamera ikke flyr til feil zoom.
-	//    Når geometrien lastes, trigges steg 1 og gir riktig kamera.
-	if (SKIP_SEARCH_BOUNDS.includes(location.type) && location.id) {
+	// 3. Land/kontinent uten geometri: returner null → useMapCamera venter
+	if (AWAIT_GEOMETRY_TYPES.includes(location.type) && location.id) {
 		return null;
 	}
 

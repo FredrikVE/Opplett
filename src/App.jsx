@@ -67,21 +67,21 @@ import Footer from "./ui/view/components/Common/Layout/Footer.jsx";
 import LoadingSpinner from "./ui/view/components/Common/LoadingSpinner/LoadingSpinner.jsx";
 
 //Composition Root
-const locationRepo = new LocationForecastRepository(new LocationForecastDataSource());
+const locationForecastRepository = new LocationForecastRepository(new LocationForecastDataSource());
 const sunriseRepo = new SunriseRepository(new SunriseDataSource());
 const alertsRepo = new MetAlertsRepository(new MetAlertsDataSource());
 const mapTilerRepo = new MapTilerRepository(new MapTilerDataSource());
 
-const getForecastUseCase = new GetForecastUseCase(locationRepo);
+const getForecastUseCase = new GetForecastUseCase(locationForecastRepository);
 const getSunTimesUseCase = new GetSunTimesUseCase(sunriseRepo);
 const getAlertsUseCase = new GetAlertsUseCase(alertsRepo);
 const getAllAlertsUseCase = new GetAllAlertsUseCase(alertsRepo);
-const getCurrentWeatherUseCase = new GetCurrentWeatherUseCase(locationRepo);
+const getCurrentWeatherUseCase = new GetCurrentWeatherUseCase(locationForecastRepository);
 const searchLocationUseCase = new SearchLocationUseCase(mapTilerRepo);
 const getLocationNameUseCase = new GetLocationNameUseCase(mapTilerRepo);
-const getMapWeatherUseCase = new GetMapWeatherUseCase(mapTilerRepo, getCurrentWeatherUseCase);
+//const getMapWeatherUseCase = new GetMapWeatherUseCase(mapTilerRepo, getCurrentWeatherUseCase);
+const getMapWeatherUseCase = new GetMapWeatherUseCase(getCurrentWeatherUseCase);
 const getLocationGeometryUseCase = new GetLocationGeometryUseCase(mapTilerRepo);
-//const getCountryCitiesUseCase = new GetCountryCitiesUseCase(mapTilerRepo);
 
 export default function App() {
     const hoursAhead = 120;
