@@ -1,5 +1,5 @@
 //src/ui/utils/MapUtils/Icons/CalculateFeaturePriority.js
-function getLayerPriority(layerId = "") {
+function getLayerPriority(layerId) {
 	if (layerId.includes("Capital")) return 0;
 	if (layerId.includes("City")) return 1;
 	if (layerId.includes("Town")) return 2;

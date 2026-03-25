@@ -7,14 +7,18 @@ import WeatherSymbolLabel from "../WeatherSymbolLabel.jsx";
 function disposeMarkerEntry(entry) {
 	try {
 		entry.marker?.remove();
-	} catch (error) {
+	} 
+	
+	catch (error) {
 		console.warn("[useWeatherMarkers] marker remove failed:", error);
 	}
 
 	queueMicrotask(() => {
 		try {
 			entry.root?.unmount();
-		} catch (error) {
+		} 
+		
+		catch (error) {
 			console.warn("[useWeatherMarkers] root unmount failed:", error);
 		}
 	});

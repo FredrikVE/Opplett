@@ -3,22 +3,14 @@ import { useEffect, useRef, useCallback } from "react";
 import { MarkerLayout } from "@maptiler/marker-layout";
 import { distributeWeatherPoints } from "../../../../utils/MapUtils/Icons/DistributeWeatherPoints.js";
 import { getFeaturePriorityScore } from "../../../../utils/MapUtils/Icons/CalculateFeaturePriority.js";
+import { MAP_LABEL_LAYERS } from "../../../../utils/MapUtils/Layers/LayerConfig.js";
 
-const MAP_LABEL_LAYERS = [
-	"Capital city labels",
-	"City labels",
-	"Town labels",
-	"Place labels"
-];
-
-//Maks antall markers MarkerLayout får håndtere
-const MAX_LAYOUT_MARKERS = 60;
+const MAX_LAYOUT_MARKERS = 60;		//Maks antall markers MarkerLayout får håndtere
 
 export function useLocationPoints(map, countryCode, onMapChange) {
 
 	const layoutRef = useRef(null);
 	const activeMarkersRef = useRef(new Map());
-
 
 	const createLayout = useCallback(() => {
 		return new MarkerLayout(map, {

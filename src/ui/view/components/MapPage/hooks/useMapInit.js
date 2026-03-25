@@ -1,17 +1,10 @@
 //src/ui/view/components/MapPage/hooks/useMapInit.js
 import { useEffect, useRef, useState, useCallback } from "react";
 import * as maptilersdk from "@maptiler/sdk";
+import { MIN_ZOOM, MAX_ZOOM, ZOOM_LEVELS } from "../../../../utils/MapUtils/Zoom/ZoomConfig";
+import { MAP_LABEL_LAYERS } from "../../../../utils/MapUtils/Layers/LayerConfig";
 
-const DEFAULT_ZOOM = 14;
-const MIN_ZOOM = 1;
-const MAX_ZOOM = 14;
-
-const LABEL_LAYERS = [
-	"Capital city labels",
-	"City labels",
-	"Town labels",
-	"Place labels"
-];
+const DEFAULT_ZOOM = ZOOM_LEVELS.STREET; //Zoomnivå 14 som standard
 
 export function useMapInit(mapContainerRef, apiKey, style, activeLocation) {
 
@@ -22,12 +15,14 @@ export function useMapInit(mapContainerRef, apiKey, style, activeLocation) {
 	const initialZoom = useRef(DEFAULT_ZOOM);
 
 	const configureMapLabels = useCallback((map) => {
-		LABEL_LAYERS.forEach((layer) => {
+		MAP_LABEL_LAYERS.forEach((layer) => {
 			if (map.getLayer(layer)) {
 				map.setLayerZoomRange(layer, 0, 24);
 			}
 		});
-	}, []);
+	}, 
+
+	[]);
 
 	const createMapInstance = useCallback(() => {
 		maptilersdk.config.apiKey = apiKey;
@@ -43,7 +38,9 @@ export function useMapInit(mapContainerRef, apiKey, style, activeLocation) {
 			navigationControl: true,
 			geolocateControl: false,
 		});
-	}, [apiKey, style, mapContainerRef]);
+	}, 
+
+	[apiKey, style, mapContainerRef]);
 
 	const destroyMapInstance = useCallback((map) => {
 		try {
@@ -56,7 +53,9 @@ export function useMapInit(mapContainerRef, apiKey, style, activeLocation) {
 
 		isInitialized.current = false;
 		setMapInstance(null);
-	}, []);
+	}, 
+	
+	[]);
 
 	/* =========================
 		CALLBACK TIL USEEFFECT

@@ -1,23 +1,19 @@
 //src/ui/utils/MapUtils/Camera/CameraPolicy.js
-const ZOOM_LIMITS = {
-	MIN: 1,
-	MAX: 14,
-};
+import { ZOOM_LEVELS, MIN_ZOOM, MAX_ZOOM } from "../Zoom/ZoomConfig";
 
-const DEFAULT_ZOOM = 14;
-const STREET_ZOOM = 12;
+const DEFAULT_ZOOM = ZOOM_LEVELS.STREET;	//DEnne bestemmer hva som det startes opp på
 
 const TYPE_ZOOM = {
-	continental_marine: 3,
-	major_landform: 3,
-	country: 4,
-	region: 6,
-	subregion: 8,
-	county: 8,
-	municipality: 10,
-	place: 10,
-	neighbourhood: 13,
-	address: 13,
+	continental_marine: ZOOM_LEVELS.CONTINENT,	//3
+	major_landform: ZOOM_LEVELS.CONTINENT,		//3
+	country: ZOOM_LEVELS.COUNTRY,				//4
+	region: ZOOM_LEVELS.REGION,					//6
+	subregion: ZOOM_LEVELS.SUBREGION,			//7
+	county: ZOOM_LEVELS.COUNTY,					//8
+	municipality: ZOOM_LEVELS.MUNICIPALITY,		//10	
+	place: ZOOM_LEVELS.MUNICIPALITY,			//10
+	neighbourhood: ZOOM_LEVELS.NEIGHBOURHOOD,	//12
+	address: ZOOM_LEVELS.STREET,				//14
 };
 
 const AWAIT_GEOMETRY_TYPES = new Set([
@@ -27,15 +23,15 @@ const AWAIT_GEOMETRY_TYPES = new Set([
 ]);
 
 const ZOOM_THRESHOLDS = [
-	{ maxDegrees: 50, zoom: 2 },
-	{ maxDegrees: 25, zoom: 3 },
-	{ maxDegrees: 10, zoom: 4 },
-	{ maxDegrees: 5, zoom: 5 },
-	{ maxDegrees: 3, zoom: 6 },
-	{ maxDegrees: 1.5, zoom: 7 },
-	{ maxDegrees: 0.8, zoom: 8 },
-	{ maxDegrees: 0.4, zoom: 9 },
-	{ maxDegrees: 0.15, zoom: 10 },
+	{ maxDegrees: 50, zoom: ZOOM_LEVELS.MAJOR_LANDFORM },	//2
+	{ maxDegrees: 25, zoom: ZOOM_LEVELS.CONTINENT },		//3
+	{ maxDegrees: 10, zoom: ZOOM_LEVELS.COUNTRY },			//4
+	{ maxDegrees: 5, zoom: ZOOM_LEVELS.SMALL_COUNTRY },		//5
+	{ maxDegrees: 3, zoom: ZOOM_LEVELS.REGION },			//6
+	{ maxDegrees: 1.5, zoom: ZOOM_LEVELS.SUBREGION },		//7
+	{ maxDegrees: 0.8, zoom: ZOOM_LEVELS.COUNTY },			//8
+	{ maxDegrees: 0.4, zoom: ZOOM_LEVELS.LOCAL_REGION },	//9
+	{ maxDegrees: 0.15, zoom: ZOOM_LEVELS.MUNICIPALITY },	//10
 ];
 
 /* =========================
@@ -43,8 +39,8 @@ const ZOOM_THRESHOLDS = [
 ========================= */
 function clampZoom(zoom) {
 	return Math.min(
-		Math.max(zoom, ZOOM_LIMITS.MIN),
-		ZOOM_LIMITS.MAX
+		Math.max(zoom,MIN_ZOOM),
+		MAX_ZOOM
 	);
 }
 
@@ -65,7 +61,7 @@ function zoomFromBounds(bounds) {
 		}
 	}
 
-	return STREET_ZOOM;
+	return ZOOM_LEVELS.STREET;
 }
 
 function zoomFromType(type) {
@@ -115,7 +111,6 @@ function centerFromBounds(bounds) {
 /* =========================
 	PUBLIC API
 ========================= */
-
 export function resolveMapCamera({ location, geometryBounds }) {
 	if (location?.lat == null || location?.lon == null) {
 		return null;
