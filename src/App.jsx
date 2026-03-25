@@ -79,7 +79,6 @@ const getAllAlertsUseCase = new GetAllAlertsUseCase(alertsRepo);
 const getCurrentWeatherUseCase = new GetCurrentWeatherUseCase(locationForecastRepository);
 const searchLocationUseCase = new SearchLocationUseCase(mapTilerRepo);
 const getLocationNameUseCase = new GetLocationNameUseCase(mapTilerRepo);
-//const getMapWeatherUseCase = new GetMapWeatherUseCase(mapTilerRepo, getCurrentWeatherUseCase);
 const getMapWeatherUseCase = new GetMapWeatherUseCase(getCurrentWeatherUseCase);
 const getLocationGeometryUseCase = new GetLocationGeometryUseCase(mapTilerRepo);
 

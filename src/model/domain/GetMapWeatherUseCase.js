@@ -1,19 +1,8 @@
-// src/model/domain/GetMapWeatherUseCase.js
-//
-// Henter værdata for en liste med kartpunkter.
-//
-// Tar imot ferdige punkter (med navn og koordinater) fra UI-laget
-// og beriker dem med værdata fra getCurrentWeatherUseCase.
-//
-// Grid-punkter (name === "") vises med kun temperatur og ikon,
-// uten stedsnavn — dette håndteres av WeatherSymbolLabel.
-
+//src/model/domain/GetMapWeatherUseCase.js
 export default class GetMapWeatherUseCase {
 	#getCurrentWeatherUseCase;
 
 	constructor(getCurrentWeatherUseCase) {
-		// mapTilerRepository beholdes i signaturen for bakoverkompatibilitet
-		// med App.jsx, men brukes ikke lenger.
 		this.#getCurrentWeatherUseCase = getCurrentWeatherUseCase;
 	}
 

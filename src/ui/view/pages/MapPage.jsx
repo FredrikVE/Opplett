@@ -34,7 +34,7 @@ export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREE
 				)}
 
 				<WeatherMap
-					style={viewModel.mapStyle}
+					mapStyle={viewModel.mapStyle}
 					mapTarget={viewModel.mapTarget}
 					weatherPoints={viewModel.weatherPoints}
 					onMapChange={viewModel.onMapChange}

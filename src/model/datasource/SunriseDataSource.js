@@ -9,7 +9,7 @@ export default class SunriseDataSource extends DataSource {
 	  		`&lon=${lon}` +
 	  		`&date=${dateISO}`;
 
-		// offset er valgfritt – ikke send param om den er undefined/null
+		//offset er valgfritt – ikke send param om den er undefined/null
 		if (offset != null) {
 			path += `&offset=${encodeURIComponent(offset)}`;
 		}
