@@ -1,3 +1,4 @@
+//src/ui/viewmodel/MapPageViewModel.js
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import useSearchViewModel from "./SearchViewModel.js";
 import { resolveMapCamera } from "../utils/MapUtils/Camera/CameraPolicy.js";
@@ -82,7 +83,6 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 	/* =========================
 		CHILD VIEWMODELS
 	========================= */
-
 	const searchViewModel = useSearchViewModel(
 		searchLocationUseCase,
 		onLocationChange,
@@ -93,7 +93,6 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 	/* =========================
 		COMPUTED
 	========================= */
-
 	const highlightGeometry =
 		locationId === highlightState.locationId
 			? highlightState.geojson
@@ -115,7 +114,6 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 	/* =========================
 		EFFECTS – LOCATION
 	========================= */
-
 	const onLocationChangedLoadGeometry = useCallback(() => {
 		if (!locationId || !isAreaLocation(locationType)) {
 			resetHighlightState();
@@ -165,7 +163,6 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 	/* =========================
 		EFFECTS – WEATHER
 	========================= */
-
 	const onVisiblePointsChangedFetchWeather = useCallback(() => {
 		if (!mapPoints.length || !timezone) {
 			setWeatherPoints([]);
@@ -190,7 +187,6 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 	/* =========================
 		EFFECTS – UI / VIEWPORT
 	========================= */
-
 	const onHighlightChangedResetConfirmation = useCallback(() => {
 		if (!highlightGeometry) {
 			highlightConfirmedRef.current = false;
@@ -220,7 +216,6 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 	/* =========================
 		EFFECT BINDINGS
 	========================= */
-
 	useEffect(onLocationChangedLoadGeometry, [onLocationChangedLoadGeometry]);
 	useEffect(onVisiblePointsChangedFetchWeather, [onVisiblePointsChangedFetchWeather]);
 	useEffect(onHighlightChangedResetConfirmation, [onHighlightChangedResetConfirmation]);

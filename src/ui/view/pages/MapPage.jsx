@@ -1,5 +1,4 @@
 // src/ui/view/pages/MapPage.jsx
-
 import Navigation from "../../../navigation/Navigation.jsx";
 import SearchField from "../components/Common/SearchFeild/SearchField.jsx";
 import WeatherMap from "../components/MapPage/WeatherMap.jsx";

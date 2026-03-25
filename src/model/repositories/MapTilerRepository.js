@@ -1,3 +1,4 @@
+//src/model/repositories/MapTilerRepository.js
 import tzLookup from "tz-lookup";
 
 export default class MapTilerRepository {
