@@ -1,7 +1,4 @@
 // src/ui/view/components/MapPage/WeatherMap.jsx
-//
-// Samler alle kart-hooks i riktig rekkefølge.
-// Endring: mapTarget sendes ikke lenger til useMapInit (init bruker GPS).
 
 import { useRef } from "react";
 import "@maptiler/sdk/dist/maptiler-sdk.css";
@@ -12,24 +9,14 @@ import { useMapHighlight } from "./hooks/useMapHighlight.js";
 import { useLocationPoints } from "./hooks/useLocationPoints.js";
 import { useWeatherMarkers } from "./hooks/useWeatherMarkers.jsx";
 
-export default function WeatherMap({ apiKey, style, mapTarget, weatherPoints, onMapChange, activeLocation, highlightGeometry }) {
+export default function WeatherMap(props) {
+	const { apiKey, style, mapTarget, weatherPoints, onMapChange, activeLocation, highlightGeometry } = props;
 	const mapContainerRef = useRef(null);
 
-	// Init: bruker kun GPS-posisjon, ikke mapTarget
 	const map = useMapInit(mapContainerRef, apiKey, style, activeLocation);
-
-	// Kamera: flyTo ved lokasjonsbytte
 	useMapCamera(map, mapTarget);
-
-	// Highlight: kommunegrenser osv.
 	useMapHighlight(map, highlightGeometry);
-
-	// Finn synlige byer → rapporter punkter for værhenting
-	// highlightGeometry brukes til å prioritere byer innenfor valgt område
-	//useLocationPoints(map, activeLocation, highlightGeometry, onMapChange);
-	useLocationPoints(map, highlightGeometry, onMapChange);
-
-	// Tegn værmarkører
+	useLocationPoints(map, highlightGeometry, activeLocation?.countryCode, onMapChange);
 	useWeatherMarkers(map, weatherPoints);
 
 	return (

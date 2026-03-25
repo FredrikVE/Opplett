@@ -1,39 +1,51 @@
-//src/model/domain/GetMapWeatherUseCase.js
+// src/model/domain/GetMapWeatherUseCase.js
+//
+// Henter værdata for en liste med kartpunkter.
+// Punkter fra MarkerLayout har allerede navn.
+// Grid-punkter (name === "") reverse-geocodes for å finne nærmeste stedsnavn.
+
 export default class GetMapWeatherUseCase {
-    constructor(mapTilerRepository, getCurrentWeatherUseCase) {
-        this.mapTilerRepository = mapTilerRepository;
-        this.getCurrentWeatherUseCase = getCurrentWeatherUseCase;
-    }
+	constructor(mapTilerRepository, getCurrentWeatherUseCase) {
+		this.mapTilerRepository = mapTilerRepository;
+		this.getCurrentWeatherUseCase = getCurrentWeatherUseCase;
+	}
 
-    async execute(points, timeZone) {
-        if (!points?.length) return [];
+	async execute(points, timeZone) {
+		if (!points?.length) return [];
 
-        try {
-            // Vi kjører alle kallene parallelt med Promise.all for mye bedre hastighet
-            const weatherPromises = points.map(async (point) => {
-                const weather = await this.getCurrentWeatherUseCase.execute({
-                    lat: point.lat,
-                    lon: point.lon,
-                    timeZone
-                });
+		try {
+			const results = await Promise.all(
+				points.map((point) => this.#processPoint(point, timeZone))
+			);
 
-                if (!weather) return null;
+			return results.filter(Boolean);
+		} catch (error) {
+			console.error("[GetMapWeatherUseCase] Feil:", error);
+			return [];
+		}
+	}
 
-                // Slå sammen dataene rett i returen
-                return {
-                    ...point, // Beholder ID, navn, koordinater fra kartet
-                    ...weather, // Legger på temperatur og symbol
-                };
-            });
+	async #processPoint(point, timeZone) {
+		try {
+			const weather = await this.getCurrentWeatherUseCase.execute({
+				lat: point.lat,
+				lon: point.lon,
+				timeZone,
+			});
 
-            const results = await Promise.all(weatherPromises);
-            
-            // Filtrer bort de som feilet (null)
-            return results.filter(Boolean);
+			if (!weather) return null;
 
-        } catch (error) {
-            console.error("[GetMapWeatherUseCase] Feil:", error);
-            return [];
-        }
-    }
+			return {
+				...point,
+				...weather,
+				// Grid-punkter (name="") beholder tomt navn.
+				// WeatherSymbolLabel viser da kun temperatur + ikon.
+				name: point.name || "",
+			};
+		} 
+		
+		catch {
+			return null;
+		}
+	}
 }

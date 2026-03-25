@@ -12,7 +12,7 @@ import { MAP_MARKER_CONFIG } from "../../../../utils/MapUtils/Constants/MapConst
 import { distributeWeatherPoints } from "../../../../utils/MapUtils/Icons/DistributeWeatherPoints.js";
 import { getFeaturePriorityScore } from "../../../../utils/MapUtils/Icons/CalculateFeaturePriority.js";
 
-export function useLocationPoints(map, highlightGeometry, onMapChange) {
+export function useLocationPoints(map, highlightGeometry, countryCode, onMapChange) {
 	const layoutRef = useRef(null);
 	const activeMarkersRef = useRef(new Map());
 
@@ -44,7 +44,9 @@ export function useLocationPoints(map, highlightGeometry, onMapChange) {
 			const points = distributeWeatherPoints(
 				allMarkers,
 				map.getZoom(),
-				highlightGeometry
+				highlightGeometry,
+				map.getBounds().toArray(),
+				countryCode
 			);
 
 			onMapChange({
@@ -84,5 +86,5 @@ export function useLocationPoints(map, highlightGeometry, onMapChange) {
 			layoutRef.current = null;
 			activeMarkers.clear();
 		};
-	}, [map, highlightGeometry, onMapChange]);
+	}, [map, highlightGeometry, countryCode, onMapChange]);
 }

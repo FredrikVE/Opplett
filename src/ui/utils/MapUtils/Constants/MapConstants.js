@@ -26,7 +26,7 @@ export const LOCATION_TYPES = {
 };
 
 export const MAP_ZOOM_LEVELS = {
-	WORLD: 2.5,
+	WORLD: 2,
 	COUNTRY: 3,
 	REGION: 5,
 	SUB_REGION: 6,
