@@ -23,6 +23,10 @@ const MAJOR_CITIES = {
 		{ name: "Omsk", lat: 54.99, lon: 73.37 },
 		{ name: "Samara", lat: 53.20, lon: 50.15 },
 		{ name: "Arkhangelsk", lat: 64.54, lon: 40.54 },
+		{ name: "Petropavlovsk-Kamtsjatskij", lat: 53.01, lon: 158.65 },
+		{ name: "Magadan", lat: 59.56, lon: 150.80 },
+		{ name: "Anadyr", lat: 64.73, lon: 177.51 },
+
 	],
 	CA: [
 		{ name: "Ottawa", lat: 45.42, lon: -75.69 },
@@ -39,7 +43,18 @@ const MAJOR_CITIES = {
 		{ name: "St. John's", lat: 47.56, lon: -52.71 },
 		{ name: "Iqaluit", lat: 63.75, lon: -68.52 },
 		{ name: "Thunder Bay", lat: 48.38, lon: -89.25 },
+		{ name: "Inuvik", lat: 68.36, lon: -133.72 },
+		{ name: "Dawson City", lat: 64.06, lon: -139.43 },
+		{ name: "Rankin Inlet", lat: 62.81, lon: -92.08 },
+		{ name: "Churchill", lat: 58.77, lon: -94.17 },
+		{ name: "Resolute", lat: 74.70, lon: -94.97 },
+		{ name: "Alert", lat: 82.50, lon: -62.35 },
+		{ name: "Prince Rupert", lat: 54.31, lon: -130.32 },
+		{ name: "Saskatoon", lat: 52.13, lon: -106.67 },
+		{ name: "Regina", lat: 50.45, lon: -104.62 },
+		{ name: "Victoria", lat: 48.43, lon: -123.37 },
 	],
+
 	US: [
 		{ name: "Washington D.C.", lat: 38.91, lon: -77.04 },
 		{ name: "New York", lat: 40.71, lon: -74.01 },
@@ -55,6 +70,11 @@ const MAJOR_CITIES = {
 		{ name: "San Francisco", lat: 37.77, lon: -122.42 },
 		{ name: "Minneapolis", lat: 44.98, lon: -93.27 },
 		{ name: "Anchorage", lat: 61.22, lon: -149.90 },
+		{ name: "Fairbanks", lat: 64.84, lon: -147.72 },
+		{ name: "Juneau", lat: 58.30, lon: -134.42 },
+		{ name: "Barrow", lat: 71.29, lon: -156.79 },
+		{ name: "Nome", lat: 64.50, lon: -165.41 },
+		{ name: "Kodiak", lat: 57.79, lon: -152.41 },
 	],
 	CN: [
 		{ name: "Beijing", lat: 39.90, lon: 116.40 },
@@ -150,7 +170,22 @@ const MAJOR_CITIES = {
 		{ name: "Joensuu", lat: 62.60, lon: 29.76 },
 		{ name: "Sodankylä", lat: 67.42, lon: 26.59 },
 	],
-};
+	GL: [
+		{ name: "Nuuk", lat: 64.17, lon: -51.74 },
+		{ name: "Sisimiut", lat: 66.94, lon: -53.67 },
+		{ name: "Ilulissat", lat: 69.22, lon: -51.10 },
+		{ name: "Qaqortoq", lat: 60.72, lon: -46.04 },
+		{ name: "Aasiaat", lat: 68.71, lon: -52.87 },
+		{ name: "Maniitsoq", lat: 65.41, lon: -52.90 },
+		{ name: "Tasiilaq", lat: 65.61, lon: -37.63 },
+		{ name: "Narsaq", lat: 60.91, lon: -46.05 },
+		{ name: "Paamiut", lat: 61.99, lon: -49.67 },
+		{ name: "Upernavik", lat: 72.79, lon: -56.15 },
+		{ name: "Qaanaaq", lat: 77.47, lon: -69.23 },
+		{ name: "Ittoqqortoormiit", lat: 70.49, lon: -21.97 },
+		{ name: "Kangerlussuaq", lat: 67.01, lon: -50.69 },
+	],
+}
 
 /**
  * Henter hardkodede storbyer for et land basert på countryCode.

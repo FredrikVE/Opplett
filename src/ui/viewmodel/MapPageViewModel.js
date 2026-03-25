@@ -36,12 +36,12 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 	const [currentZoom, setCurrentZoom] = useState(null);
 
 	const highlightConfirmedRef = useRef(false);
+	const previousMapTargetRef = useRef(null);
 	const mapStyle = mapTilerRepository.getMapStyle();
 
 	/* =========================
 		COMMANDS
 	========================= */
-
 	const clearWeatherPoints = useCallback(() => {
 		setWeatherPoints([]);
 	}, []);
@@ -105,10 +105,29 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 		? activeLocation?.countryCode ?? null
 		: null;
 
-	const mapTarget = resolveMapCamera({
-		location: activeLocation,
-		geometryBounds,
-	});
+	const mapTarget = useMemo(() => {
+		const next = resolveMapCamera({
+			location: activeLocation,
+			geometryBounds,
+		});
+
+		const prev = previousMapTargetRef.current;
+
+		// Samme lokasjon men mistet geometri → behold kameraposisjon
+		const sameLocation = prev
+			&& next
+			&& activeLocation.id === prev._locationId;
+
+		if (sameLocation && !geometryBounds) {
+			return prev;
+		}
+
+		if (next) {
+			previousMapTargetRef.current = { ...next, _locationId: activeLocation.id };
+		}
+
+		return next;
+	}, [activeLocation, geometryBounds]);
 
 	/* =========================
 		EFFECTS – LOCATION
@@ -193,16 +212,18 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 	}, [highlightGeometry]);
 
 	const onViewportChangedHandleHighlightVisibility = useCallback(() => {
-		if (!highlightGeometry || !viewportBounds || !geometryBounds) return;
+		if (!highlightGeometry || !viewportBounds || !geometryBounds) {
+			return;
+		}
 
-		const [[geoW, geoS], [geoE, geoN]] = geometryBounds;
-		const [[vpW, vpS], [vpE, vpN]] = viewportBounds;
+		const [[geoWest, geoSouth], [geoEast, geoNorth]] = geometryBounds;
+		const [[vpWest, vpSouth], [vpEast, vpNorth]] = viewportBounds;
 
-		const noOverlap =
-			vpE < geoW || vpW > geoE ||
-			vpN < geoS || vpS > geoN;
+		const highlightOutsideViewport =
+			vpEast < geoWest || vpWest > geoEast ||
+			vpNorth < geoSouth || vpSouth > geoNorth;
 
-		if (!noOverlap) {
+		if (!highlightOutsideViewport) {
 			highlightConfirmedRef.current = true;
 			return;
 		}
@@ -210,7 +231,11 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 		if (highlightConfirmedRef.current) {
 			resetHighlightState();
 		}
-	}, [viewportBounds, highlightGeometry, geometryBounds, resetHighlightState]);
+	}, 
+	
+	[viewportBounds, highlightGeometry, geometryBounds, resetHighlightState]);
+
+
 
 	/* =========================
 		EFFECT BINDINGS

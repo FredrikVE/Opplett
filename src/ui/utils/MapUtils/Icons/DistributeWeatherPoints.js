@@ -129,11 +129,26 @@ function filterByDistance(candidates, maxMarkers, minDistance) {
 /* =========================
     CANDIDATE BUILDING
 ========================= */
+function isWithinBounds(point, bounds) {
+    if (!bounds) return true;
+
+    const [[west, south], [east, north]] = bounds;
+
+    return point.lat >= south
+        && point.lat <= north
+        && point.lon >= west
+        && point.lon <= east;
+}
+
 function buildCandidates(markerPoints, countryCode, zoom, bounds) {
     const majorCities = getMajorCities(countryCode);
 
     if (majorCities.length > 0) {
-        return [...majorCities.map(cityToPoint), ...markerPoints];
+        const visibleCities = majorCities
+            .map(cityToPoint)
+            .filter(city => isWithinBounds(city, bounds));
+
+        return [...visibleCities, ...markerPoints];
     }
 
     if (needsGridFallback(markerPoints.length, zoom)) {
