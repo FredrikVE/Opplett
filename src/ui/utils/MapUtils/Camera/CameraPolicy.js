@@ -9,7 +9,6 @@
 //       prioriterer største landmasse, f.eks. fastlands-Norge)
 //   2. Område med søke-bounds? → senter + zoom fra bounds
 //   3. Fallback → geocoder-koordinat + type-basert zoom
-
 import { MAP_ZOOM_LEVELS, MAP_ZOOM_LIMITS } from "../Constants/MapConstants.js";
 
 function clampZoom(zoom) {
@@ -130,7 +129,14 @@ export function resolveMapCamera({ location, geometryBounds }) {
 		};
 	}
 
-	// 3. Fallback → geocoder-koordinat + type-basert zoom
+	// 3. For land/kontinenter uten geometri ennå: VENT.
+	//    Returnerer null slik at useMapCamera ikke flyr til feil zoom.
+	//    Når geometrien lastes, trigges steg 1 og gir riktig kamera.
+	if (SKIP_SEARCH_BOUNDS.includes(location.type) && location.id) {
+		return null;
+	}
+
+	// 4. Fallback → geocoder-koordinat + type-basert zoom
 	return {
 		id: `${location.id ?? "gps"}-${location.type ?? "default"}`,
 		lat: location.lat,
