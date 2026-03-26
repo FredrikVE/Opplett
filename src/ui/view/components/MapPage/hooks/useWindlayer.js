@@ -28,6 +28,9 @@ export function useWindLayer(map, isActive) {
 		return new WindLayer({
 			...WIND_LAYER_OPTIONS,
 			colorramp: buildYrColorRamp(),
+			//valueRange: [0, 33],
+			//normalize: false,
+
 		});
 	}, []);
 
@@ -42,7 +45,9 @@ export function useWindLayer(map, isActive) {
 
 			map.addLayer(windLayer, beforeLayer);
 			await windLayer.onSourceReadyAsync();
-		} catch (error) {
+		} 
+		
+		catch (error) {
 			console.error("[useWindLayer] Kunne ikke legge til vindlag:", error);
 		}
 	}, [map]);
