@@ -1,3 +1,4 @@
+//src/ui/view/components/MapPage/hooks/useDeviceLocationDot.js
 import { useEffect, useRef, useCallback } from "react";
 import * as maptilersdk from "@maptiler/sdk";
 
@@ -20,10 +21,6 @@ function createDotElement() {
 export function useDeviceLocationDot(map, deviceCoords) {
     const markerRef = useRef(null);
 
-    /* =========================
-        COMMANDS
-    ========================= */
-
     const createMarker = useCallback((lat, lon) => {
         return new maptilersdk.Marker({
             element: createDotElement(),
@@ -38,9 +35,6 @@ export function useDeviceLocationDot(map, deviceCoords) {
         markerRef.current = null;
     }, []);
 
-    /* =========================
-        EFFECT (EVENT STYLE)
-    ========================= */
     const onDeviceCoordsChangedSyncMarker = useCallback(() => {
         if (!map || !deviceCoords?.lat || !deviceCoords?.lon) {
             removeMarker();
@@ -59,9 +53,6 @@ export function useDeviceLocationDot(map, deviceCoords) {
         };
     }, [map, deviceCoords, createMarker, removeMarker]);
 
-    /* =========================
-        EFFECT BINDING
-    ========================= */
     useEffect(onDeviceCoordsChangedSyncMarker, [
         onDeviceCoordsChangedSyncMarker
     ]);
