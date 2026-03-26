@@ -3,7 +3,7 @@ import useSearchViewModel from "./SearchViewModel.js";
 import { resolveMapCamera } from "../utils/MapUtils/Camera/CameraPolicy.js";
 import { isAreaLocation } from "../utils/MapUtils/Camera/MapLocationLogic.js";
 import { getBoundsFromGeometry } from "../utils/MapUtils/Camera/MapBoundsHelper.js";
-import { LAYER_KEYS } from "../utils/MapUtils/MapModeLayers/Weatherlayerconfig.js";
+import { LAYER_KEYS } from "../view/components/MapPage/MapLayerToggle/MapToggleConfig.js";
 
 /* =========================
 	CONSTANTS

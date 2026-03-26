@@ -12,7 +12,8 @@ import { useWindLayer } from "./MapHooks/useWindlayer.js";
 
 import MapLayerToggle from "./MapLayerToggle/MapLayerToggle.jsx";
 import WindLegend from "./Windmap/WindLegend.jsx";
-import { LAYER_KEYS } from "../../../utils/MapUtils/MapModeLayers/Weatherlayerconfig.js";
+//import { LAYER_KEYS } from "../../../utils/MapUtils/MapModeLayers/Weatherlayerconfig.js";
+import { LAYER_KEYS } from "./MapLayerToggle/MapToggleConfig.js";
 
 export default function WeatherMap(props) {
 	const {

@@ -1,8 +1,9 @@
 //src/ui/view/components/MapPage/MapLayerToggle/MapLayerToggle.jsx
 import { useState, useRef, useEffect, useCallback } from "react";
-import { WEATHER_LAYERS, LAYER_KEYS } from "../../../../utils/MapUtils/MapModeLayers/Weatherlayerconfig.js";
 import MapLayerButton from "./MapLayerButton.jsx";
 import MapLayerDropdown from "./MapLayerDropdown.jsx";
+import { WEATHER_LAYERS, LAYER_KEYS } from "./MapToggleConfig.js";
+
 
 export default function MapLayerToggle({ activeLayer, onLayerChange, showMarkers, onToggleMarkers }) {
 	const [isOpen, setIsOpen] = useState(false);
