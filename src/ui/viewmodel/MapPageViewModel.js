@@ -39,6 +39,9 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 	const [activeLayer, setActiveLayer] = useState(LAYER_KEYS.NONE);
 	const [showMarkersWithLayer, setShowMarkersWithLayer] = useState(true);
 
+	// Teller som tvinger nytt mapTarget selv når lokasjonen er uendret
+	const [resetCounter, setResetCounter] = useState(0);
+
 	const highlightConfirmedRef = useRef(false);
 	const previousMapTargetRef = useRef(null);
 	const mapStyle = mapTilerRepository.getMapStyle();
@@ -56,6 +59,11 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 
 	const handleResetToDeviceLocation = useCallback(() => {
 		clearWeatherPoints();
+		// Inkrementerer telleren slik at mapTarget får ny ID
+		// selv om activeLocation allerede peker på enhetsposisjonen
+		setResetCounter(prev => prev + 1);
+		// Nullstiller previousMapTargetRef så kameraet ikke blir blokkert
+		previousMapTargetRef.current = null;
 		onResetToDeviceLocation();
 	}, [clearWeatherPoints, onResetToDeviceLocation]);
 
@@ -123,23 +131,30 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 			geometryBounds,
 		});
 
+		if (!next) {
+			return null;
+		}
+
 		const prev = previousMapTargetRef.current;
 
 		// Samme lokasjon men mistet geometri → behold kameraposisjon
 		const sameLocation = prev
-			&& next
 			&& activeLocation.id === prev._locationId;
 
 		if (sameLocation && !geometryBounds) {
 			return prev;
 		}
 
-		if (next) {
-			previousMapTargetRef.current = { ...next, _locationId: activeLocation.id };
-		}
+		// resetCounter i ID-en sikrer at reset alltid gir et nytt mapTarget
+		const target = {
+			...next,
+			id: `${next.id}-reset${resetCounter}`,
+			_locationId: activeLocation.id,
+		};
 
-		return next;
-	}, [activeLocation, geometryBounds]);
+		previousMapTargetRef.current = target;
+		return target;
+	}, [activeLocation, geometryBounds, resetCounter]);
 
 	/* =========================
 		EFFECTS – LOCATION
