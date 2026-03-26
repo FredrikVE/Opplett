@@ -59,6 +59,8 @@
 .map-layer-chevron {
 	flex-shrink: 0;
 	transition: transform 0.2s ease;
+	color: inherit;
+
 }
 
 .map-layer-chevron.open {
