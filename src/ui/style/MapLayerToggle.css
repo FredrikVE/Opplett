@@ -1,0 +1,195 @@
+/*src/ui/style/MapLayerToggle.css*/
+
+/* =========================
+   POSISJONERING
+========================= */
+.map-layer-toggle {
+	position: absolute;
+	bottom: 24px;
+	right: 16px;
+	z-index: 10;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+}
+
+/* =========================
+   HOVEDKNAPP
+========================= */
+.map-layer-button {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 14px;
+	border: none;
+	border-radius: 24px;
+	background: rgba(255, 255, 255, 0.95);
+	color: #333;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+	backdrop-filter: blur(8px);
+	transition: background 0.2s, box-shadow 0.2s;
+	white-space: nowrap;
+}
+
+.map-layer-button:hover {
+	background: #fff;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+.map-layer-button.has-overlay {
+	background: rgba(66, 133, 244, 0.95);
+	color: #fff;
+}
+
+.map-layer-button.has-overlay:hover {
+	background: rgba(66, 133, 244, 1);
+}
+
+.map-layer-button-icon {
+	flex-shrink: 0;
+}
+
+.map-layer-button-label {
+	line-height: 1;
+}
+
+.map-layer-chevron {
+	flex-shrink: 0;
+	transition: transform 0.2s ease;
+}
+
+.map-layer-chevron.open {
+	transform: rotate(180deg);
+}
+
+/* =========================
+   DROPDOWN
+========================= */
+.map-layer-dropdown {
+	margin-bottom: 8px;
+	min-width: 200px;
+	background: rgba(255, 255, 255, 0.97);
+	border-radius: 12px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+	backdrop-filter: blur(12px);
+	overflow: hidden;
+	animation: slideUp 0.15s ease-out;
+}
+
+@keyframes slideUp {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.map-layer-dropdown-header {
+	padding: 10px 14px 6px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	color: #888;
+}
+
+/* =========================
+   ALTERNATIVER
+========================= */
+.map-layer-option {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	padding: 10px 14px;
+	border: none;
+	background: transparent;
+	color: #333;
+	font-size: 14px;
+	cursor: pointer;
+	transition: background 0.15s;
+	text-align: left;
+}
+
+.map-layer-option:hover {
+	background: rgba(0, 0, 0, 0.05);
+}
+
+.map-layer-option.active {
+	background: rgba(66, 133, 244, 0.08);
+	color: #1a73e8;
+	font-weight: 500;
+}
+
+.map-layer-option-icon {
+	font-size: 16px;
+	width: 22px;
+	text-align: center;
+	flex-shrink: 0;
+}
+
+.map-layer-option-label {
+	flex: 1;
+}
+
+.map-layer-option-check {
+	font-size: 14px;
+	font-weight: 600;
+	color: #1a73e8;
+	width: 18px;
+	text-align: center;
+}
+
+/* =========================
+   DIVIDER
+========================= */
+.map-layer-divider {
+	height: 1px;
+	background: rgba(0, 0, 0, 0.08);
+	margin: 4px 12px;
+}
+
+/* =========================
+   DARK MODE SUPPORT
+========================= */
+@media (prefers-color-scheme: dark) {
+	.map-layer-button {
+		background: rgba(40, 40, 40, 0.95);
+		color: #e0e0e0;
+	}
+
+	.map-layer-button:hover {
+		background: rgba(50, 50, 50, 1);
+	}
+
+	.map-layer-dropdown {
+		background: rgba(40, 40, 40, 0.97);
+	}
+
+	.map-layer-option {
+		color: #e0e0e0;
+	}
+
+	.map-layer-option:hover {
+		background: rgba(255, 255, 255, 0.08);
+	}
+
+	.map-layer-option.active {
+		background: rgba(66, 133, 244, 0.15);
+		color: #8ab4f8;
+	}
+
+	.map-layer-option-check {
+		color: #8ab4f8;
+	}
+
+	.map-layer-dropdown-header {
+		color: #999;
+	}
+}

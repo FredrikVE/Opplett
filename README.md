@@ -38,6 +38,11 @@ npm install @maptiler/marker-layout
 npm install --save @maptiler/sdk
 ```
 
+**For bruk av vindkart osv**
+
+```bash
+npm install @maptiler/weather
+```
 
 ## Bruk av Highcharts
 

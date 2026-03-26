@@ -1,9 +1,9 @@
-//src/ui/viewmodel/MapPageViewModel.js
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import useSearchViewModel from "./SearchViewModel.js";
 import { resolveMapCamera } from "../utils/MapUtils/Camera/CameraPolicy.js";
 import { isAreaLocation } from "../utils/MapUtils/Camera/MapLocationLogic.js";
 import { getBoundsFromGeometry } from "../utils/MapUtils/Camera/MapBoundsHelper.js";
+import { LAYER_KEYS } from "../utils/MapUtils/MapModeLayers/Weatherlayerconfig.js";
 
 /* =========================
 	CONSTANTS
@@ -35,6 +35,10 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 	const [isLoading, setIsLoading] = useState(false);
 	const [currentZoom, setCurrentZoom] = useState(null);
 
+	// Kartlag-state
+	const [activeLayer, setActiveLayer] = useState(LAYER_KEYS.NONE);
+	const [showMarkersWithLayer, setShowMarkersWithLayer] = useState(true);
+
 	const highlightConfirmedRef = useRef(false);
 	const previousMapTargetRef = useRef(null);
 	const mapStyle = mapTilerRepository.getMapStyle();
@@ -62,6 +66,14 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 		if (viewport?.bounds) {
 			setViewportBounds(viewport.bounds);
 		}
+	}, []);
+
+	const onLayerChange = useCallback((layerKey) => {
+		setActiveLayer(layerKey);
+	}, []);
+
+	const onToggleMarkers = useCallback(() => {
+		setShowMarkersWithLayer(prev => !prev);
 	}, []);
 
 	const loadWeather = useCallback(async (points, timezone) => {
@@ -259,6 +271,12 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 
 		weatherPoints,
 		isLoading,
+
+		// Kartlag
+		activeLayer,
+		onLayerChange,
+		showMarkersWithLayer,
+		onToggleMarkers,
 
 		query: searchViewModel.query,
 		suggestions: searchViewModel.suggestions,

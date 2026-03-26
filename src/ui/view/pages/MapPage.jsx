@@ -1,4 +1,3 @@
-// src/ui/view/pages/MapPage.jsx
 import Navigation from "../../../navigation/Navigation.jsx";
 import SearchField from "../components/Common/SearchFeild/SearchField.jsx";
 import WeatherMap from "../components/MapPage/WeatherMap.jsx";
@@ -42,6 +41,10 @@ export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREE
 					deviceCoords={viewModel.deviceCoords}
 					highlightGeometry={viewModel.highlightGeometry}
 					countryCode={viewModel.countryCode}
+					activeLayer={viewModel.activeLayer}
+					onLayerChange={viewModel.onLayerChange}
+					showMarkersWithLayer={viewModel.showMarkersWithLayer}
+					onToggleMarkers={viewModel.onToggleMarkers}
 				/>
 			</main>
 		</div>
