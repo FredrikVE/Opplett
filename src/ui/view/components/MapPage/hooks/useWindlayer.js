@@ -1,13 +1,22 @@
-//src/ui/view/components/MapPage/hooks/useWindlayer.js
 import { useEffect, useRef, useCallback } from "react";
 import { WindLayer, ColorRamp } from "@maptiler/weather";
-import { WIND_LAYER_OPTIONS } from "../../../../utils/MapUtils/MapModeLayers/Weatherlayerconfig.js";
+import { WIND_LAYER_OPTIONS, WIND_COLOR_STOPS } from "../../../../utils/MapUtils/MapModeLayers/Weatherlayerconfig.js";
 
 /**
  * Plasserer WindLayer under label-lagene slik at by-navn
  * forblir lesbare oppå vind-overlayet.
  */
 const INSERT_BEFORE_LAYER = "Place labels";
+
+/**
+ * Bygger en yr.no-inspirert ColorRamp fra WIND_COLOR_STOPS.
+ * API: new ColorRamp({ stops: [...] })
+ */
+function buildYrColorRamp() {
+	return new ColorRamp({
+		stops: WIND_COLOR_STOPS,
+	});
+}
 
 export function useWindLayer(map, isActive) {
 	const layerRef = useRef(null);
@@ -18,7 +27,7 @@ export function useWindLayer(map, isActive) {
 	const createWindLayer = useCallback(() => {
 		return new WindLayer({
 			...WIND_LAYER_OPTIONS,
-			colorramp: ColorRamp.builtin.WIND,
+			colorramp: buildYrColorRamp(),
 		});
 	}, []);
 
