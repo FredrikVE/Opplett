@@ -1,17 +1,4 @@
 //src/ui/utils/MapUtils/MapModeLayers/Weatherlayerconfig.js
-/**
- * Konfigurasjon for vær-overlay-lag på kartet.
- * 
- * Hvert lag har en unik nøkkel, visningsnavn, og en factory-funksjon
- * som oppretter selve MapTiler Weather-laget.
- * 
- * For å legge til nye lag (f.eks. nedbør, radar, temperatur):
- *   1. Legg til en ny entry i WEATHER_LAYERS
- *   2. Opprett en tilhørende hook (useXxxLayer.js)
- * 
- * @module WeatherLayerConfig
- */
-
 export const LAYER_KEYS = {
 	NONE: "none",
 	WIND: "wind",

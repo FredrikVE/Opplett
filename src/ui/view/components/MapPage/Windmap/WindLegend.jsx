@@ -1,9 +1,10 @@
 //src/ui/view/components/MapPage/WindLegend.jsx
-import { WIND_LEGEND_STEPS } from "../../../utils/MapUtils/MapModeLayers/Weatherlayerconfig.js";
-import "../../../style/WindLegend.css";
+import { WIND_LEGEND_STEPS } from "../../../../utils/MapUtils/MapModeLayers/Weatherlayerconfig";
 
 export default function WindLegend({ isVisible }) {
-	if (!isVisible) return null;
+	if (!isVisible) {
+		return null;
+	}
 
 	return (
 		<div className="wind-legend">

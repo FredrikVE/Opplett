@@ -10,9 +10,8 @@ import { useWeatherMarkers } from "./hooks/useWeatherMarkers.jsx";
 import { useDeviceLocationDot } from "./hooks/useDeviceLocationDot.js";
 import { useWindLayer } from "./hooks/useWindlayer.js";
 
-import MapLayerToggle from "./MapLayerToggle.jsx";
-import WindLegend from "./WindLegend.jsx";
-
+import MapLayerToggle from "./MapLayerToggle/MapLayerToggle.jsx";
+import WindLegend from "./Windmap/WindLegend.jsx";
 import { LAYER_KEYS } from "../../../utils/MapUtils/MapModeLayers/Weatherlayerconfig.js";
 
 export default function WeatherMap(props) {

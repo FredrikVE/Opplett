@@ -2,7 +2,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import * as maptilersdk from "@maptiler/sdk";
 import { createRoot } from "react-dom/client";
-import WeatherSymbolLabel from "../WeatherSymbolLabel.jsx";
+import WeatherSymbolLabel from "../Forecastmap/WeatherSymbolLabel";
 
 function disposeMarkerEntry(entry) {
 	try {
