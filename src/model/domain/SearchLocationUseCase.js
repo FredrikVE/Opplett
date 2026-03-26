@@ -1,4 +1,4 @@
-// src/model/domain/SearchLocationUseCase.js
+//src/model/domain/SearchLocationUseCase.js
 export default class SearchLocationUseCase {
     
     constructor(mapTilerRepository) {

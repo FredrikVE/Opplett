@@ -5,8 +5,7 @@ export default class MapTilerDataSource {
 	#apiKey = API_KEY;
 	#baseUrl = "https://api.maptiler.com/geocoding";
 	#limit = 10; // Sentral styring av antall resultater
-
-	#allowedTypes = ["continental_marine", "major_landform", "country", "region", "subregion", "county", "municipality", "place", "locality", "neighbourhood", "address"];
+	#allowedTypes = ["continental_marine", "country", "region", "subregion", "county", "municipality", "place", "locality", "neighbourhood", "address"];
 
 	constructor() {
 		if (!this.#apiKey) {
@@ -54,6 +53,7 @@ export default class MapTilerDataSource {
 		}
 
 		const data = await response.json();
+		console.log("[MapTiler] Rådata for query:", query, data.features);
 		return (data.features || []).map(f => this.#mapFeatureToLocation(f));
 	}
 
