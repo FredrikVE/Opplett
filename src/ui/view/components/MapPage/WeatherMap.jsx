@@ -2,13 +2,13 @@
 import { useRef } from "react";
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 
-import { useMapInit } from "./hooks/useMapInit.js";
-import { useMapCamera } from "./hooks/useMapCamera.js";
-import { useMapHighlight } from "./hooks/useMapHighlight.js";
-import { useLocationPoints } from "./hooks/useLocationPoints.js";
-import { useWeatherMarkers } from "./hooks/useWeatherMarkers.jsx";
-import { useDeviceLocationDot } from "./hooks/useDeviceLocationDot.js";
-import { useWindLayer } from "./hooks/useWindlayer.js";
+import { useMapInit } from "./MapHooks/useMapInit.js";
+import { useMapCamera } from "./MapHooks/useMapCamera.js";
+import { useMapHighlight } from "./MapHooks/useMapHighlight.js";
+import { useLocationPoints } from "./MapHooks/useLocationPoints.js";
+import { useWeatherMarkers } from "./MapHooks/useWeatherMarkers.jsx";
+import { useDeviceLocationDot } from "./MapHooks/useDeviceLocationDot.js";
+import { useWindLayer } from "./MapHooks/useWindlayer.js";
 
 import MapLayerToggle from "./MapLayerToggle/MapLayerToggle.jsx";
 import WindLegend from "./Windmap/WindLegend.jsx";
