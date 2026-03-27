@@ -7,9 +7,9 @@ export default function MapLayerOption({ layer, isActive, onClick }) {
 		>
 			<span className="map-layer-option-icon">{layer.icon}</span>
 			<span className="map-layer-option-label">{layer.label}</span>
-			{isActive && (
-				<span className="map-layer-option-check">✓</span>
-			)}
+				{isActive && (
+					<span className="map-layer-option-check">✓</span>
+				)}
 		</button>
 	);
 }

@@ -9,10 +9,14 @@ const UI_LOCALE = "nb-NO";
  * Følger samme SSOT-mønster som timeFormatters.js
  */
 function formatTimeLabel(timestampMs, tz) {
-	if (!timestampMs) return "";
+	if (!timestampMs) {
+		return "";
+	}
 
 	const dt = DateTime.fromMillis(timestampMs).setZone(tz).setLocale(UI_LOCALE);
-	if (!dt.isValid) return "";
+	if (!dt.isValid) {
+		return "";
+	}
 
 	return dt.toFormat("ccc d. MMM HH:mm");
 }
@@ -21,47 +25,53 @@ function formatTimeLabel(timestampMs, tz) {
  * Kort tidslabel for start/slutt (f.eks. "fre 14:00").
  */
 function formatShortTime(timestampMs, tz) {
-	if (!timestampMs) return "";
+	if (!timestampMs) {
+		return "";
+	}
 
 	const dt = DateTime.fromMillis(timestampMs).setZone(tz).setLocale(UI_LOCALE);
-	if (!dt.isValid) return "";
+	if (!dt.isValid) {
+		return "";
+	}
 
 	return dt.toFormat("ccc HH:mm");
 }
 
-export default function PrecipitationTimeline({
-	isVisible,
-	isPlaying,
-	startMs,
-	endMs,
-	currentMs,
-	timezone,
-	onPlay,
-	onPause,
-	onSeek,
-}) {
+export default function PrecipitationTimeline(props) {
+	const { isVisible, isPlaying, startMs, endMs, currentMs, timezone, onPlay, onPause, onSeek } = props;
 	// Alle hooks MÅ kjøres før early return
-	const hasData = startMs > 0 && endMs > 0 && endMs > startMs;
 
+	const hasData = startMs > 0 && endMs > 0 && endMs > startMs;
 	const progressPercent = useMemo(() => {
-		if (!hasData) return 0;
+		if (!hasData) {
+			return 0;
+		}
+
 		const range = endMs - startMs;
 		const elapsed = (currentMs || startMs) - startMs;
 		return Math.max(0, Math.min(100, (elapsed / range) * 100));
-	}, [hasData, startMs, endMs, currentMs]);
+	}, 
+
+	[hasData, startMs, endMs, currentMs]);
 
 	const handleSliderChange = useCallback((e) => {
 		const value = Number(e.target.value);
 		onSeek?.(value);
-	}, [onSeek]);
+	}, 
+	
+	[onSeek]);
 
 	const handlePlayPause = useCallback(() => {
 		if (isPlaying) {
 			onPause?.();
-		} else {
+		} 
+		
+		else {
 			onPlay?.();
 		}
-	}, [isPlaying, onPlay, onPause]);
+	}, 
+	
+	[isPlaying, onPlay, onPause]);
 
 	const currentLabel = formatTimeLabel(currentMs || startMs, timezone);
 	const startLabel = formatShortTime(startMs, timezone);
@@ -74,6 +84,7 @@ export default function PrecipitationTimeline({
 
 	return (
 		<div className="precip-timeline">
+			
 			{/* Tidslabel */}
 			<div className="precip-timeline-time">
 				<span className="precip-timeline-current">{currentLabel}</span>

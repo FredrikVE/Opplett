@@ -10,6 +10,7 @@ export default function MapLayerDropdown(props) {
 			<div className="map-layer-dropdown-header">Kartlag</div>
 
 			<div className="map-layer-dropdown-list">
+				
 				{layers.map(layer => (
 					<MapLayerOption
 						key={layer.key}

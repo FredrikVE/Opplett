@@ -11,7 +11,6 @@ export default function PrecipitationLegend({ isVisible }) {
 	return (
 		<div className="precip-legend">
 			<div className="precip-legend-header">
-				<span className="precip-legend-icon">🌧️</span>
 				<span className="precip-legend-unit">mm/t</span>
 			</div>
 

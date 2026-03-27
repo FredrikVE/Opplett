@@ -20,6 +20,7 @@ const WIND_LEGEND_STEPS = [
 ];
 
 export default function WindLegend({ isVisible }) {
+
 	if (!isVisible) {
 		return null;
 	}
@@ -27,7 +28,6 @@ export default function WindLegend({ isVisible }) {
 	return (
 		<div className="wind-legend">
 			<div className="wind-legend-header">
-				<span className="wind-legend-icon">💨</span>
 				<span className="wind-legend-unit">m/s</span>
 			</div>
 

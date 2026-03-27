@@ -4,6 +4,7 @@ import { syncMapHighlight } from "../../../../utils/MapUtils/HighlightBorder/Map
 
 export function useMapHighlight(map, highlightGeometry) {
 	useEffect(() => {
+		
 		if (!map) {
 			return;
 		}
