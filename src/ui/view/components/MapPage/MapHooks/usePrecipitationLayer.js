@@ -1,6 +1,7 @@
 //src/ui/view/components/MapPage/MapHooks/usePrecipitationLayer.js
 import { useEffect, useRef, useCallback } from "react";
 import { PrecipitationLayer, ColorRamp } from "@maptiler/weather";
+import { buildPrecipColorStops } from "../PrecipitationMap/PrecipitationScale.js";
 
 /**
  * Plasserer PrecipitationLayer under label-lagene slik at by-navn
@@ -8,40 +9,9 @@ import { PrecipitationLayer, ColorRamp } from "@maptiler/weather";
  */
 const INSERT_BEFORE_LAYER = "Place labels";
 
-/**
- * yr.no-inspirert fargeskala for nedbør.
- * Blåtoner som er godt synlige mot kartet.
- * value = mm/t
- */
-/**
- * yr.no-inspirert fargeskala med skarpe, diskrete trinn.
- * Høy alpha + få steg = tydelig "blokk"-effekt.
- * Cyan/blå-dominert som yr.no sin radar.
- */
-const PRECIP_COLOR_STOPS = [
-	{ value: 0,    color: [200, 220, 240,   0] },   // Transparent (ingen nedbør)
-	{ value: 0.09, color: [200, 220, 240,   0] },   // Fortsatt transparent
-	{ value: 0.1,  color: [185, 225, 255, 140] },   // Svak lysblå – hopp inn
-	{ value: 0.19, color: [185, 225, 255, 140] },   // Hold
-	{ value: 0.2,  color: [135, 206, 250, 190] },   // Lys himmelblå
-	{ value: 0.49, color: [135, 206, 250, 190] },   // Hold
-	{ value: 0.5,  color: [ 80, 185, 245, 210] },   // Klar cyan
-	{ value: 0.99, color: [ 80, 185, 245, 210] },   // Hold
-	{ value: 1,    color: [ 30, 160, 235, 225] },   // Sterk cyan
-	{ value: 1.99, color: [ 30, 160, 235, 225] },   // Hold
-	{ value: 2,    color: [ 20, 120, 220, 235] },   // Mellomblå
-	{ value: 4.99, color: [ 20, 120, 220, 235] },   // Hold
-	{ value: 5,    color: [ 10,  75, 200, 245] },   // Dyp blå
-	{ value: 9.99, color: [ 10,  75, 200, 245] },   // Hold
-	{ value: 10,   color: [ 40,  40, 180, 250] },   // Blålilla
-	{ value: 14.9, color: [ 40,  40, 180, 250] },   // Hold
-	{ value: 15,   color: [120,  20, 160, 250] },   // Lilla
-	{ value: 50,   color: [120,  20, 160, 250] },   // Hold til maks
-];
-
-function buildYrPrecipColorRamp() {
+function buildPrecipColorRamp() {
 	return new ColorRamp({
-		stops: PRECIP_COLOR_STOPS,
+		stops: buildPrecipColorStops(),
 	});
 }
 
@@ -63,7 +33,7 @@ export function usePrecipitationLayer(map, isActive, onTimeUpdate) {
 	const createPrecipitationLayer = useCallback(() => {
 		return new PrecipitationLayer({
 			...PRECIPITATION_LAYER_OPTIONS,
-			colorramp: buildYrPrecipColorRamp(),
+			colorramp: buildPrecipColorRamp(),
 		});
 	}, []);
 
