@@ -1,5 +1,5 @@
 //src/ui/view/components/MapPage/WeatherMap.jsx
-import { useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback, useEffect, useMemo } from "react";
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 
 import { useMapInit } from "./MapHooks/useMapInit.js";
@@ -53,40 +53,52 @@ export default function WeatherMap(props) {
 
 	//Vind
 	const isWindActive = activeLayer === LAYER_KEYS.WIND;
-	useWindLayer(map, isWindActive);
+	const windControls = useWindLayer(map, isWindActive, onTimeUpdate);
 
 	//Nedbør
 	const isPrecipActive = activeLayer === LAYER_KEYS.PRECIPITATION;
 	const precipControls = usePrecipitationLayer(map, isPrecipActive, onTimeUpdate);
-	useMapLayerDimming(map, isPrecipActive);	//Dim kart ved nedbør
+	useMapLayerDimming(map, isPrecipActive);			//Dim kart ved nedbør
 
-	//Handlefunksjoner for tidslinje
+	//Active timeline layer
+	const activeTimelineLayer = useMemo(() => {
+		if (isPrecipActive) {
+			return precipControls;
+		}
+
+		if (isWindActive) {
+			return windControls;
+		}
+
+		return null;
+	}, 
+	[isPrecipActive, isWindActive, precipControls, windControls]);
+
+
+	//Timeline handlers
 	const handlePlay = useCallback(() => {
-		precipControls.play();
+		activeTimelineLayer?.play?.();
 		play();
-	}, [precipControls, play]);
+	}, [activeTimelineLayer, play]);
 
 	const handlePause = useCallback(() => {
-		precipControls.pause();
+		activeTimelineLayer?.pause?.();
 		pause();
-	}, [precipControls, pause]);
+	}, [activeTimelineLayer, pause]);
 
 	const handleSeek = useCallback((timestampMs) => {
-		precipControls.seekTo(timestampMs);
-	}, [precipControls]);
+		activeTimelineLayer?.seekTo?.(timestampMs);
+	}, [activeTimelineLayer]);
 
-
-	const onPrecipLayerDeactivatedResetTimeline = useCallback(() => {
-		if (!isPrecipActive) {
-			onTimeUpdate({
-				type: "removed",
-			});
+	const onActiveLayerChangedResetTimeline = useCallback(() => {
+		if (!activeTimelineLayer) {
+			onTimeUpdate({ type: "removed" });
 		}
-	}, [isPrecipActive, onTimeUpdate]);
+	}, [activeTimelineLayer, onTimeUpdate]);
 
-	useEffect(onPrecipLayerDeactivatedResetTimeline, [onPrecipLayerDeactivatedResetTimeline]);
+	useEffect(onActiveLayerChangedResetTimeline, [onActiveLayerChangedResetTimeline]);
 
-	//Værikoner 
+	//Værikoner på værkart
 	const shouldShowMarkers = activeLayer === LAYER_KEYS.NONE || showMarkersWithLayer;
 	useWeatherMarkers(map, shouldShowMarkers ? weatherPoints : []);
 
@@ -98,7 +110,7 @@ export default function WeatherMap(props) {
 			<PrecipitationLegend isVisible={isPrecipActive} />
 
 			<TimeLine
-				isVisible={isPrecipActive}
+				isVisible={isPrecipActive || isWindActive}
 				isPlaying={timelineState.isPlaying}
 				startMs={timelineState.startMs}
 				endMs={timelineState.endMs}

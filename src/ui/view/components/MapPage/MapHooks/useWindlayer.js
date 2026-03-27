@@ -5,71 +5,145 @@ import { buildWindColorStops } from "../Windmap/WindScale";
 import { WIND_LAYER_OPTIONS } from "../Windmap/WindLayerOptions";
 
 const INSERT_BEFORE_LAYER = "Place labels";
+const ANIMATION_SPEED_FACTOR = 3600;
 
-export function useWindLayer(map, isActive) {
+export function useWindLayer(map, isActive, onTimeUpdate) {
 	const layerRef = useRef(null);
+	const isPlayingRef = useRef(false);
 
+	/* =========================
+		CREATE LAYER
+	========================= */
 	const createWindLayer = useCallback(() => {
 		return new WindLayer({
 			...WIND_LAYER_OPTIONS,
 			colorramp: new ColorRamp({
-				stops: buildWindColorStops()
-			})
+				stops: buildWindColorStops(),
+			}),
 		});
-	}, 
-	[]);
+	}, []);
 
-	const addLayerToMap = useCallback(async (windLayer) => {
+	/* =========================
+		ADD LAYER
+	========================= */
+	const addLayerToMap = useCallback(async (layer) => {
 		try {
-			let beforeLayer;
+			const beforeLayer = map.getLayer(INSERT_BEFORE_LAYER)
+				? INSERT_BEFORE_LAYER
+				: undefined;
 
-			if (map.getLayer(INSERT_BEFORE_LAYER)) {
-				beforeLayer = INSERT_BEFORE_LAYER;
-			}
+			map.addLayer(layer, beforeLayer);
 
-			map.addLayer(windLayer, beforeLayer);
-			await windLayer.onSourceReadyAsync();
+			await layer.onSourceReadyAsync();
+
+			const startMs = +layer.getAnimationStartDate();
+			const endMs = +layer.getAnimationEndDate();
+			const currentMs = +layer.getAnimationTimeDate();
+
+			onTimeUpdate?.({
+				type: "ready",
+				startMs,
+				endMs,
+				currentMs,
+				isPlaying: false,
+			});
+
+		} catch (error) {
+			console.error("[useWindLayer] addLayer feilet:", error);
 		}
-		catch (error) {
-			console.error("[useWindLayer] Kunne ikke legge til vindlag:", error);
-		}
-	}, 
-	[map]);
+	}, [map, onTimeUpdate]);
 
-
-
+	/* =========================
+		REMOVE
+	========================= */
 	const removeLayerFromMap = useCallback(() => {
-		if (!layerRef.current) {
-			return;
-		}
+		const layer = layerRef.current;
+		if (!layer) return;
 
 		try {
+			layer.animateByFactor(0);
+			isPlayingRef.current = false;
+
 			if (map.getLayer(WIND_LAYER_OPTIONS.id)) {
 				map.removeLayer(WIND_LAYER_OPTIONS.id);
 			}
-		}
-
-		catch (error) {
-			console.warn("[useWindLayer] Feil ved fjerning av lag:", error);
+		} catch (error) {
+			console.warn("[useWindLayer] remove feilet:", error);
 		}
 
 		layerRef.current = null;
-	}, 
-	[map]);
+	}, [map]);
 
+	/* =========================
+		CONTROLS
+	========================= */
+
+	const play = useCallback(() => {
+		const layer = layerRef.current;
+		if (!layer) return;
+
+		layer.animateByFactor(ANIMATION_SPEED_FACTOR);
+		isPlayingRef.current = true;
+	}, []);
+
+	const pause = useCallback(() => {
+		const layer = layerRef.current;
+		if (!layer) return;
+
+		layer.animateByFactor(0);
+		isPlayingRef.current = false;
+	}, []);
+
+	const seekTo = useCallback((timestampMs) => {
+		const layer = layerRef.current;
+		if (!layer) return;
+
+		layer.setAnimationTime(timestampMs / 1000);
+	}, []);
+
+	/* =========================
+		TOGGLE
+	========================= */
 	const onActiveChangedToggleLayer = useCallback(() => {
-		if (!map || !map.isStyleLoaded()) {
-			return;
-		}
+		if (!map || !map.isStyleLoaded()) return;
 
 		if (isActive && !layerRef.current) {
-			const windLayer = createWindLayer();
-			layerRef.current = windLayer;
-			addLayerToMap(windLayer);
+			const layer = createWindLayer();
+			layerRef.current = layer;
+
+			layer.on("tick", () => {
+				const currentMs = +layer.getAnimationTimeDate();
+
+				onTimeUpdate?.({
+					type: "tick",
+					currentMs,
+					isPlaying: isPlayingRef.current,
+				});
+			});
+
+			layer.on("animationTimeSet", () => {
+				const currentMs = +layer.getAnimationTimeDate();
+
+				onTimeUpdate?.({
+					type: "seek",
+					currentMs,
+					isPlaying: isPlayingRef.current,
+				});
+			});
+
+			addLayerToMap(layer);
 		}
 
 		if (!isActive && layerRef.current) {
 			removeLayerFromMap();
+
+			onTimeUpdate?.({
+				type: "removed",
+				startMs: 0,
+				endMs: 0,
+				currentMs: 0,
+				isPlaying: false,
+			});
 		}
 
 		return () => {
@@ -77,8 +151,20 @@ export function useWindLayer(map, isActive) {
 				removeLayerFromMap();
 			}
 		};
-	}, 
-	[map, isActive, createWindLayer, addLayerToMap, removeLayerFromMap]);
+	}, [
+		map,
+		isActive,
+		createWindLayer,
+		addLayerToMap,
+		removeLayerFromMap,
+		onTimeUpdate,
+	]);
 
 	useEffect(onActiveChangedToggleLayer, [onActiveChangedToggleLayer]);
+
+	return {
+		play,
+		pause,
+		seekTo,
+	};
 }
