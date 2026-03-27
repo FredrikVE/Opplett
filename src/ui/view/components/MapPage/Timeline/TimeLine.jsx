@@ -1,13 +1,13 @@
-//src/ui/view/components/MapPage/Timeline/PrecipitationTimeline.jsx
+//src/ui/view/components/MapPage/Timeline/TimeLine.jsx
 import { useMemo, useCallback } from "react";
 import PlaybackIcon from "./PlaybackIcon";
-import { PrecipitationTimelineModel } from "./PrecipitationTimelineModel";
+import { TimelineModel } from "./TimelineModel.js";
 
-export default function PrecipitationTimeline(props) {
+export default function TimeLine(props) {
 	const { isVisible, isPlaying, startMs, endMs, currentMs, timezone, onPlay, onPause, onSeek } = props;
 
 	const model = useMemo(() => {
-		return new PrecipitationTimelineModel({
+		return new TimelineModel({
 			startMs,
 			endMs,
 			currentMs,

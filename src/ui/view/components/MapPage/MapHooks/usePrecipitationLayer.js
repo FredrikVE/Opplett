@@ -62,7 +62,9 @@ export function usePrecipitationLayer(map, isActive, onTimeUpdate) {
 				isPlaying: false,
 			});
 
-		} catch (error) {
+		} 
+		
+		catch (error) {
 			console.error("[usePrecipitationLayer] Kunne ikke legge til nedbørlag:", error);
 		}
 	}, [map, onTimeUpdate]);
@@ -72,7 +74,9 @@ export function usePrecipitationLayer(map, isActive, onTimeUpdate) {
 	========================= */
 	const removeLayerFromMap = useCallback(() => {
 		const layer = layerRef.current;
-		if (!layer) return;
+		if (!layer) {
+			return;
+		}
 
 		try {
 			layer.animateByFactor(0);
@@ -81,44 +85,54 @@ export function usePrecipitationLayer(map, isActive, onTimeUpdate) {
 			if (map.getLayer(PRECIPITATION_LAYER_OPTIONS.id)) {
 				map.removeLayer(PRECIPITATION_LAYER_OPTIONS.id);
 			}
-		} catch (error) {
+		} 
+
+		catch (error) {
 			console.warn("[usePrecipitationLayer] Feil ved fjerning av lag:", error);
 		}
 
 		layerRef.current = null;
-	}, [map]);
+	}, 
+	[map]);
 
-	/* =========================
-		COMMANDS
-	========================= */
+
 	const play = useCallback(() => {
 		const layer = layerRef.current;
-		if (!layer) return;
+		if (!layer) {
+			return;
+		}
 
 		layer.animateByFactor(ANIMATION_SPEED_FACTOR);
 		isPlayingRef.current = true;
-	}, []);
+	}, 
+	[]);
 
 	const pause = useCallback(() => {
 		const layer = layerRef.current;
-		if (!layer) return;
+		if (!layer) {
+			return;
+		}
 
 		layer.animateByFactor(0);
 		isPlayingRef.current = false;
-	}, []);
+	}, 
+	[]);
 
 	const seekTo = useCallback((timestampMs) => {
 		const layer = layerRef.current;
-		if (!layer) return;
+		if (!layer) {
+			return;
+		}
 
 		layer.setAnimationTime(timestampMs / 1000);
-	}, []);
+	}, 
+	[]);
 
-	/* =========================
-		EFFECT
-	========================= */
+
 	const onActiveChangedToggleLayer = useCallback(() => {
-		if (!map || !map.isStyleLoaded()) return;
+		if (!map || !map.isStyleLoaded()) {
+			return;
+		}
 
 		if (isActive && !layerRef.current) {
 			const precipLayer = createPrecipitationLayer();
@@ -162,16 +176,12 @@ export function usePrecipitationLayer(map, isActive, onTimeUpdate) {
 				removeLayerFromMap();
 			}
 		};
-	}, [map, isActive, createPrecipitationLayer, addLayerToMap, removeLayerFromMap, onTimeUpdate]);
+	}, 
+	[map, isActive, createPrecipitationLayer, addLayerToMap, removeLayerFromMap, onTimeUpdate]);
 
-	/* =========================
-		EFFECT BINDING
-	========================= */
+
 	useEffect(onActiveChangedToggleLayer, [onActiveChangedToggleLayer]);
 
-	/* =========================
-		RETURN CONTROLS
-	========================= */
 	return {
 		play,
 		pause,

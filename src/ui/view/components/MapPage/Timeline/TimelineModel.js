@@ -1,9 +1,9 @@
-//src/ui/view/components/MapPage/Timeline/PrecipitationTimelineModel.js
+//src/ui/view/components/MapPage/Timeline/TimelineModel.js
 import { DateTime } from "luxon";
 
 const UI_LOCALE = "nb-NO";
 
-export class PrecipitationTimelineModel {
+export class TimelineModel {
 	constructor({ startMs, endMs, currentMs, timezone }) {
 		this.startMs = startMs;
 		this.endMs = endMs;

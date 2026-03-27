@@ -15,7 +15,7 @@ import { useMapLayerDimming } from "./MapHooks/useMapLayerDimming.js";
 import MapLayerToggle from "./MapLayerToggle/MapLayerToggle.jsx";
 import WindLegend from "./Windmap/WindLegend.jsx";
 import PrecipitationLegend from "./PrecipitationMap/Precipitationlegend.jsx";
-import PrecipitationTimeline from "./Timeline/PrecipitationTimeline.jsx";
+import TimeLine from "./Timeline/TimeLine.jsx"
 import { LAYER_KEYS } from "./MapLayerToggle/MapToggleConfig.js";
 
 export default function WeatherMap(props) {
@@ -84,7 +84,7 @@ export default function WeatherMap(props) {
 			<WindLegend isVisible={isWindActive} />
 			<PrecipitationLegend isVisible={isPrecipActive} />
 
-			<PrecipitationTimeline
+			<TimeLine
 				isVisible={isPrecipActive}
 				isPlaying={precipTimeline?.isPlaying ?? false}
 				startMs={precipTimeline?.startMs ?? 0}
