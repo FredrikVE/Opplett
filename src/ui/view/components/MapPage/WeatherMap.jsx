@@ -14,7 +14,7 @@ import { useMapLayerDimming } from "./MapHooks/useMapLayerDimming.js";
 
 import MapLayerToggle from "./MapLayerToggle/MapLayerToggle.jsx";
 import WindLegend from "./Windmap/WindLegend.jsx";
-import PrecipitationLegend from "./PrecipitationMap/PrecipitationLegend.jsx";
+import PrecipitationLegend from "./PrecipitationMap/Precipitationlegend.jsx";
 import PrecipitationTimeline from "./Timeline/PrecipitationTimeline.jsx";
 import { LAYER_KEYS } from "./MapLayerToggle/MapToggleConfig.js";
 
