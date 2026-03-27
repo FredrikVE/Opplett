@@ -1,7 +1,7 @@
 /*src/ui/style/PrecipitationTimeline.css*/
 /* ===========================
    PRECIPITATION LEGEND
-   Kompakt, matcher WindLegend i stil
+   yr.no-inspirert: gradient-bar + 3 labels
    =========================== */
 
 .precip-legend {
@@ -10,61 +10,65 @@
 	left: 12px;
 	z-index: 10;
 
-	background: rgba(30, 30, 40, 0.82);
-	backdrop-filter: blur(8px);
-	-webkit-backdrop-filter: blur(8px);
-	border-radius: 8px;
-	border: 1px solid rgba(255, 255, 255, 0.08);
+	background: rgba(255, 255, 255, 0.92);
+	backdrop-filter: blur(6px);
+	-webkit-backdrop-filter: blur(6px);
+	border-radius: 6px;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
 
 	padding: 6px 8px;
-	color: #fff;
+	color: #333;
 	font-family: inherit;
+	min-width: 44px;
 }
 
 .precip-legend-header {
 	display: flex;
 	align-items: center;
-	gap: 4px;
+	gap: 3px;
 	margin-bottom: 4px;
-	padding-bottom: 3px;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .precip-legend-icon {
-	font-size: 0.75rem;
+	font-size: 0.7rem;
 	line-height: 1;
 }
 
 .precip-legend-unit {
-	font-size: 0.65rem;
+	font-size: 0.62rem;
 	font-weight: 600;
-	opacity: 0.8;
-	letter-spacing: 0.02em;
+	opacity: 0.7;
 }
 
-.precip-legend-scale {
+.precip-legend-bar-wrap {
 	display: flex;
 	flex-direction: column;
-	gap: 1px;
+	align-items: flex-start;
+	gap: 0;
 }
 
-.precip-legend-step {
-	display: flex;
-	align-items: center;
-	gap: 5px;
-}
-
-.precip-legend-color {
+.precip-legend-bar {
 	width: 14px;
-	height: 8px;
+	height: 50px;
 	border-radius: 2px;
-	flex-shrink: 0;
+	margin-left: 0;
 }
 
-.precip-legend-label {
-	font-size: 0.58rem;
-	opacity: 0.75;
-	line-height: 1.3;
+.precip-legend-bar-spacer {
+	height: 0;
+}
+
+.precip-legend-tick {
+	font-size: 0.56rem;
+	font-weight: 500;
+	opacity: 0.65;
+	line-height: 1;
+	padding: 1px 0;
+}
+
+.precip-legend-tick-mid {
+	margin-top: -2px;
+	margin-bottom: -2px;
 }
 
 
@@ -182,7 +186,7 @@
 	transform: translateY(-50%);
 	height: 4px;
 	border-radius: 2px;
-	background: #00aaff;
+	background: #4da6ff;
 	pointer-events: none;
 	z-index: 1;
 }
@@ -195,7 +199,7 @@
 	height: 18px;
 	border-radius: 50%;
 	background: #fff;
-	border: 2px solid #00aaff;
+	border: 2px solid #4da6ff;
 	cursor: pointer;
 	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
@@ -206,7 +210,7 @@
 	height: 16px;
 	border-radius: 50%;
 	background: #fff;
-	border: 2px solid #00aaff;
+	border: 2px solid #4da6ff;
 	cursor: pointer;
 	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
@@ -243,13 +247,9 @@
 		padding: 5px 6px;
 	}
 
-	.precip-legend-color {
+	.precip-legend-bar {
+		height: 40px;
 		width: 12px;
-		height: 6px;
-	}
-
-	.precip-legend-label {
-		font-size: 0.54rem;
 	}
 
 	.precip-timeline {

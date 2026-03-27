@@ -1,6 +1,5 @@
-//src/ui/view/components/MapPage/MapHooks/usePrecipitationLayer.js
 import { useEffect, useRef, useCallback } from "react";
-import { PrecipitationLayer } from "@maptiler/weather";
+import { PrecipitationLayer, ColorRamp } from "@maptiler/weather";
 
 /**
  * Plasserer PrecipitationLayer under label-lagene slik at by-navn
@@ -8,15 +7,37 @@ import { PrecipitationLayer } from "@maptiler/weather";
  */
 const INSERT_BEFORE_LAYER = "Place labels";
 
+/**
+ * yr.no-inspirert fargeskala for nedbør.
+ * Blåtoner som er godt synlige mot kartet.
+ * value = mm/t
+ */
+const PRECIP_COLOR_STOPS = [
+	{ value: 0,    color: [200, 220, 240,   0] },   // Transparent under 0.1
+	{ value: 0.1,  color: [190, 215, 240, 100] },   // Svak lysblå
+	{ value: 0.2,  color: [170, 210, 245, 140] },   // Lys blå
+	{ value: 0.5,  color: [130, 195, 245, 170] },   // Mellomblå
+	{ value: 1,    color: [ 90, 175, 240, 195] },   // Blå
+	{ value: 2,    color: [ 55, 150, 235, 210] },   // Sterkere blå
+	{ value: 5,    color: [ 30, 115, 225, 225] },   // Dyp blå
+	{ value: 10,   color: [ 20,  80, 200, 235] },   // Mørk blå
+	{ value: 15,   color: [ 80,  40, 180, 240] },   // Blålilla
+	{ value: 25,   color: [140,  30, 160, 245] },   // Lilla
+	{ value: 50,   color: [190,  20, 120, 250] },   // Rosa/magenta
+];
+
+function buildYrPrecipColorRamp() {
+	return new ColorRamp({
+		stops: PRECIP_COLOR_STOPS,
+	});
+}
+
 const PRECIPITATION_LAYER_OPTIONS = {
 	id: "maptiler-precipitation-layer",
-	opacity: 0.8,
+	opacity: 1,       // Full opacity – alpha styres via ColorRamp
 	smooth: true,
 };
 
-/**
- * Animasjonshastighet: 3600 = 1 sekund animasjon = 1 time i virkeligheten.
- */
 const ANIMATION_SPEED_FACTOR = 3600;
 
 export function usePrecipitationLayer(map, isActive, onTimeUpdate) {
@@ -29,6 +50,7 @@ export function usePrecipitationLayer(map, isActive, onTimeUpdate) {
 	const createPrecipitationLayer = useCallback(() => {
 		return new PrecipitationLayer({
 			...PRECIPITATION_LAYER_OPTIONS,
+			colorramp: buildYrPrecipColorRamp(),
 		});
 	}, []);
 
@@ -43,10 +65,8 @@ export function usePrecipitationLayer(map, isActive, onTimeUpdate) {
 
 			map.addLayer(precipLayer, beforeLayer);
 
-			// Vent på at datakilden er klar
 			await precipLayer.onSourceReadyAsync();
 
-			// Publiser tidsrammen til ViewModel
 			const startMs = +precipLayer.getAnimationStartDate();
 			const endMs = +precipLayer.getAnimationEndDate();
 			const currentMs = +precipLayer.getAnimationTimeDate();
@@ -72,7 +92,6 @@ export function usePrecipitationLayer(map, isActive, onTimeUpdate) {
 		if (!layer) return;
 
 		try {
-			// Stopp animasjon
 			layer.animateByFactor(0);
 			isPlayingRef.current = false;
 
@@ -87,7 +106,7 @@ export function usePrecipitationLayer(map, isActive, onTimeUpdate) {
 	}, [map]);
 
 	/* =========================
-		COMMANDS (eksponeres via ref-callback)
+		COMMANDS
 	========================= */
 	const play = useCallback(() => {
 		const layer = layerRef.current;
@@ -109,7 +128,6 @@ export function usePrecipitationLayer(map, isActive, onTimeUpdate) {
 		const layer = layerRef.current;
 		if (!layer) return;
 
-		// setAnimationTime tar UNIX-sekunder
 		layer.setAnimationTime(timestampMs / 1000);
 	}, []);
 
@@ -123,7 +141,6 @@ export function usePrecipitationLayer(map, isActive, onTimeUpdate) {
 			const precipLayer = createPrecipitationLayer();
 			layerRef.current = precipLayer;
 
-			// Lytt på tick for å oppdatere tidslinja
 			precipLayer.on("tick", () => {
 				const currentMs = +precipLayer.getAnimationTimeDate();
 				onTimeUpdate?.({
