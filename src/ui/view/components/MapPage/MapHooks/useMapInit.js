@@ -70,6 +70,7 @@ export function useMapInit(mapContainerRef, mapStyle, activeLocation) {
 
 		map.on("load", () => {
 			configureMapLabels(map);
+			window.__map = map;  // ← legg til denne midlertidig
 			setMapInstance(map);
 		});
 

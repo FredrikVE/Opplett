@@ -10,10 +10,11 @@ import { useWeatherMarkers } from "./MapHooks/useWeatherMarkers.jsx";
 import { useDeviceLocationDot } from "./MapHooks/useDeviceLocationDot.js";
 import { useWindLayer } from "./MapHooks/useWindlayer.js";
 import { usePrecipitationLayer } from "./MapHooks/usePrecipitationLayer.js";
+import { useMapLayerDimming } from "./MapHooks/useMapLayerDimming.js";
 
 import MapLayerToggle from "./MapLayerToggle/MapLayerToggle.jsx";
 import WindLegend from "./Windmap/WindLegend.jsx";
-import PrecipitationLegend from "./PrecipitationMap/Precipitationlegend.jsx";
+import PrecipitationLegend from "./PrecipitationMap/PrecipitationLegend.jsx";
 import PrecipitationTimeline from "./Timeline/PrecipitationTimeline.jsx";
 import { LAYER_KEYS } from "./MapLayerToggle/MapToggleConfig.js";
 
@@ -53,6 +54,9 @@ export default function WeatherMap(props) {
 	// Vær-overlay: Nedbør
 	const isPrecipActive = activeLayer === LAYER_KEYS.PRECIPITATION;
 	const precipControls = usePrecipitationLayer(map, isPrecipActive, onPrecipTimeUpdate);
+
+	// Dim kartlag når nedbør er aktivt for bedre kontrast
+	useMapLayerDimming(map, isPrecipActive);
 
 	// Kobler play/pause/seek: kaller BÅDE hooken (MapTiler-laget) OG ViewModel (UI-state)
 	const handlePrecipPlay = useCallback(() => {
