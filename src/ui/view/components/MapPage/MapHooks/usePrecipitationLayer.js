@@ -1,3 +1,4 @@
+//src/ui/view/components/MapPage/MapHooks/usePrecipitationLayer.js
 import { useEffect, useRef, useCallback } from "react";
 import { PrecipitationLayer, ColorRamp } from "@maptiler/weather";
 
@@ -12,18 +13,30 @@ const INSERT_BEFORE_LAYER = "Place labels";
  * Blåtoner som er godt synlige mot kartet.
  * value = mm/t
  */
+/**
+ * yr.no-inspirert fargeskala med skarpe, diskrete trinn.
+ * Høy alpha + få steg = tydelig "blokk"-effekt.
+ * Cyan/blå-dominert som yr.no sin radar.
+ */
 const PRECIP_COLOR_STOPS = [
-	{ value: 0,    color: [200, 220, 240,   0] },   // Transparent under 0.1
-	{ value: 0.1,  color: [190, 215, 240, 100] },   // Svak lysblå
-	{ value: 0.2,  color: [170, 210, 245, 140] },   // Lys blå
-	{ value: 0.5,  color: [130, 195, 245, 170] },   // Mellomblå
-	{ value: 1,    color: [ 90, 175, 240, 195] },   // Blå
-	{ value: 2,    color: [ 55, 150, 235, 210] },   // Sterkere blå
-	{ value: 5,    color: [ 30, 115, 225, 225] },   // Dyp blå
-	{ value: 10,   color: [ 20,  80, 200, 235] },   // Mørk blå
-	{ value: 15,   color: [ 80,  40, 180, 240] },   // Blålilla
-	{ value: 25,   color: [140,  30, 160, 245] },   // Lilla
-	{ value: 50,   color: [190,  20, 120, 250] },   // Rosa/magenta
+	{ value: 0,    color: [200, 220, 240,   0] },   // Transparent (ingen nedbør)
+	{ value: 0.09, color: [200, 220, 240,   0] },   // Fortsatt transparent
+	{ value: 0.1,  color: [185, 225, 255, 140] },   // Svak lysblå – hopp inn
+	{ value: 0.19, color: [185, 225, 255, 140] },   // Hold
+	{ value: 0.2,  color: [135, 206, 250, 190] },   // Lys himmelblå
+	{ value: 0.49, color: [135, 206, 250, 190] },   // Hold
+	{ value: 0.5,  color: [ 80, 185, 245, 210] },   // Klar cyan
+	{ value: 0.99, color: [ 80, 185, 245, 210] },   // Hold
+	{ value: 1,    color: [ 30, 160, 235, 225] },   // Sterk cyan
+	{ value: 1.99, color: [ 30, 160, 235, 225] },   // Hold
+	{ value: 2,    color: [ 20, 120, 220, 235] },   // Mellomblå
+	{ value: 4.99, color: [ 20, 120, 220, 235] },   // Hold
+	{ value: 5,    color: [ 10,  75, 200, 245] },   // Dyp blå
+	{ value: 9.99, color: [ 10,  75, 200, 245] },   // Hold
+	{ value: 10,   color: [ 40,  40, 180, 250] },   // Blålilla
+	{ value: 14.9, color: [ 40,  40, 180, 250] },   // Hold
+	{ value: 15,   color: [120,  20, 160, 250] },   // Lilla
+	{ value: 50,   color: [120,  20, 160, 250] },   // Hold til maks
 ];
 
 function buildYrPrecipColorRamp() {
@@ -35,7 +48,7 @@ function buildYrPrecipColorRamp() {
 const PRECIPITATION_LAYER_OPTIONS = {
 	id: "maptiler-precipitation-layer",
 	opacity: 1,       // Full opacity – alpha styres via ColorRamp
-	smooth: true,
+	smooth: false,
 };
 
 const ANIMATION_SPEED_FACTOR = 3600;
