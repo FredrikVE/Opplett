@@ -3,7 +3,7 @@ export const LAYER_KEYS = {
     NONE: "none",
     WIND: "wind",
     // Fremtidige lag:
-    // PRECIPITATION: "precipitation",
+    PRECIPITATION: "precipitation",
     // RADAR: "radar",
     // TEMPERATURE: "temperature",
 };
@@ -19,11 +19,11 @@ export const WEATHER_LAYERS = [
         label: "Vind",
         icon: "💨",
     },
-    // {
-    // 	key: LAYER_KEYS.PRECIPITATION,
-    // 	label: "Nedbør",
-    // 	icon: "🌧️",
-    // },
+    {
+     	key: LAYER_KEYS.PRECIPITATION,
+     	label: "Nedbør",
+     	icon: "🌧️",
+    },
     // {
     // 	key: LAYER_KEYS.RADAR,
     // 	label: "Radar",

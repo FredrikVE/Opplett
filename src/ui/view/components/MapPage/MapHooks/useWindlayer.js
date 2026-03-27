@@ -1,3 +1,4 @@
+//src/ui/view/components/MapPage/MapHooks/useWindlayer.js
 import { useEffect, useRef, useCallback } from "react";
 import { WindLayer, ColorRamp } from "@maptiler/weather";
 

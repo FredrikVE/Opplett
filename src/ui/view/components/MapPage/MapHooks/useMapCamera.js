@@ -1,4 +1,4 @@
-//src/ui/view/components/MapPage/hooks/useMapCamera.js
+//src/ui/view/components/MapPage/MapHooks/useMapCamera.js
 import { useEffect, useRef, useCallback } from "react";
 import { MAX_ZOOM } from "../../../../utils/MapUtils/Zoom/ZoomConfig";
 

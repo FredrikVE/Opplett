@@ -25,6 +25,7 @@ import "./ui/style/MapPage.css";
 import "./ui/style/DeviceLocationDot.css"
 import "./ui/style/MapLayerToggle.css";
 import "./ui/style/WindLegend.css";
+import "./ui/style/PrecipitationTimeline.css"
 
 //Navigation
 import { NAV_SCREENS } from "./navigation/navGraph.js";

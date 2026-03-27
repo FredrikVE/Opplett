@@ -1,4 +1,4 @@
-//src/ui/view/components/MapPage/hooks/useDeviceLocationDot.js
+//src/ui/view/components/MapPage/MapHooks/useDeviceLocationDot.js
 import { useEffect, useRef, useCallback } from "react";
 import * as maptilersdk from "@maptiler/sdk";
 

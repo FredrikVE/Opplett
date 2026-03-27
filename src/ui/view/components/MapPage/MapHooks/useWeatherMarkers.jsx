@@ -1,4 +1,4 @@
-//src/ui/view/components/MapPage/hooks/useWeatherMarkers.jsx
+//src/ui/view/components/MapPage/MapHooks/useWeatherMarkers.jsx
 import { useEffect, useRef, useCallback } from "react";
 import * as maptilersdk from "@maptiler/sdk";
 import { createRoot } from "react-dom/client";

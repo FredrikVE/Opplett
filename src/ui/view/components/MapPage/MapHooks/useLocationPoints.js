@@ -1,4 +1,4 @@
-//src/ui/view/components/MapPage/hooks/useLocationPoints.js
+//src/ui/view/components/MapPage/MapHooks/useLocationPoints.js
 import { useEffect, useRef, useCallback } from "react";
 import { MarkerLayout } from "@maptiler/marker-layout";
 import { distributeWeatherPoints } from "../../../../utils/MapUtils/Icons/DistributeWeatherPoints.js";

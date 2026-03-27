@@ -1,4 +1,4 @@
-//src/ui/view/components/MapPage/hooks/useMapInit.js
+//src/ui/view/components/MapPage/MapHooks/useMapInit.js
 import { useEffect, useRef, useState, useCallback } from "react";
 import * as maptilersdk from "@maptiler/sdk";
 import { MIN_ZOOM, MAX_ZOOM, ZOOM_LEVELS } from "../../../../utils/MapUtils/Zoom/ZoomConfig";

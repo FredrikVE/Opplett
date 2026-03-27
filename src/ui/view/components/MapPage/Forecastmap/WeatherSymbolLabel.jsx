@@ -1,4 +1,4 @@
-//src/ui/view/components/MapPage/WeatherSymbolLabel.jsx
+//src/ui/view/components/MapPage/Forecastmap/WeatherSymbolLabel.jsx
 import { getWeatherIconFileName } from "../../../../utils/CommonUtils/weatherIcons.js"
 
 export default function WeatherSymbolLabel({ point }) {

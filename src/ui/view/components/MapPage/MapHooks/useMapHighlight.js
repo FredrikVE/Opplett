@@ -1,4 +1,4 @@
-//src/ui/view/components/MapPage/hooks/useMapHighlight.js
+//src/ui/view/components/MapPage/MapHooks/useMapHighlight.js
 import { useEffect } from "react";
 import { syncMapHighlight } from "../../../../utils/MapUtils/HighlightBorder/MapHighlight.js";
 

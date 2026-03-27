@@ -1,0 +1,291 @@
+/*src/ui/style/PrecipitationTimeline.css*/
+/* ===========================
+   PRECIPITATION LEGEND
+   Kompakt, matcher WindLegend i stil
+   =========================== */
+
+.precip-legend {
+	position: absolute;
+	top: 12px;
+	left: 12px;
+	z-index: 10;
+
+	background: rgba(30, 30, 40, 0.82);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	border-radius: 8px;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+
+	padding: 6px 8px;
+	color: #fff;
+	font-family: inherit;
+}
+
+.precip-legend-header {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin-bottom: 4px;
+	padding-bottom: 3px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.precip-legend-icon {
+	font-size: 0.75rem;
+	line-height: 1;
+}
+
+.precip-legend-unit {
+	font-size: 0.65rem;
+	font-weight: 600;
+	opacity: 0.8;
+	letter-spacing: 0.02em;
+}
+
+.precip-legend-scale {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+}
+
+.precip-legend-step {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+}
+
+.precip-legend-color {
+	width: 14px;
+	height: 8px;
+	border-radius: 2px;
+	flex-shrink: 0;
+}
+
+.precip-legend-label {
+	font-size: 0.58rem;
+	opacity: 0.75;
+	line-height: 1.3;
+}
+
+
+/* ===========================
+   PRECIPITATION TIMELINE
+   =========================== */
+
+.precip-timeline {
+	position: absolute;
+	bottom: 12px;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 10;
+
+	width: calc(100% - 24px);
+	max-width: 440px;
+	padding: 8px 12px 6px;
+
+	background: rgba(30, 30, 40, 0.88);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+	border-radius: 10px;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+
+	color: #fff;
+	font-family: inherit;
+	box-sizing: border-box;
+
+	touch-action: none;
+}
+
+/* --- Tidslabel --- */
+.precip-timeline-time {
+	text-align: center;
+	margin-bottom: 4px;
+}
+
+.precip-timeline-current {
+	font-size: 0.78rem;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	text-transform: capitalize;
+}
+
+/* --- Kontrollrad --- */
+.precip-timeline-controls {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.precip-timeline-play-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	width: 36px;
+	height: 36px;
+	min-width: 36px;
+	flex-shrink: 0;
+
+	background: rgba(255, 255, 255, 0.12);
+	border: 1px solid rgba(255, 255, 255, 0.18);
+	border-radius: 50%;
+	color: #fff;
+	cursor: pointer;
+	padding: 0;
+
+	transition: background 0.15s ease;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.precip-timeline-play-btn:hover:not(:disabled) {
+	background: rgba(255, 255, 255, 0.22);
+}
+
+.precip-timeline-play-btn:active:not(:disabled) {
+	background: rgba(255, 255, 255, 0.30);
+}
+
+.precip-timeline-play-btn:disabled {
+	opacity: 0.35;
+	cursor: not-allowed;
+}
+
+/* --- Slider wrapper --- */
+.precip-timeline-slider-wrap {
+	position: relative;
+	flex: 1;
+	min-width: 0;
+	height: 32px;
+	display: flex;
+	align-items: center;
+}
+
+.precip-timeline-slider {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 100%;
+	height: 4px;
+	border-radius: 2px;
+	background: rgba(255, 255, 255, 0.15);
+	outline: none;
+	cursor: pointer;
+	position: relative;
+	z-index: 2;
+	margin: 0;
+	padding: 0;
+}
+
+.precip-timeline-progress {
+	position: absolute;
+	top: 50%;
+	left: 0;
+	transform: translateY(-50%);
+	height: 4px;
+	border-radius: 2px;
+	background: #00aaff;
+	pointer-events: none;
+	z-index: 1;
+}
+
+/* Slider thumb – Webkit */
+.precip-timeline-slider::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	background: #fff;
+	border: 2px solid #00aaff;
+	cursor: pointer;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Slider thumb – Firefox */
+.precip-timeline-slider::-moz-range-thumb {
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background: #fff;
+	border: 2px solid #00aaff;
+	cursor: pointer;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.precip-timeline-slider::-moz-range-track {
+	height: 4px;
+	border-radius: 2px;
+	background: rgba(255, 255, 255, 0.15);
+}
+
+/* --- Start/slutt-labels --- */
+.precip-timeline-range {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 2px;
+	padding: 0 2px;
+}
+
+.precip-timeline-start,
+.precip-timeline-end {
+	font-size: 0.65rem;
+	opacity: 0.5;
+	text-transform: capitalize;
+}
+
+
+/* ===========================
+   RESPONSIV
+   =========================== */
+@media (max-width: 480px) {
+	.precip-legend {
+		top: 8px;
+		left: 8px;
+		padding: 5px 6px;
+	}
+
+	.precip-legend-color {
+		width: 12px;
+		height: 6px;
+	}
+
+	.precip-legend-label {
+		font-size: 0.54rem;
+	}
+
+	.precip-timeline {
+		bottom: 8px;
+		padding: 6px 10px 4px;
+		border-radius: 8px;
+	}
+
+	.precip-timeline-current {
+		font-size: 0.72rem;
+	}
+
+	.precip-timeline-play-btn {
+		width: 32px;
+		height: 32px;
+		min-width: 32px;
+	}
+
+	.precip-timeline-play-btn svg {
+		width: 16px;
+		height: 16px;
+	}
+
+	.precip-timeline-start,
+	.precip-timeline-end {
+		font-size: 0.6rem;
+	}
+}
+
+@media (max-width: 360px) {
+	.precip-timeline {
+		width: calc(100% - 16px);
+		padding: 5px 8px 3px;
+	}
+
+	.precip-timeline-controls {
+		gap: 6px;
+	}
+}
