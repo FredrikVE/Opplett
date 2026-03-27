@@ -46,10 +46,6 @@ export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREE
 					onLayerChange={viewModel.onLayerChange}
 					showMarkersWithLayer={viewModel.showMarkersWithLayer}
 					onToggleMarkers={viewModel.onToggleMarkers}
-					precipTimeline={viewModel.precipTimeline}
-					onPrecipTimeUpdate={viewModel.onPrecipTimeUpdate}
-					onPrecipPlay={viewModel.onPrecipPlay}
-					onPrecipPause={viewModel.onPrecipPause}
 				/>
 			</main>
 		</div>

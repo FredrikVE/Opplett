@@ -12,13 +12,6 @@ import { LAYER_KEYS } from "../view/components/MapPage/MapLayerToggle/MapToggleC
 const IDLE_HIGHLIGHT = { status: "idle", locationId: null, geojson: null };
 const DEBOUNCE_DELAY_MS = 500;
 
-const INITIAL_PRECIP_TIMELINE = {
-	startMs: 0,
-	endMs: 0,
-	currentMs: 0,
-	isPlaying: false,
-};
-
 export default function useMapPageViewModel(mapTilerRepository, searchLocationUseCase, getMapWeatherUseCase, getLocationGeometryUseCase, activeLocation, deviceCoords, onLocationChange, onResetToDeviceLocation) {
 
 	/* =========================
@@ -47,9 +40,6 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 	const [activeLayer, setActiveLayer] = useState(LAYER_KEYS.NONE);
 	const [showMarkersWithLayer, setShowMarkersWithLayer] = useState(true);
 
-	// Nedbør-tidslinje state
-	const [precipTimeline, setPrecipTimeline] = useState(INITIAL_PRECIP_TIMELINE);
-
 	// Teller som tvinger nytt mapTarget selv når lokasjonen er uendret
 	const [resetCounter, setResetCounter] = useState(0);
 
@@ -73,7 +63,8 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 		setResetCounter(prev => prev + 1);
 		previousMapTargetRef.current = null;
 		onResetToDeviceLocation();
-	}, [clearWeatherPoints, onResetToDeviceLocation]);
+	}, 
+	[clearWeatherPoints, onResetToDeviceLocation]);
 
 	const onMapChange = useCallback(({ viewport, points }) => {
 		setCurrentZoom(viewport?.zoom ?? null);
@@ -82,20 +73,18 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 		if (viewport?.bounds) {
 			setViewportBounds(viewport.bounds);
 		}
-	}, []);
+	}, 
+	[]);
 
 	const onLayerChange = useCallback((layerKey) => {
 		setActiveLayer(layerKey);
-
-		// Nullstill tidslinja når man bytter bort fra nedbør
-		if (layerKey !== LAYER_KEYS.PRECIPITATION) {
-			setPrecipTimeline(INITIAL_PRECIP_TIMELINE);
-		}
-	}, []);
+	}, 
+	[]);
 
 	const onToggleMarkers = useCallback(() => {
 		setShowMarkersWithLayer(prev => !prev);
-	}, []);
+	}, 
+	[]);
 
 	const loadWeather = useCallback(async (points, timezone) => {
 		setIsLoading(true);
@@ -112,52 +101,8 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 		finally {
 			setIsLoading(false);
 		}
-	}, [getMapWeatherUseCase]);
-
-	/* =========================
-		PRECIPITATION TIMELINE COMMANDS
-	========================= */
-
-	/**
-	 * Callback som precipitation-hooken kaller for å oppdatere tidslinje-state.
-	 * Bruker "functional update" for å unngå stale closures.
-	 */
-	const onPrecipTimeUpdate = useCallback((event) => {
-		switch (event.type) {
-			case "ready":
-				setPrecipTimeline({
-					startMs: event.startMs,
-					endMs: event.endMs,
-					currentMs: event.currentMs,
-					isPlaying: event.isPlaying,
-				});
-				break;
-
-			case "tick":
-			case "seek":
-				setPrecipTimeline(prev => ({
-					...prev,
-					currentMs: event.currentMs,
-					isPlaying: event.isPlaying,
-				}));
-				break;
-
-			case "removed":
-				setPrecipTimeline(INITIAL_PRECIP_TIMELINE);
-				break;
-
-			default:
-				break;
-		}
-	}, []);
-
-	const onPrecipPlay = useCallback(() => {
-		setPrecipTimeline(prev => ({ ...prev, isPlaying: true }));
-	}, []);
-
-	const onPrecipPause = useCallback(() => {
-		setPrecipTimeline(prev => ({ ...prev, isPlaying: false }));
-	}, []);
+	}, 
+	[getMapWeatherUseCase]);
 
 	/* =========================
 		CHILD VIEWMODELS
@@ -283,7 +228,8 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 			cancelled = true;
 			clearTimeout(timer);
 		};
-	}, [mapPoints, timezone, loadWeather]);
+	}, 
+	[mapPoints, timezone, loadWeather]);
 
 	/* =========================
 		EFFECTS – UI / VIEWPORT
@@ -292,7 +238,8 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 		if (!highlightGeometry) {
 			highlightConfirmedRef.current = false;
 		}
-	}, [highlightGeometry]);
+	}, 
+	[highlightGeometry]);
 
 	const onViewportChangedHandleHighlightVisibility = useCallback(() => {
 		if (!highlightGeometry || !viewportBounds || !geometryBounds) {
@@ -317,8 +264,6 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 	}, 
 	
 	[viewportBounds, highlightGeometry, geometryBounds, resetHighlightState]);
-
-
 
 	/* =========================
 		EFFECT BINDINGS
@@ -348,12 +293,6 @@ export default function useMapPageViewModel(mapTilerRepository, searchLocationUs
 		onLayerChange,
 		showMarkersWithLayer,
 		onToggleMarkers,
-
-		// Nedbør-tidslinje
-		precipTimeline,
-		onPrecipTimeUpdate,
-		onPrecipPlay,
-		onPrecipPause,
 
 		query: searchViewModel.query,
 		suggestions: searchViewModel.suggestions,

@@ -1,5 +1,5 @@
 //src/ui/view/components/MapPage/WeatherMap.jsx
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect } from "react";
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 
 import { useMapInit } from "./MapHooks/useMapInit.js";
@@ -11,11 +11,12 @@ import { useDeviceLocationDot } from "./MapHooks/useDeviceLocationDot.js";
 import { useWindLayer } from "./MapHooks/useWindlayer.js";
 import { usePrecipitationLayer } from "./MapHooks/usePrecipitationLayer.js";
 import { useMapLayerDimming } from "./MapHooks/useMapLayerDimming.js";
+import useTimelineController from "./MapHooks/useTimelineController.js";
 
 import MapLayerToggle from "./MapLayerToggle/MapLayerToggle.jsx";
 import WindLegend from "./Windmap/WindLegend.jsx";
 import PrecipitationLegend from "./PrecipitationMap/Precipitationlegend.jsx";
-import TimeLine from "./Timeline/TimeLine.jsx"
+import TimeLine from "./Timeline/TimeLine.jsx";
 import { LAYER_KEYS } from "./MapLayerToggle/MapToggleConfig.js";
 
 export default function WeatherMap(props) {
@@ -32,13 +33,8 @@ export default function WeatherMap(props) {
 		onLayerChange,
 		showMarkersWithLayer,
 		onToggleMarkers,
-		// Precipitation timeline props
-		precipTimeline,
-		onPrecipTimeUpdate,
-		onPrecipPlay,
-		onPrecipPause,
 	} = props;
-	
+
 	const mapContainerRef = useRef(null);
 
 	const map = useMapInit(mapContainerRef, mapStyle, activeLocation);
@@ -47,33 +43,50 @@ export default function WeatherMap(props) {
 	useLocationPoints(map, countryCode, onMapChange);
 	useDeviceLocationDot(map, deviceCoords);
 
-	// Vær-overlay: Vind
+	//Timeline controller
+	const {
+		timeline: timelineState,
+		onTimeUpdate,
+		play,
+		pause,
+	} = useTimelineController();
+
+	//Vind
 	const isWindActive = activeLayer === LAYER_KEYS.WIND;
 	useWindLayer(map, isWindActive);
 
-	// Vær-overlay: Nedbør
+	//Nedbør
 	const isPrecipActive = activeLayer === LAYER_KEYS.PRECIPITATION;
-	const precipControls = usePrecipitationLayer(map, isPrecipActive, onPrecipTimeUpdate);
+	const precipControls = usePrecipitationLayer(map, isPrecipActive, onTimeUpdate);
+	useMapLayerDimming(map, isPrecipActive);	//Dim kart ved nedbør
 
-	// Dim kartlag når nedbør er aktivt for bedre kontrast
-	useMapLayerDimming(map, isPrecipActive);
-
-	// Kobler play/pause/seek: kaller BÅDE hooken (MapTiler-laget) OG ViewModel (UI-state)
-	const handlePrecipPlay = useCallback(() => {
+	//Handlefunksjoner for tidslinje
+	const handlePlay = useCallback(() => {
 		precipControls.play();
-		onPrecipPlay?.();
-	}, [precipControls, onPrecipPlay]);
+		play();
+	}, [precipControls, play]);
 
-	const handlePrecipPause = useCallback(() => {
+	const handlePause = useCallback(() => {
 		precipControls.pause();
-		onPrecipPause?.();
-	}, [precipControls, onPrecipPause]);
+		pause();
+	}, [precipControls, pause]);
 
-	const handlePrecipSeek = useCallback((timestampMs) => {
+	const handleSeek = useCallback((timestampMs) => {
 		precipControls.seekTo(timestampMs);
 	}, [precipControls]);
 
-	// Markører: vis kun hvis det ikke er aktivt lag, eller bruker har valgt å vise dem
+
+	const onPrecipLayerDeactivatedResetTimeline = useCallback(() => {
+		if (!isPrecipActive) {
+			onTimeUpdate({
+				type: "removed",
+			});
+		}
+	}, [isPrecipActive, onTimeUpdate]);
+
+	useEffect(onPrecipLayerDeactivatedResetTimeline, [onPrecipLayerDeactivatedResetTimeline]);
+
+	//Værikoner 
 	const shouldShowMarkers = activeLayer === LAYER_KEYS.NONE || showMarkersWithLayer;
 	useWeatherMarkers(map, shouldShowMarkers ? weatherPoints : []);
 
@@ -86,14 +99,14 @@ export default function WeatherMap(props) {
 
 			<TimeLine
 				isVisible={isPrecipActive}
-				isPlaying={precipTimeline?.isPlaying ?? false}
-				startMs={precipTimeline?.startMs ?? 0}
-				endMs={precipTimeline?.endMs ?? 0}
-				currentMs={precipTimeline?.currentMs ?? 0}
+				isPlaying={timelineState.isPlaying}
+				startMs={timelineState.startMs}
+				endMs={timelineState.endMs}
+				currentMs={timelineState.currentMs}
 				timezone={activeLocation?.timezone}
-				onPlay={handlePrecipPlay}
-				onPause={handlePrecipPause}
-				onSeek={handlePrecipSeek}
+				onPlay={handlePlay}
+				onPause={handlePause}
+				onSeek={handleSeek}
 			/>
 
 			<MapLayerToggle

@@ -46,7 +46,5 @@ export function useMapCamera(map, mapTarget) {
 
 	[map, mapTarget, shouldSkipMove, markMoveHandled, flyToTarget]);
 
-	useEffect(onMapTargetChangedFlyCamera, [
-		onMapTargetChangedFlyCamera
-	]);
+	useEffect(onMapTargetChangedFlyCamera, [onMapTargetChangedFlyCamera]);
 }
