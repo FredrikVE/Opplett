@@ -1,4 +1,3 @@
-//src/ui/view/components/MapPage/PrecipitationMap/PrecipitationScale.js
 export const PRECIP_SCALE = [
 	{ mmFrom: 0,    mmTo: 0.1,  color: [200, 220, 240,   0],  label: null      },  // Transparent
 	{ mmFrom: 0.1,  mmTo: 0.2,  color: [185, 225, 255, 150],  label: "<0.2"    },  // Svak lysblå
@@ -8,40 +7,22 @@ export const PRECIP_SCALE = [
 	{ mmFrom: 2,    mmTo: 5,    color: [ 20, 120, 220, 235],  label: "2"       },  // Mellomblå
 	{ mmFrom: 5,    mmTo: 10,   color: [ 10,  80, 200, 245],  label: "5"       },  // Dyp blå
 	{ mmFrom: 10,   mmTo: 15,   color: [ 10,  40, 170, 250],  label: "10"      },  // Mørk blå
-	{ mmFrom: 15,   mmTo: 50,   color: [ 80,  20, 140, 250],  label: ">15"     },  // Lilla (ekstremt)
+	{ mmFrom: 15,   mmTo: 20,   color: [ 80,  20, 140, 250],  label: ">15"     },  // Lilla (ekstremt)
 ];
 
 export function buildPrecipColorStops() {
 	const stops = [];
 
 	for (const step of PRECIP_SCALE) {
-		//Start av intervallet
 		stops.push({ value: step.mmFrom, color: step.color });
 
-		//Hold til rett før neste trinn (epsilon-gap)
-		if (step.mmTo < 50) {
+		if (step.mmTo < 20) {
 			stops.push({ value: step.mmTo - 0.01, color: step.color });
 		} 
-
-        else {
-			//Siste trinn – hold til maks
+		else {
 			stops.push({ value: step.mmTo, color: step.color });
 		}
 	}
 
 	return stops;
-}
-
-/**
- * Henter synlige legend-trinn (de med label).
- * Returnerer array med { label, cssColor } – fra mye til lite regn.
- */
-export function getPrecipLegendSteps() {
-	return PRECIP_SCALE
-		.filter(step => step.label !== null)
-		.reverse()
-		.map(step => ({
-			label: step.label,
-			cssColor: `rgba(${step.color[0]}, ${step.color[1]}, ${step.color[2]}, ${(step.color[3] / 255).toFixed(2)})`,
-		}));
 }

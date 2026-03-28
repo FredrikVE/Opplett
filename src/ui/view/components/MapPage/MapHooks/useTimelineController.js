@@ -6,6 +6,7 @@ const INITIAL_TIMELINE = {
 	endMs: 0,
 	currentMs: 0,
 	isPlaying: false,
+	colorRamp: null,
 };
 
 export function useTimelineController() {
@@ -19,6 +20,7 @@ export function useTimelineController() {
 					endMs: event.endMs,
 					currentMs: event.currentMs,
 					isPlaying: event.isPlaying,
+					colorRamp: event.colorRamp ?? null,
 				});
 				break;
 

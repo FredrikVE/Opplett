@@ -3,10 +3,6 @@ import { useEffect, useRef, useCallback } from "react";
 import { PrecipitationLayer, ColorRamp } from "@maptiler/weather";
 import { buildPrecipColorStops } from "../PrecipitationMap/PrecipitationScale.js";
 
-/**
- * Plasserer PrecipitationLayer under label-lagene slik at by-navn
- * forblir lesbare oppå nedbør-overlayet.
- */
 const INSERT_BEFORE_LAYER = "Place labels";
 
 function buildPrecipColorRamp() {
@@ -17,7 +13,7 @@ function buildPrecipColorRamp() {
 
 const PRECIPITATION_LAYER_OPTIONS = {
 	id: "maptiler-precipitation-layer",
-	opacity: 1,       // Full opacity – alpha styres via ColorRamp
+	opacity: 1,
 	smooth: false,
 };
 
@@ -27,9 +23,6 @@ export function usePrecipitationLayer(map, isActive, onTimeUpdate) {
 	const layerRef = useRef(null);
 	const isPlayingRef = useRef(false);
 
-	/* =========================
-		OPPRETT LAYER
-	========================= */
 	const createPrecipitationLayer = useCallback(() => {
 		return new PrecipitationLayer({
 			...PRECIPITATION_LAYER_OPTIONS,
@@ -37,9 +30,6 @@ export function usePrecipitationLayer(map, isActive, onTimeUpdate) {
 		});
 	}, []);
 
-	/* =========================
-		LEGG TIL PÅ KART
-	========================= */
 	const addLayerToMap = useCallback(async (precipLayer) => {
 		try {
 			const beforeLayer = map.getLayer(INSERT_BEFORE_LAYER)
@@ -54,29 +44,26 @@ export function usePrecipitationLayer(map, isActive, onTimeUpdate) {
 			const endMs = +precipLayer.getAnimationEndDate();
 			const currentMs = +precipLayer.getAnimationTimeDate();
 
+			precipLayer.animateByFactor(ANIMATION_SPEED_FACTOR);
+			isPlayingRef.current = true;
+
 			onTimeUpdate?.({
 				type: "ready",
 				startMs,
 				endMs,
 				currentMs,
-				isPlaying: false,
+				isPlaying: true,
+				colorRamp: precipLayer.getColorRamp(),
 			});
 
-		} 
-		
-		catch (error) {
+		} catch (error) {
 			console.error("[usePrecipitationLayer] Kunne ikke legge til nedbørlag:", error);
 		}
 	}, [map, onTimeUpdate]);
 
-	/* =========================
-		FJERN FRA KART
-	========================= */
 	const removeLayerFromMap = useCallback(() => {
 		const layer = layerRef.current;
-		if (!layer) {
-			return;
-		}
+		if (!layer) return;
 
 		try {
 			layer.animateByFactor(0);
@@ -85,73 +72,57 @@ export function usePrecipitationLayer(map, isActive, onTimeUpdate) {
 			if (map.getLayer(PRECIPITATION_LAYER_OPTIONS.id)) {
 				map.removeLayer(PRECIPITATION_LAYER_OPTIONS.id);
 			}
-		} 
-
-		catch (error) {
+		} catch (error) {
 			console.warn("[usePrecipitationLayer] Feil ved fjerning av lag:", error);
 		}
 
 		layerRef.current = null;
-	}, 
-	[map]);
+	}, [map]);
 
 
 	const play = useCallback(() => {
 		const layer = layerRef.current;
-		if (!layer) {
-			return;
-		}
+		if (!layer) return;
 
 		layer.animateByFactor(ANIMATION_SPEED_FACTOR);
 		isPlayingRef.current = true;
-	}, 
-	[]);
+	}, []);
 
 	const pause = useCallback(() => {
 		const layer = layerRef.current;
-		if (!layer) {
-			return;
-		}
+		if (!layer) return;
 
 		layer.animateByFactor(0);
 		isPlayingRef.current = false;
-	}, 
-	[]);
+	}, []);
 
 	const seekTo = useCallback((timestampMs) => {
 		const layer = layerRef.current;
-		if (!layer) {
-			return;
-		}
+		if (!layer) return;
 
 		layer.setAnimationTime(timestampMs / 1000);
-	}, 
-	[]);
+	}, []);
 
 
 	const onActiveChangedToggleLayer = useCallback(() => {
-		if (!map || !map.isStyleLoaded()) {
-			return;
-		}
+		if (!map || !map.isStyleLoaded()) return;
 
 		if (isActive && !layerRef.current) {
 			const precipLayer = createPrecipitationLayer();
 			layerRef.current = precipLayer;
 
 			precipLayer.on("tick", () => {
-				const currentMs = +precipLayer.getAnimationTimeDate();
 				onTimeUpdate?.({
 					type: "tick",
-					currentMs,
+					currentMs: +precipLayer.getAnimationTimeDate(),
 					isPlaying: isPlayingRef.current,
 				});
 			});
 
 			precipLayer.on("animationTimeSet", () => {
-				const currentMs = +precipLayer.getAnimationTimeDate();
 				onTimeUpdate?.({
 					type: "seek",
-					currentMs,
+					currentMs: +precipLayer.getAnimationTimeDate(),
 					isPlaying: isPlayingRef.current,
 				});
 			});
@@ -176,8 +147,7 @@ export function usePrecipitationLayer(map, isActive, onTimeUpdate) {
 				removeLayerFromMap();
 			}
 		};
-	}, 
-	[map, isActive, createPrecipitationLayer, addLayerToMap, removeLayerFromMap, onTimeUpdate]);
+	}, [map, isActive, createPrecipitationLayer, addLayerToMap, removeLayerFromMap, onTimeUpdate]);
 
 
 	useEffect(onActiveChangedToggleLayer, [onActiveChangedToggleLayer]);

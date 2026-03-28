@@ -15,14 +15,18 @@ import { useTemperatureLayer } from "./MapHooks/useTemperatureLayer.js";
 import { useMapLayerDimming } from "./MapHooks/useMapLayerDimming.js";
 import { useTimelineController } from "./MapHooks/useTimelineController.js";
 
-import WindLegend from "./Windmap/WindLegend.jsx";
-import PrecipitationLegend from "./PrecipitationMap/Precipitationlegend.jsx";
-import TemperatureLegend from "./TemperatureMap/TemperatureLegend.jsx";
-import PressureLegend from "./PressureMap/PressureLegend.jsx";
+import MapCanvasLegend from "./MapCanvasLegend.jsx";
 
 import MapLayerToggle from "./MapLayerToggle/MapLayerToggle.jsx";
 import TimeLine from "./Timeline/TimeLine.jsx";
 import { LAYER_KEYS } from "./MapLayerToggle/MapToggleConfig.js";
+
+const LAYER_UNITS = {
+	[LAYER_KEYS.WIND]: "m/s",
+	[LAYER_KEYS.PRECIPITATION]: "mm/t",
+	[LAYER_KEYS.PRESSURE]: "hPa",
+	[LAYER_KEYS.TEMPERATURE]: "°C",
+};
 
 export default function WeatherMap(props) {
 	const {
@@ -125,10 +129,11 @@ export default function WeatherMap(props) {
 		<div className="map-page-wrap">
 			<div ref={mapContainerRef} className="map" />
 
-			<WindLegend isVisible={isWindActive} />
-			<PrecipitationLegend isVisible={isPrecipActive} />
-			<TemperatureLegend isVisible={isTemperatureLayerActive} />
-			<PressureLegend isVisible={isPressureActive} />
+			<MapCanvasLegend
+				colorRamp={timelineState.colorRamp}
+				unit={LAYER_UNITS[activeLayer] || ""}
+				isVisible={hasActiveOverlayLayer}
+			/>
 
 			<div className={overlayClassName}>
 				{showTimeline && (

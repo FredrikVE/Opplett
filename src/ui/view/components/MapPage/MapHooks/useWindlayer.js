@@ -11,9 +11,6 @@ export function useWindLayer(map, isActive, onTimeUpdate) {
 	const layerRef = useRef(null);
 	const isPlayingRef = useRef(false);
 
-	/* =========================
-		CREATE LAYER
-	========================= */
 	const createWindLayer = useCallback(() => {
 		return new WindLayer({
 			...WIND_LAYER_OPTIONS,
@@ -23,9 +20,6 @@ export function useWindLayer(map, isActive, onTimeUpdate) {
 		});
 	}, []);
 
-	/* =========================
-		ADD LAYER
-	========================= */
 	const addLayerToMap = useCallback(async (layer) => {
 		try {
 			const beforeLayer = map.getLayer(INSERT_BEFORE_LAYER)
@@ -40,12 +34,16 @@ export function useWindLayer(map, isActive, onTimeUpdate) {
 			const endMs = +layer.getAnimationEndDate();
 			const currentMs = +layer.getAnimationTimeDate();
 
+			layer.animateByFactor(ANIMATION_SPEED_FACTOR);
+			isPlayingRef.current = true;
+
 			onTimeUpdate?.({
 				type: "ready",
 				startMs,
 				endMs,
 				currentMs,
-				isPlaying: false,
+				isPlaying: true,
+				colorRamp: layer.getColorRamp(),
 			});
 
 		} catch (error) {
@@ -53,9 +51,6 @@ export function useWindLayer(map, isActive, onTimeUpdate) {
 		}
 	}, [map, onTimeUpdate]);
 
-	/* =========================
-		REMOVE
-	========================= */
 	const removeLayerFromMap = useCallback(() => {
 		const layer = layerRef.current;
 		if (!layer) return;
@@ -73,10 +68,6 @@ export function useWindLayer(map, isActive, onTimeUpdate) {
 
 		layerRef.current = null;
 	}, [map]);
-
-	/* =========================
-		CONTROLS
-	========================= */
 
 	const play = useCallback(() => {
 		const layer = layerRef.current;
@@ -101,9 +92,6 @@ export function useWindLayer(map, isActive, onTimeUpdate) {
 		layer.setAnimationTime(timestampMs / 1000);
 	}, []);
 
-	/* =========================
-		TOGGLE
-	========================= */
 	const onActiveChangedToggleLayer = useCallback(() => {
 		if (!map || !map.isStyleLoaded()) return;
 
@@ -112,21 +100,17 @@ export function useWindLayer(map, isActive, onTimeUpdate) {
 			layerRef.current = layer;
 
 			layer.on("tick", () => {
-				const currentMs = +layer.getAnimationTimeDate();
-
 				onTimeUpdate?.({
 					type: "tick",
-					currentMs,
+					currentMs: +layer.getAnimationTimeDate(),
 					isPlaying: isPlayingRef.current,
 				});
 			});
 
 			layer.on("animationTimeSet", () => {
-				const currentMs = +layer.getAnimationTimeDate();
-
 				onTimeUpdate?.({
 					type: "seek",
-					currentMs,
+					currentMs: +layer.getAnimationTimeDate(),
 					isPlaying: isPlayingRef.current,
 				});
 			});

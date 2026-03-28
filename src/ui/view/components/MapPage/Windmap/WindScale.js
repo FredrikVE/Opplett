@@ -1,4 +1,4 @@
-// src/ui/view/components/MapPage/Windmap/WindScale.js
+//src/ui/view/components/MapPage/Windmap/WindScale.js
 export const WIND_SCALE = [
 	{ value: 0,  color: "#b0d890" },
 	{ value: 4,  color: "#88d080" },
@@ -13,9 +13,8 @@ export const WIND_SCALE = [
 	{ value: 36, color: "#d648a8" },
 ];
 
-/**
- * HEX → RGBA (uten bitwise “code smell”)
- */
+
+//HEX -> RGBA (uten bitwise “code smell”)
 export function hexToRgba(hex) {
 	const cleanHex = hex.replace("#", "");
 
@@ -26,40 +25,10 @@ export function hexToRgba(hex) {
 	return [r, g, b, 255];
 }
 
-/**
- * Stops til ColorRamp
- */
+//Stops til ColorRamp
 export function buildWindColorStops() {
 	return WIND_SCALE.map((s) => ({
 		value: s.value,
 		color: hexToRgba(s.color),
 	}));
-}
-
-/**
- * Legend (diskrete steg)
- */
-export function buildWindLegendSteps() {
-	const reversed = [...WIND_SCALE].reverse();
-
-	return reversed.map((s, i) => {
-		if (i === 0) {
-			return {
-				label: `>${s.value}`,
-				color: s.color,
-			};
-		}
-
-		if (i === reversed.length - 1) {
-			return {
-				label: `<${reversed[i - 1].value}`,
-				color: s.color,
-			};
-		}
-
-		return {
-			label: `${s.value}`,
-			color: s.color,
-		};
-	});
 }

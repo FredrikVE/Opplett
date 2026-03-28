@@ -1,4 +1,4 @@
-/* src/ui/style/MapLegend.css */
+/*src/ui/style/MapLegend.css*/
 .map-legend {
 	position: absolute;
 	top: 12px;
@@ -17,49 +17,54 @@
 	animation: fadeIn 0.15s ease-out;
 }
 
+/* MapCanvasLegend: canvas-gradient legend */
+.map-legend-gradient {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.map-legend-header {
+	margin-bottom: 8px;
+	padding-bottom: 4px;
+}
+
+.map-legend-canvas-area {
+	display: flex;
+	flex-direction: row;
+	align-items: stretch;
+	height: 200px;
+	gap: 30px;
+}
+
+.map-legend-canvas-wrap {
+	width: 18px;
+	height: 100%;
+}
+
+.map-legend-ticks {
+	position: relative;
+	width: auto;
+	height: 100%;
+}
+
+.map-legend-tick {
+	position: absolute;
+	right: 0;
+	transform: translateY(-50%);
+	font-size: 0.65rem;
+	font-weight: 500;
+	line-height: 1;
+	white-space: nowrap;
+}
+
+.map-legend-bound {
+	font-size: 11px;
+	color: var(--text-secondary, #666);
+	line-height: 1;
+}
+
 @keyframes fadeIn {
 	from { opacity: 0; transform: translateY(4px); }
 	to { opacity: 1; transform: translateY(0); }
 }
-
-.map-legend-header {
-	display: flex;
-	align-items: center;
-	gap: 4px;
-	margin-bottom: 4px;
-	padding-bottom: 3px;
-	border-bottom: 1px solid rgba(0,0,0,0.08);
-}
-
-.map-legend-unit {
-	font-size: 0.62rem;
-	font-weight: 600;
-	opacity: 0.7;
-}
-
-.map-legend-scale {
-	display: flex;
-	flex-direction: column;
-	gap: 1px;
-}
-
-.map-legend-step {
-	display: flex;
-	align-items: center;
-	gap: 5px;
-}
-
-.map-legend-color {
-	width: 14px;
-	height: 8px;
-	border-radius: 1px;
-	flex-shrink: 0;
-}
-
-.map-legend-label {
-	font-size: 0.58rem;
-	opacity: 0.7;
-	line-height: 1.3;
-}
-
-

@@ -11,16 +11,10 @@ export function useTemperatureLayer(map, isActive, onTimeUpdate) {
 	const layerRef = useRef(null);
 	const isPlayingRef = useRef(false);
 
-	/* =========================
-		CREATE
-	========================= */
 	const createLayer = useCallback(() => {
 		return new TemperatureLayer(TEMPERATURE_LAYER_OPTIONS);
 	}, []);
 
-	/* =========================
-		ADD
-	========================= */
 	const addLayerToMap = useCallback(async (layer) => {
 		try {
 			const beforeLayer = map.getLayer(INSERT_BEFORE_LAYER)
@@ -35,12 +29,16 @@ export function useTemperatureLayer(map, isActive, onTimeUpdate) {
 			const endMs = +layer.getAnimationEndDate();
 			const currentMs = +layer.getAnimationTimeDate();
 
+			layer.animateByFactor(ANIMATION_SPEED_FACTOR);
+			isPlayingRef.current = true;
+
 			onTimeUpdate?.({
 				type: "ready",
 				startMs,
 				endMs,
 				currentMs,
-				isPlaying: false,
+				isPlaying: true,
+				colorRamp: layer.getColorRamp(),
 			});
 
 		} catch (err) {
@@ -48,9 +46,6 @@ export function useTemperatureLayer(map, isActive, onTimeUpdate) {
 		}
 	}, [map, onTimeUpdate]);
 
-	/* =========================
-		REMOVE
-	========================= */
 	const removeLayer = useCallback(() => {
 		const layer = layerRef.current;
 		if (!layer) return;
@@ -78,9 +73,6 @@ export function useTemperatureLayer(map, isActive, onTimeUpdate) {
 
 	}, [map, onTimeUpdate]);
 
-	/* =========================
-		CONTROLS
-	========================= */
 	const play = useCallback(() => {
 		layerRef.current?.animateByFactor(ANIMATION_SPEED_FACTOR);
 		isPlayingRef.current = true;
@@ -95,9 +87,6 @@ export function useTemperatureLayer(map, isActive, onTimeUpdate) {
 		layerRef.current?.setAnimationTime(timestampMs / 1000);
 	}, []);
 
-	/* =========================
-		TOGGLE
-	========================= */
 	useEffect(() => {
 		if (!map || !map.isStyleLoaded()) return;
 

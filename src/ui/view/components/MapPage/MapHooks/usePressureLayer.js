@@ -10,16 +10,11 @@ export function usePressureLayer(map, isActive, onTimeUpdate) {
 	const layerRef = useRef(null);
 	const isPlayingRef = useRef(false);
 
-	/* =========================
-		CREATE
-	========================= */
 	const createLayer = useCallback(() => {
 		return new PressureLayer(PRESSURE_LAYER_OPTIONS);
 	}, []);
 
-	/* =========================
-		ADD
-	========================= */
+
 	const addLayerToMap = useCallback(async (layer) => {
 		try {
 			const beforeLayer = map.getLayer(INSERT_BEFORE_LAYER)
@@ -34,25 +29,30 @@ export function usePressureLayer(map, isActive, onTimeUpdate) {
 			const endMs = +layer.getAnimationEndDate();
 			const currentMs = +layer.getAnimationTimeDate();
 
+			layer.animateByFactor(ANIMATION_SPEED_FACTOR);
+			isPlayingRef.current = true;
+
 			onTimeUpdate?.({
 				type: "ready",
 				startMs,
 				endMs,
 				currentMs,
-				isPlaying: false,
+				isPlaying: true,
+				colorRamp: layer.getColorRamp(),
 			});
 
-		} catch (err) {
+		} 
+
+		catch (err) {
 			console.error("[PressureLayer] add failed:", err);
 		}
 	}, [map, onTimeUpdate]);
 
-	/* =========================
-		REMOVE
-	========================= */
 	const removeLayer = useCallback(() => {
 		const layer = layerRef.current;
-		if (!layer) return;
+		if (!layer) {
+			return;
+		}
 
 		try {
 			layer.animateByFactor(0);
@@ -61,35 +61,37 @@ export function usePressureLayer(map, isActive, onTimeUpdate) {
 			if (map.getLayer(PRESSURE_LAYER_OPTIONS.id)) {
 				map.removeLayer(PRESSURE_LAYER_OPTIONS.id);
 			}
-		} catch (err) {
+		} 
+		
+		catch (err) {
 			console.warn("[PressureLayer] remove failed:", err);
 		}
 
 		layerRef.current = null;
-	}, [map]);
+	}, 
+	[map]);
 
-	/* =========================
-		CONTROLS
-	========================= */
 	const play = useCallback(() => {
 		layerRef.current?.animateByFactor(ANIMATION_SPEED_FACTOR);
 		isPlayingRef.current = true;
-	}, []);
+	}, 
+	[]);
 
 	const pause = useCallback(() => {
 		layerRef.current?.animateByFactor(0);
 		isPlayingRef.current = false;
-	}, []);
+	}, 
+	[]);
 
 	const seekTo = useCallback((timestampMs) => {
 		layerRef.current?.setAnimationTime(timestampMs / 1000);
-	}, []);
+	}, 
+	[]);
 
-	/* =========================
-		TOGGLE
-	========================= */
 	const onActiveChanged = useCallback(() => {
-		if (!map || !map.isStyleLoaded()) return;
+		if (!map || !map.isStyleLoaded()) {
+			return;
+		}
 
 		if (isActive && !layerRef.current) {
 			const layer = createLayer();
@@ -131,8 +133,7 @@ export function usePressureLayer(map, isActive, onTimeUpdate) {
 				removeLayer();
 			}
 		};
-	}, 
-	[map, isActive, createLayer, addLayerToMap, removeLayer, onTimeUpdate]);
+	}, [map, isActive, createLayer, addLayerToMap, removeLayer, onTimeUpdate]);
 
 	useEffect(onActiveChanged, [onActiveChanged]);
 
