@@ -21,7 +21,7 @@
   --font-variant-numeric: lining-nums tabular-nums;
 
   /* Base colors */
-  --color-background-base: #f0f5fe; /* veldig lys, kjølig blå – Yr-aktig */
+  --color-background-base: #f0f5fe;
   --color-text-base: #426da1;
   --color-text-subtle: #4c5a66;
 
@@ -67,6 +67,11 @@ html,
 body {
   margin: 0;
   padding: 0;
+  height: 100%;
+}
+
+#root {
+  height: 100%;
 }
 
 body {

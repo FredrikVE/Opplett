@@ -8,23 +8,25 @@ export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREE
 	
 	return (
 		<div className="map-screen">
-			<header className="map-header">
-				<h1>{viewModel.activeLocation.name || "Værkart"}</h1>
-			</header>
+			<div className="map-screen-top">
+				<header className="map-header">
+					<h1>{viewModel.activeLocation.name || "Værkart"}</h1>
+				</header>
 
-			<SearchField
-				query={viewModel.query}
-				suggestions={viewModel.suggestions}
-				onSearchChange={viewModel.onSearchChange}
-				onSuggestionSelected={viewModel.onSuggestionSelected}
-				onResetToDeviceLocation={viewModel.onResetToDeviceLocation}
-			/>
+				<SearchField
+					query={viewModel.query}
+					suggestions={viewModel.suggestions}
+					onSearchChange={viewModel.onSearchChange}
+					onSuggestionSelected={viewModel.onSuggestionSelected}
+					onResetToDeviceLocation={viewModel.onResetToDeviceLocation}
+				/>
 
-			<Navigation
-				activeScreen={activeScreen}
-				onChangeScreen={onChangeScreen}
-				SCREENS={SCREENS}
-			/>
+				<Navigation
+					activeScreen={activeScreen}
+					onChangeScreen={onChangeScreen}
+					SCREENS={SCREENS}
+				/>
+			</div>
 
 			<main className="map-content">
 				{viewModel.isLoading && (
@@ -44,8 +46,6 @@ export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREE
 					countryCode={viewModel.countryCode}
 					activeLayer={viewModel.activeLayer}
 					onLayerChange={viewModel.onLayerChange}
-					showMarkersWithLayer={viewModel.showMarkersWithLayer}
-					onToggleMarkers={viewModel.onToggleMarkers}
 				/>
 			</main>
 		</div>

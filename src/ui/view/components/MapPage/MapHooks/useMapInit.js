@@ -28,20 +28,28 @@ export function useMapInit(mapContainerRef, mapStyle, activeLocation) {
 	const createMapInstance = useCallback(() => {
 		maptilersdk.config.apiKey = MAPTILER_API_KEY;
 
-		return new maptilersdk.Map({
+		const map = new maptilersdk.Map({
 			container: mapContainerRef.current,
 			style: mapStyle,
 			center: [initialLon.current, initialLat.current],
 			zoom: initialZoom.current,
 			maxZoom: MAX_ZOOM,
 			minZoom: MIN_ZOOM,
+			logoControl: false,
 			attributionControl: false,
 			navigationControl: true,
 			geolocateControl: false,
 		});
-	}, 
 
-	[mapStyle, mapContainerRef]);
+		map.addControl(
+			new maptilersdk.AttributionControl({ compact: true }),
+			"top-right"
+		);
+
+
+
+    return map;
+}, [mapStyle, mapContainerRef]);
 
 	const destroyMapInstance = useCallback((map) => {
 		try {
