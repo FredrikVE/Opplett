@@ -120,12 +120,18 @@ export default function WeatherMap(props) {
 	const shouldShowMarkers = activeLayer === LAYER_KEYS.NONE || showMarkersWithLayer;
 	useWeatherMarkers(map, shouldShowMarkers ? weatherPoints : []);
 
-	/* ---- Avgjør om Timeline skal vises ----
-	   Skjules når MapLayerToggle-dropdown er åpen. */
+	/* ---- Avgjør om Timeline skal vises ---- */
 	const hasActiveOverlayLayer =
 		isPrecipActive || isWindActive || isPressureActive || isTemperatureLayerActive;
 
 	const showTimeline = hasActiveOverlayLayer && !isLayerToggleOpen;
+
+	/* ---- Overlay CSS-klasse ----
+	   "has-timeline" brukes til å aktivere
+	   kant-i-kant justering på smale skjermer. */
+	const overlayClassName = showTimeline
+		? "map-overlays has-timeline"
+		: "map-overlays";
 
 	return (
 		<div className="map-page-wrap">
@@ -138,7 +144,7 @@ export default function WeatherMap(props) {
 			<PressureLegend isVisible={isPressureActive} />
 
 			{/* Overlay grid: Timeline sentrert, Toggle til høyre */}
-			<div className="map-overlays">
+			<div className={overlayClassName}>
 				{showTimeline && (
 					<div className="map-overlays-timeline-slot">
 						<TimeLine
