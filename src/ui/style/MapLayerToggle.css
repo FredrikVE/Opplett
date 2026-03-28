@@ -68,7 +68,8 @@
 
 .map-layer-button.has-overlay .map-layer-button-icon,
 .map-layer-button.has-overlay .map-layer-chevron {
-	opacity: 0.9;
+	opacity: 1;
+	color: #ffffff;
 }
 
 
