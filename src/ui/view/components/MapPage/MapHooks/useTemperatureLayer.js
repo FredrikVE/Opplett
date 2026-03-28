@@ -1,12 +1,13 @@
-//src/ui/view/components/MapPage/MapHooks/usePressureLayer.js
+//src/ui/view/components/MapPage/MapHooks/useTemperatureLayer.js
 import { useEffect, useRef, useCallback } from "react";
-import { PressureLayer } from "@maptiler/weather";
-import { PRESSURE_LAYER_OPTIONS } from "../PressureMap/PressureLayerOptions";
+import { TemperatureLayer } from "@maptiler/weather";
+import { TEMPERATURE_LAYER_OPTIONS } from "../TemperatureMap/TemperaturLayerOptions";
 
 const INSERT_BEFORE_LAYER = "Place labels";
 const ANIMATION_SPEED_FACTOR = 3600;
 
-export function usePressureLayer(map, isActive, onTimeUpdate) {
+export function useTemperatureLayer(map, isActive, onTimeUpdate) {
+
 	const layerRef = useRef(null);
 	const isPlayingRef = useRef(false);
 
@@ -14,7 +15,7 @@ export function usePressureLayer(map, isActive, onTimeUpdate) {
 		CREATE
 	========================= */
 	const createLayer = useCallback(() => {
-		return new PressureLayer(PRESSURE_LAYER_OPTIONS);
+		return new TemperatureLayer(TEMPERATURE_LAYER_OPTIONS);
 	}, []);
 
 	/* =========================
@@ -43,7 +44,7 @@ export function usePressureLayer(map, isActive, onTimeUpdate) {
 			});
 
 		} catch (err) {
-			console.error("[PressureLayer] add failed:", err);
+			console.error("[TemperatureLayer] add failed:", err);
 		}
 	}, [map, onTimeUpdate]);
 
@@ -58,15 +59,24 @@ export function usePressureLayer(map, isActive, onTimeUpdate) {
 			layer.animateByFactor(0);
 			isPlayingRef.current = false;
 
-			if (map.getLayer(PRESSURE_LAYER_OPTIONS.id)) {
-				map.removeLayer(PRESSURE_LAYER_OPTIONS.id);
+			if (map.getLayer(TEMPERATURE_LAYER_OPTIONS.id)) {
+				map.removeLayer(TEMPERATURE_LAYER_OPTIONS.id);
 			}
 		} catch (err) {
-			console.warn("[PressureLayer] remove failed:", err);
+			console.warn("[TemperatureLayer] remove failed:", err);
 		}
 
 		layerRef.current = null;
-	}, [map]);
+
+		onTimeUpdate?.({
+			type: "removed",
+			startMs: 0,
+			endMs: 0,
+			currentMs: 0,
+			isPlaying: false,
+		});
+
+	}, [map, onTimeUpdate]);
 
 	/* =========================
 		CONTROLS
@@ -88,7 +98,7 @@ export function usePressureLayer(map, isActive, onTimeUpdate) {
 	/* =========================
 		TOGGLE
 	========================= */
-	const onActiveChanged = useCallback(() => {
+	useEffect(() => {
 		if (!map || !map.isStyleLoaded()) return;
 
 		if (isActive && !layerRef.current) {
@@ -116,14 +126,6 @@ export function usePressureLayer(map, isActive, onTimeUpdate) {
 
 		if (!isActive && layerRef.current) {
 			removeLayer();
-
-			onTimeUpdate?.({
-				type: "removed",
-				startMs: 0,
-				endMs: 0,
-				currentMs: 0,
-				isPlaying: false,
-			});
 		}
 
 		return () => {
@@ -131,10 +133,8 @@ export function usePressureLayer(map, isActive, onTimeUpdate) {
 				removeLayer();
 			}
 		};
-	}, 
-	[map, isActive, createLayer, addLayerToMap, removeLayer, onTimeUpdate]);
 
-	useEffect(onActiveChanged, [onActiveChanged]);
+	}, [map, isActive, createLayer, addLayerToMap, removeLayer, onTimeUpdate]);
 
 	return { play, pause, seekTo };
 }

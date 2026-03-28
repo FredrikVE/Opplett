@@ -11,6 +11,7 @@ import { useDeviceLocationDot } from "./MapHooks/useDeviceLocationDot.js";
 import { useWindLayer } from "./MapHooks/useWindlayer.js";
 import { usePrecipitationLayer } from "./MapHooks/usePrecipitationLayer.js";
 import { usePressureLayer } from "./MapHooks/usePressureLayer.js";
+import { useTemperatureLayer } from "./MapHooks/useTemperatureLayer.js";
 import { useMapLayerDimming } from "./MapHooks/useMapLayerDimming.js";
 import { useTimelineController } from "./MapHooks/useTimelineController.js";
 
@@ -66,15 +67,32 @@ export default function WeatherMap(props) {
 	const isPressureActive = activeLayer === LAYER_KEYS.PRESSURE;
 	const pressureControls = usePressureLayer(map, isPressureActive, onTimeUpdate);
 
+	//Temperature layer
+	const isTemperatureLayerActive = activeLayer === LAYER_KEYS.TEMPERATURE;
+	const temperatureControls = useTemperatureLayer(map, isTemperatureLayerActive, onTimeUpdate);
+
 	//Definerer hvilke lag som skal bruke timeline
 	const activeTimelineLayer = useMemo(() => {
 		if (isPrecipActive) return precipControls;
 		if (isWindActive) return windControls;
 		if (isPressureActive) return pressureControls;
+		if (isTemperatureLayerActive) return temperatureControls;
 
 		return null;
 	}, 
-	[isPrecipActive, isWindActive, isPressureActive, precipControls, windControls, pressureControls]);
+	[	
+		//Lytter til disse layers
+		isPrecipActive, 
+		isWindActive, 
+		isPressureActive, 
+		isTemperatureLayerActive, 
+	
+		//Lytter til disse kontrollene
+		temperatureControls,
+		precipControls, 
+		windControls, 
+		pressureControls
+	]);
 
 	//Handle funksjoner for timeline
 	const handlePlay = useCallback(() => {
@@ -113,7 +131,9 @@ export default function WeatherMap(props) {
 
 			{/* Timeline */}
 			<TimeLine
-				isVisible={ isPrecipActive || isWindActive || isPressureActive }
+				isVisible={ 
+					isPrecipActive || isWindActive || isPressureActive || isTemperatureLayerActive
+				}
 				isPlaying={timelineState.isPlaying}
 				startMs={timelineState.startMs}
 				endMs={timelineState.endMs}
