@@ -4,7 +4,9 @@ import * as maptilersdk from "@maptiler/sdk";
 import { MIN_ZOOM, MAX_ZOOM, ZOOM_LEVELS } from "../../../../utils/MapUtils/Zoom/ZoomConfig";
 import { MAP_LABEL_LAYERS } from "../../../../utils/MapUtils/Layers/LayerConfig";
 const MAPTILER_API_KEY = import.meta.env.VITE_MAPTILER_API_KEY;
-const DEFAULT_ZOOM = ZOOM_LEVELS.STREET; //Zoomnivå 14 som standard
+//const DEFAULT_ZOOM = ZOOM_LEVELS.STREET; //Zoomnivå 14 som standard
+const DEFAULT_ZOOM = ZOOM_LEVELS.LOCAL_REGION; //Zoomnivå 9 som standard
+
 
 export function useMapInit(mapContainerRef, mapStyle, activeLocation) {
 

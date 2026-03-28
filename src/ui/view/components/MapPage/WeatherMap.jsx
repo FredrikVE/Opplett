@@ -10,8 +10,9 @@ import { useWeatherMarkers } from "./MapHooks/useWeatherMarkers.jsx";
 import { useDeviceLocationDot } from "./MapHooks/useDeviceLocationDot.js";
 import { useWindLayer } from "./MapHooks/useWindlayer.js";
 import { usePrecipitationLayer } from "./MapHooks/usePrecipitationLayer.js";
+import { usePressureLayer } from "./MapHooks/usePressureLayer.js";
 import { useMapLayerDimming } from "./MapHooks/useMapLayerDimming.js";
-import useTimelineController from "./MapHooks/useTimelineController.js";
+import { useTimelineController } from "./MapHooks/useTimelineController.js";
 
 import MapLayerToggle from "./MapLayerToggle/MapLayerToggle.jsx";
 import WindLegend from "./Windmap/WindLegend.jsx";
@@ -51,31 +52,31 @@ export default function WeatherMap(props) {
 		pause,
 	} = useTimelineController();
 
-	//Vind
+
+	//Wind layer
 	const isWindActive = activeLayer === LAYER_KEYS.WIND;
 	const windControls = useWindLayer(map, isWindActive, onTimeUpdate);
 
-	//Nedbør
+	//Precipitation layer
 	const isPrecipActive = activeLayer === LAYER_KEYS.PRECIPITATION;
 	const precipControls = usePrecipitationLayer(map, isPrecipActive, onTimeUpdate);
-	useMapLayerDimming(map, isPrecipActive);			//Dim kart ved nedbør
+	useMapLayerDimming(map, isPrecipActive);
 
-	//Active timeline layer
+	//Pressure layer
+	const isPressureActive = activeLayer === LAYER_KEYS.PRESSURE;
+	const pressureControls = usePressureLayer(map, isPressureActive, onTimeUpdate);
+
+	//Definerer hvilke lag som skal bruke timeline
 	const activeTimelineLayer = useMemo(() => {
-		if (isPrecipActive) {
-			return precipControls;
-		}
-
-		if (isWindActive) {
-			return windControls;
-		}
+		if (isPrecipActive) return precipControls;
+		if (isWindActive) return windControls;
+		if (isPressureActive) return pressureControls;
 
 		return null;
 	}, 
-	[isPrecipActive, isWindActive, precipControls, windControls]);
+	[isPrecipActive, isWindActive, isPressureActive, precipControls, windControls, pressureControls]);
 
-
-	//Timeline handlers
+	//Handle funksjoner for timeline
 	const handlePlay = useCallback(() => {
 		activeTimelineLayer?.play?.();
 		play();
@@ -98,7 +99,7 @@ export default function WeatherMap(props) {
 
 	useEffect(onActiveLayerChangedResetTimeline, [onActiveLayerChangedResetTimeline]);
 
-	//Værikoner på værkart
+	//Værikoner på standard værkart
 	const shouldShowMarkers = activeLayer === LAYER_KEYS.NONE || showMarkersWithLayer;
 	useWeatherMarkers(map, shouldShowMarkers ? weatherPoints : []);
 
@@ -106,11 +107,13 @@ export default function WeatherMap(props) {
 		<div className="map-page-wrap">
 			<div ref={mapContainerRef} className="map" />
 
+			{/* Legends */}
 			<WindLegend isVisible={isWindActive} />
 			<PrecipitationLegend isVisible={isPrecipActive} />
 
+			{/* Timeline */}
 			<TimeLine
-				isVisible={isPrecipActive || isWindActive}
+				isVisible={ isPrecipActive || isWindActive || isPressureActive }
 				isPlaying={timelineState.isPlaying}
 				startMs={timelineState.startMs}
 				endMs={timelineState.endMs}
@@ -121,6 +124,7 @@ export default function WeatherMap(props) {
 				onSeek={handleSeek}
 			/>
 
+			{/* Layer toggle */}
 			<MapLayerToggle
 				activeLayer={activeLayer}
 				onLayerChange={onLayerChange}

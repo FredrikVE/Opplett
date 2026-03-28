@@ -8,7 +8,7 @@ const INITIAL_TIMELINE = {
 	isPlaying: false,
 };
 
-export default function useTimelineController() {
+export function useTimelineController() {
 	const [timeline, setTimeline] = useState(INITIAL_TIMELINE);
 
 	const onTimeUpdate = useCallback((event) => {

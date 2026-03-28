@@ -2,8 +2,8 @@
 export const LAYER_KEYS = {
     NONE: "none",
     WIND: "wind",
-    // Fremtidige lag:
     PRECIPITATION: "precipitation",
+    PRESSURE: "pressure",
     // RADAR: "radar",
     // TEMPERATURE: "temperature",
 };
@@ -24,6 +24,12 @@ export const WEATHER_LAYERS = [
      	label: "Nedbør",
      	icon: "🌧️",
     },
+    {
+        key: LAYER_KEYS.PRESSURE,
+        label: "Lufttrykk",
+        icon: "🌀", // eller 📈 hvis du vil
+    },
+
     // {
     // 	key: LAYER_KEYS.RADAR,
     // 	label: "Radar",
