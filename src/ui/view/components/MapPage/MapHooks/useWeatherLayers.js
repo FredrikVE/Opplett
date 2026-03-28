@@ -57,10 +57,12 @@ export function useWeatherLayers(map, activeLayer, onTimeUpdate) {
 	const emitLayerRemoved = useCallback(() => {
 		onTimeUpdateRef.current?.({
 			type: "removed",
-			startMs: 0,
-			endMs: 0,
-			currentMs: 0,
-			isPlaying: false,
+		});
+	}, []);
+
+	const emitLayerLoading = useCallback(() => {
+		onTimeUpdateRef.current?.({
+			type: "loading",
 		});
 	}, []);
 
@@ -331,8 +333,10 @@ export function useWeatherLayers(map, activeLayer, onTimeUpdate) {
 
 		if (nextEntry?.isReady) {
 			activateLayer(nextEntry);
+		} else {
+			emitLayerLoading();
 		}
-	}, [map, activeLayer, deactivateLayer, emitLayerRemoved, ensureLayer, activateLayer]);
+	}, [map, activeLayer, deactivateLayer, emitLayerRemoved, emitLayerLoading, ensureLayer, activateLayer]);
 
 	useEffect(updateOnTimeUpdateRef, [updateOnTimeUpdateRef]);
 	useEffect(preloadWeatherLayersOnMapReady, [preloadWeatherLayersOnMapReady]);

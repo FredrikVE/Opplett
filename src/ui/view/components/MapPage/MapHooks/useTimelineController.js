@@ -7,6 +7,7 @@ const INITIAL_TIMELINE = {
 	currentMs: 0,
 	isPlaying: false,
 	colorRamp: null,
+	isLoading: false,
 };
 
 export function useTimelineController() {
@@ -14,6 +15,13 @@ export function useTimelineController() {
 
 	const onTimeUpdate = useCallback((event) => {
 		switch (event.type) {
+			case "loading":
+				setTimeline((prev) => ({
+					...prev,
+					isLoading: true,
+				}));
+				break;
+
 			case "ready":
 				setTimeline({
 					startMs: event.startMs,
@@ -21,6 +29,7 @@ export function useTimelineController() {
 					currentMs: event.currentMs,
 					isPlaying: event.isPlaying,
 					colorRamp: event.colorRamp ?? null,
+					isLoading: false,
 				});
 				break;
 

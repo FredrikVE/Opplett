@@ -13,6 +13,7 @@ import { useMapLayerDimming } from "./MapHooks/useMapLayerDimming.js";
 import { useTimelineController } from "./MapHooks/useTimelineController.js";
 
 import MapCanvasLegend from "./MapCanvasLegend.jsx";
+import LoadingSpinner from "../Common/LoadingSpinner/LoadingSpinner.jsx";
 
 import MapLayerToggle from "./MapLayerToggle/MapLayerToggle.jsx";
 import TimeLine from "./Timeline/TimeLine.jsx";
@@ -91,6 +92,12 @@ export default function WeatherMap(props) {
 	return (
 		<div className="map-page-wrap">
 			<div ref={mapContainerRef} className="map" />
+
+			{timelineState.isLoading && (
+				<div className="map-loading-overlay">
+					<LoadingSpinner />
+				</div>
+			)}
 
 			<MapCanvasLegend
 				colorRamp={timelineState.colorRamp}
