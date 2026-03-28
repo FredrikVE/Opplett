@@ -42,7 +42,9 @@ export default function TimeLine(props) {
 	const handlePlayPause = useCallback(() => {
 		if (isPlaying) {
 			onPause?.();
-		} else {
+		} 
+
+		else {
 			onPlay?.();
 		}
 	}, [isPlaying, onPlay, onPause]);
@@ -62,7 +64,7 @@ export default function TimeLine(props) {
 
 			<div className="timeline-controls">
 				<button
-					className="timeline-play-btn"
+					className={`timeline-play-btn ${isPlaying ? "is-playing" : ""}`}
 					onClick={handlePlayPause}
 					disabled={!hasData}
 				>

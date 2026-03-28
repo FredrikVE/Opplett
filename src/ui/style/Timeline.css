@@ -51,9 +51,20 @@
 	transition: background 0.15s ease;
 }
 
+.timeline-play-btn.is-playing {
+	background: rgba(23, 103, 206, 0.92);
+	color: #ffffff;
+}
+
+.timeline-play-btn.is-playing:hover {
+	background: rgba(23, 103, 206, 1);
+	color: #000000;
+}
+
 .timeline-play-btn:hover:not(:disabled) {
 	background: rgba(0, 0, 0, 0.1);
 }
+
 
 .timeline-play-btn:disabled {
 	opacity: 0.4;
