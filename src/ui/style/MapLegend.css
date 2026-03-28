@@ -11,7 +11,7 @@
 	border-radius: 6px;
 	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
 
-	padding: 6px 8px;
+	padding: 1rem 1rem;
 	color: #333;
 	font-family: inherit;
 	animation: fadeIn 0.15s ease-out;
@@ -33,7 +33,7 @@
 	display: flex;
 	flex-direction: row;
 	align-items: stretch;
-	height: 200px;
+	height: 180px;
 	gap: 30px;
 }
 
