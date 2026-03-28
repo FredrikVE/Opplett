@@ -56,16 +56,18 @@
 /* =========================
    OVERLAY SYSTEM (CSS GRID)
 
-   3-kolonne grid:
-   [tom 1fr] [Timeline auto] [Toggle + tom 1fr]
+   Bred skjerm (>760px):
+   3-kolonne grid: [1fr] [Timeline] [Toggle + 1fr]
+   Timeline sentrert, toggle til høyre, bunnkant flukter.
 
-   Timeline sitter i midtkolonnen = ekte sentrert.
-   Toggle sitter i høyre kolonne = alltid til høyre.
-   Begge er align-items: end = bunnkant flukter.
-
-   På smale skjermer (<=760px) bytter vi til
-   1-kolonne layout der toggle er rad 1 (øverst
-   til høyre) og timeline er rad 2 (under, sentrert).
+   Smal skjerm (<=760px):
+   1-kolonne grid:
+   Rad 1 = toggle (høyrejustert innenfor Timeline-bredde)
+   Rad 2 = timeline (sentrert)
+   
+   Toggle-slotten har samme max-width som Timeline
+   og er sentrert, slik at justify-self: end
+   treffer Timeline-boksens høyrekant.
 ========================= */
 
 .map-overlays {
@@ -109,16 +111,26 @@
 	z-index: 3;
 }
 
-/* Smal skjerm: toggle over timeline */
+/* Smal skjerm: toggle over timeline, kant-i-kant */
 @media (max-width: 760px) {
 	.map-overlays {
 		grid-template-columns: 1fr;
 	}
 
+	/* Toggle-slotten tar samme bredde som Timeline
+	   og sentreres — da flukter justify-self: end
+	   med Timeline-boksens høyrekant */
 	.map-overlays-toggle-slot {
 		grid-column: 1;
 		grid-row: 1;
-		justify-self: end;
+
+		width: 480px;
+		max-width: 100%;
+
+		justify-self: center;
+
+		display: flex;
+		justify-content: flex-end;
 	}
 
 	.map-overlays-timeline-slot {
