@@ -1,6 +1,6 @@
 // src/ui/view/components/MapPage/MapHooks/useWeatherLayers.js
 import { useEffect, useRef, useCallback } from "react";
-import { WEATHER_LAYER_DEFS } from "./WeatherLayerConfig.js";
+import { WEATHER_LAYER_DEFS } from "../WeatherLayerConfig.js";
 import { LAYER_KEYS } from "../MapLayerToggle/MapToggleConfig.js";
 
 const INSERT_BEFORE_LAYER_ID = "Place labels";

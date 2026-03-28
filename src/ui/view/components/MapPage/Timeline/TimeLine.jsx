@@ -1,6 +1,6 @@
 //src/ui/view/components/MapPage/Timeline/TimeLine.jsx
 import { useMemo, useCallback, useRef } from "react";
-import PlaybackIcon from "./PlaybackIcon";
+import PlaybackIcon from "../../Common/Icons/PlaybackIcon.jsx"
 import { TimelineModel } from "./TimelineModel.js";
 
 const TIMELINE_STEP_MS = 60_000;

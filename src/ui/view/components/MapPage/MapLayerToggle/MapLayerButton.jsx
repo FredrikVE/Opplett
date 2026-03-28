@@ -1,5 +1,6 @@
 //src/ui/view/components/MapPage/MapLayerToggle/MapLayerButton.jsx
 import ChevronIcon from "../../Common/Buttons/ChevronIcon.jsx";
+import LayerIcon from "../../Common/Icons/LayerIcon.jsx";
 
 export default function MapLayerButton({ isOpen, onClick, label, hasActiveOverlay }) {
 	return (
@@ -9,19 +10,7 @@ export default function MapLayerButton({ isOpen, onClick, label, hasActiveOverla
 			aria-label="Velg kartlag"
 			aria-expanded={isOpen}
 		>
-			<svg
-				className="map-layer-button-icon"
-				viewBox="0 0 24 24"
-				width="18"
-				height="18"
-				fill="none"
-				stroke="currentColor"
-				strokeWidth="2"
-			>
-				<path d="M12 2L2 7l10 5 10-5-10-5z" />
-				<path d="M2 17l10 5 10-5" />
-				<path d="M2 12l10 5 10-5" />
-			</svg>
+			<LayerIcon size={18} />
 
 			<span className="map-layer-button-label">{label}</span>
 

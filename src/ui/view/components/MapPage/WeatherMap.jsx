@@ -12,7 +12,7 @@ import { useWeatherLayers } from "./MapHooks/useWeatherLayers.js";
 import { useMapLayerDimming } from "./MapHooks/useMapLayerDimming.js";
 import { useTimelineController } from "./MapHooks/useTimelineController.js";
 
-import MapCanvasLegend from "./MapCanvasLegend.jsx";
+import MapCanvasLegend from "./Legend/MapCanvasLegend.jsx";
 import LoadingSpinner from "../Common/LoadingSpinner/LoadingSpinner.jsx";
 
 import MapLayerToggle from "./MapLayerToggle/MapLayerToggle.jsx";
