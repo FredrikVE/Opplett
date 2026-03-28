@@ -41,15 +41,8 @@ export function useMapInit(mapContainerRef, mapStyle, activeLocation) {
 			geolocateControl: false,
 		});
 
-		map.addControl(
-			new maptilersdk.AttributionControl({ compact: true }),
-			"top-right"
-		);
-
-
-
     return map;
-}, [mapStyle, mapContainerRef]);
+	}, [mapStyle, mapContainerRef]);
 
 	const destroyMapInstance = useCallback((map) => {
 		try {
