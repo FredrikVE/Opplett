@@ -10,19 +10,19 @@ export default function TemperatureLegend({ isVisible }) {
 	const steps = buildTemperatureLegendSteps();
 
 	return (
-		<div className="temperature-legend">
-			<div className="temperature-legend-header">
-				<span className="temperature-legend-unit">°C</span>
+		<div className="map-legend">
+			<div className="map-legend-header">
+				<span className="map-legend-unit">°C</span>
 			</div>
 
-			<div className="temperature-legend-scale">
+			<div className="map-legend-scale">
 				{steps.map((step) => (
-					<div key={step.label} className="temperature-legend-step">
+					<div key={step.label} className="map-legend-step">
 						<div
-							className="temperature-legend-color"
+							className="map-legend-color"
 							style={{ backgroundColor: step.color }}
 						/>
-						<span className="temperature-legend-label">
+						<span className="map-legend-label">
 							{step.label}
 						</span>
 					</div>

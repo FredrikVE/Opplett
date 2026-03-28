@@ -1,17 +1,18 @@
-//src/ui/view/components/MapPage/WindLegend.jsx
-import { buildWindLegendSteps } from "./WindScale";
+//src/ui/view/components/MapPage/PressureMap/PressureLegend.jsx
+import { buildPressureLegendSteps } from "./PressureScale";
 
-export default function WindLegend({ isVisible }) {
+export default function PressureLegend({ isVisible }) {
+
 	if (!isVisible) {
-		return null;
-	}
+        return null;
+    }
 
-	const steps = buildWindLegendSteps();
+	const steps = buildPressureLegendSteps();
 
 	return (
 		<div className="map-legend">
 			<div className="map-legend-header">
-				<span className="map-legend-unit">m/s</span>
+				<span className="map-legend-unit">hPa</span>
 			</div>
 
 			<div className="map-legend-scale">

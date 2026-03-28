@@ -18,6 +18,7 @@ import { useTimelineController } from "./MapHooks/useTimelineController.js";
 import WindLegend from "./Windmap/WindLegend.jsx";
 import PrecipitationLegend from "./PrecipitationMap/Precipitationlegend.jsx";
 import TemperatureLegend from "./TemperatureMap/TemperatureLegend.jsx";
+import PressureLegend from "./PressureMap/PressureLegend.jsx";
 
 import MapLayerToggle from "./MapLayerToggle/MapLayerToggle.jsx";
 import TimeLine from "./Timeline/TimeLine.jsx";
@@ -131,6 +132,7 @@ export default function WeatherMap(props) {
 			<WindLegend isVisible={isWindActive} />
 			<PrecipitationLegend isVisible={isPrecipActive} />
 			<TemperatureLegend isVisible={isTemperatureLayerActive} />
+			<PressureLegend isVisible={isPressureActive} />
 
 			{/* Timeline */}
 			<TimeLine

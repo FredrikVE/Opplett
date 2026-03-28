@@ -23,10 +23,14 @@ import "./ui/style/WindArrow.css";
 import "./ui/style/FilterDropDown.css";
 import "./ui/style/MapPage.css";
 import "./ui/style/DeviceLocationDot.css"
+
 import "./ui/style/MapLayerToggle.css";
-import "./ui/style/WindLegend.css";
-import "./ui/style/TemperatureLegend.css";
-import "./ui/style/PrecipitationLegend.css";
+
+//import "./ui/style/WindLegend.css";
+//import "./ui/style/TemperatureLegend.css";
+//import "./ui/style/PrecipitationLegend.css";
+import "./ui/style/MapLegend.css";
+
 import "./ui/style/Timeline.css";
 
 
