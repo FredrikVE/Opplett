@@ -122,8 +122,7 @@ export default function WeatherMap(props) {
 	useWeatherMarkers(map, shouldShowMarkers ? weatherPoints : []);
 
 	/* ---- Avgjør om Timeline skal vises ----
-	   Skjules når MapLayerToggle-dropdown er åpen,
-	   slik at knappen sitter pent nederst til høyre alene. */
+	   Skjules når MapLayerToggle-dropdown er åpen. */
 	const hasActiveOverlayLayer =
 		isPrecipActive || isWindActive || isPressureActive || isTemperatureLayerActive;
 
@@ -153,7 +152,6 @@ export default function WeatherMap(props) {
 					onSeek={handleSeek}
 				/>
 
-				{/* Layer toggle */}
 				<MapLayerToggle
 					activeLayer={activeLayer}
 					onLayerChange={onLayerChange}

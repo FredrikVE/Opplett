@@ -1,5 +1,8 @@
 /* =========================
-   POSISJONERING (FLEX-BASED, IKKE ABSOLUTE)
+   POSISJONERING (FLEX-BASED)
+
+   margin-left: auto dytter knappen til
+   høyre på sin rad i wrap-reverse systemet.
 ========================= */
 .map-layer-toggle {
 	flex: 0 0 auto;

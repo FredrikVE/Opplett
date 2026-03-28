@@ -1,12 +1,23 @@
 /* ===========================
    TIMELINE (YR FLEX-COMPAT)
+
+   flex-basis: 100% tvinger Timeline til
+   å ta hele raden i wrap-reverse containeren.
+   
+   max-width begrenser faktisk bredde.
+   
+   justify-content: center på parent
+   sentrerer boksen horisontalt.
+   
+   MapLayerToggle (flex: 0 0 auto) har aldri
+   plass på samme rad og wrapper ALLTID opp
+   over Timeline — aldri ved siden av.
    =========================== */
 
 .timeline {
-	/* viktig for flex-systemet */
-	flex: 1 1 320px;
+	flex: 0 1 auto;
+	flex-basis: 100%;
 	max-width: 480px;
-	min-width: 0;
 
 	padding: 10px 14px 8px;
 

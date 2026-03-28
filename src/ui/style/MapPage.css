@@ -55,14 +55,16 @@
 /* =========================
    OVERLAY SYSTEM (YR STYLE)
 
-   wrap-reverse: når det ikke er plass til
-   både Timeline og MapLayerToggle på én rad,
-   wrapper MapLayerToggle opp og legger seg
-   oppå Timeline (som på yr.no).
+   wrap-reverse: MapLayerToggle wrapper
+   opp OVER Timeline når det ikke er plass
+   på samme rad (som alltid, pga Timeline
+   har flex-basis: 100%).
 
-   Når MapLayerToggle er åpen (håndtert i JS),
-   skjules Timeline, og knappen sitter alene
-   nederst til høyre.
+   justify-content: center sentrerer
+   Timeline horisontalt.
+
+   align-items: flex-end flukter bunnkant
+   når de ER på samme rad (bred skjerm).
 ========================= */
 
 .map-overlays {
@@ -88,19 +90,6 @@
 /* Overlays skal fortsatt være klikkbare */
 .map-overlays > * {
 	pointer-events: auto;
-}
-
-
-/* =========================
-   TIMELINE FLEX-REGLER
-
-   min-width hindrer at Timeline skvises.
-   Når containeren er for smal, tvinger
-   min-width wrapping i stedet for å krympe.
-========================= */
-
-.map-overlays .timeline {
-	min-width: 320px;
 }
 
 
@@ -243,9 +232,6 @@
 
 /* =========================
    RESPONSIVE
-
-   På veldig smale skjermer, la Timeline
-   fylle hele bredden og senk min-width.
 ========================= */
 
 @media (max-width: 600px) {
@@ -256,11 +242,6 @@
 	.marker-name {
 		max-width: 60px;
 	}
-
-	.map-overlays .timeline {
-		min-width: 260px;
-		flex-basis: 100%;
-	}
 }
 
 @media (max-width: 400px) {
@@ -270,9 +251,5 @@
 
 	.marker-container {
 		padding: 4px 8px 4px 4px;
-	}
-
-	.map-overlays .timeline {
-		min-width: 200px;
 	}
 }
