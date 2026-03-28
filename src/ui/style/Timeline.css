@@ -1,10 +1,10 @@
 /*src/ui/style/Timeline.css*/
 
 /* ===========================
-   PRECIPITATION TIMELINE
+   TIMELINE (LIGHT)
    =========================== */
 
-.precip-timeline {
+.timeline {
 	position: absolute;
 	bottom: 12px;
 	left: 50%;
@@ -12,78 +12,90 @@
 	z-index: 10;
 
 	width: calc(100% - 24px);
-	max-width: 440px;
-	padding: 8px 12px 6px;
+	max-width: 480px;
 
-	background: rgba(30, 30, 40, 0.88);
-	backdrop-filter: blur(10px);
-	-webkit-backdrop-filter: blur(10px);
-	border-radius: 10px;
-	border: 1px solid rgba(255, 255, 255, 0.08);
+	padding: 10px 14px 8px;
 
-	color: #fff;
+	background: rgba(255, 255, 255, 0.9);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+
+	border-radius: 16px;
+	border: 1px solid rgba(0, 0, 0, 0.06);
+
+	box-shadow:
+		0 8px 24px rgba(0, 0, 0, 0.12);
+
+	color: #1a1a1a;
 	font-family: inherit;
 	box-sizing: border-box;
 
-	touch-action: none;
+	touch-action: pan-x;
 }
 
-/* --- Tidslabel --- */
-.precip-timeline-time {
-	text-align: center;
-	margin-bottom: 4px;
-}
 
-.precip-timeline-current {
-	font-size: 0.78rem;
-	font-weight: 600;
-	letter-spacing: 0.02em;
-	text-transform: capitalize;
-}
+/* ===========================
+   HEADER (kun tid)
+   =========================== */
 
-/* --- Kontrollrad --- */
-.precip-timeline-controls {
+.timeline-header {
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	margin-bottom: 6px;
 }
 
-.precip-timeline-play-btn {
+.timeline-current {
+	font-size: 0.8rem;
+	font-weight: 600;
+}
+
+
+/* ===========================
+   CONTROLS
+   =========================== */
+
+.timeline-controls {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+
+/* --- Play button --- */
+.timeline-play-btn {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 
-	width: 36px;
-	height: 36px;
-	min-width: 36px;
-	flex-shrink: 0;
+	width: 32px;
+	height: 32px;
+	min-width: 32px;
 
-	background: rgba(255, 255, 255, 0.12);
-	border: 1px solid rgba(255, 255, 255, 0.18);
+	background: rgba(0, 0, 0, 0.05);
+	border: none;
 	border-radius: 50%;
-	color: #fff;
+
+	color: #1a1a1a;
 	cursor: pointer;
-	padding: 0;
 
 	transition: background 0.15s ease;
-	-webkit-tap-highlight-color: transparent;
 }
 
-.precip-timeline-play-btn:hover:not(:disabled) {
-	background: rgba(255, 255, 255, 0.22);
+.timeline-play-btn:hover:not(:disabled) {
+	background: rgba(0, 0, 0, 0.1);
 }
 
-.precip-timeline-play-btn:active:not(:disabled) {
-	background: rgba(255, 255, 255, 0.30);
-}
-
-.precip-timeline-play-btn:disabled {
-	opacity: 0.35;
+.timeline-play-btn:disabled {
+	opacity: 0.4;
 	cursor: not-allowed;
 }
 
-/* --- Slider wrapper --- */
-.precip-timeline-slider-wrap {
+
+/* ===========================
+   SLIDER
+   =========================== */
+
+.timeline-slider-wrap {
 	position: relative;
 	flex: 1;
 	min-width: 0;
@@ -92,128 +104,166 @@
 	align-items: center;
 }
 
-.precip-timeline-slider {
+
+/* --- Track --- */
+.timeline-slider {
 	-webkit-appearance: none;
 	appearance: none;
 	width: 100%;
-	height: 4px;
+	height: 3px;
 	border-radius: 2px;
-	background: rgba(255, 255, 255, 0.15);
+
+	background: rgba(0, 0, 0, 0.1);
+
 	outline: none;
 	cursor: pointer;
+
 	position: relative;
 	z-index: 2;
 	margin: 0;
 	padding: 0;
 }
 
-.precip-timeline-progress {
+
+/* --- Progress --- */
+.timeline-progress {
 	position: absolute;
 	top: 50%;
 	left: 0;
 	transform: translateY(-50%);
-	height: 4px;
+
+	height: 3px;
 	border-radius: 2px;
-	background: #4da6ff;
+
+	background: linear-gradient(
+		90deg,
+		#2f80ed,
+		#56ccf2
+	);
+
 	pointer-events: none;
 	z-index: 1;
 }
 
-/* Slider thumb – Webkit */
-.precip-timeline-slider::-webkit-slider-thumb {
-	-webkit-appearance: none;
-	appearance: none;
-	width: 18px;
-	height: 18px;
-	border-radius: 50%;
-	background: #fff;
-	border: 2px solid #4da6ff;
-	cursor: pointer;
-	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-}
 
-/* Slider thumb – Firefox */
-.precip-timeline-slider::-moz-range-thumb {
-	width: 16px;
-	height: 16px;
-	border-radius: 50%;
-	background: #fff;
-	border: 2px solid #4da6ff;
-	cursor: pointer;
-	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-}
+/* --- Ticks --- */
+.timeline-ticks {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 50%;
+	height: 2px;
 
-.precip-timeline-slider::-moz-range-track {
-	height: 4px;
-	border-radius: 2px;
-	background: rgba(255, 255, 255, 0.15);
-}
+	background-image: repeating-linear-gradient(
+		to right,
+		rgba(0, 0, 0, 0.15) 0px,
+		rgba(0, 0, 0, 0.15) 1px,
+		transparent 1px,
+		transparent 12px
+	);
 
-/* --- Start/slutt-labels --- */
-.precip-timeline-range {
-	display: flex;
-	justify-content: space-between;
-	margin-top: 2px;
-	padding: 0 2px;
-}
-
-.precip-timeline-start,
-.precip-timeline-end {
-	font-size: 0.65rem;
-	opacity: 0.5;
-	text-transform: capitalize;
+	transform: translateY(-50%);
+	pointer-events: none;
 }
 
 
 /* ===========================
-   RESPONSIV
+   THUMB
    =========================== */
+
+/* Webkit */
+.timeline-slider::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+
+	width: 14px;
+	height: 14px;
+
+	border-radius: 50%;
+	background: #2f80ed;
+	border: none;
+
+	cursor: pointer;
+
+	box-shadow:
+		0 0 0 4px rgba(47, 128, 237, 0.2);
+}
+
+/* Firefox */
+.timeline-slider::-moz-range-thumb {
+	width: 14px;
+	height: 14px;
+
+	border-radius: 50%;
+	background: #2f80ed;
+	border: none;
+
+	cursor: pointer;
+
+	box-shadow:
+		0 0 0 4px rgba(47, 128, 237, 0.2);
+}
+
+.timeline-slider::-moz-range-track {
+	height: 3px;
+	border-radius: 2px;
+	background: rgba(0, 0, 0, 0.1);
+}
+
+
+/* ===========================
+   RANGE LABELS
+   =========================== */
+
+.timeline-range {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 4px;
+	padding: 0 2px;
+
+	font-size: 0.65rem;
+	color: rgba(0, 0, 0, 0.5);
+}
+
+
+/* ===========================
+   RESPONSIVE
+   =========================== */
+
 @media (max-width: 480px) {
-	.precip-legend {
-		top: 8px;
-		left: 8px;
-		padding: 5px 6px;
-	}
-
-	.precip-legend-bar {
-		height: 40px;
-		width: 12px;
-	}
-
-	.precip-timeline {
+	.timeline {
 		bottom: 8px;
-		padding: 6px 10px 4px;
-		border-radius: 8px;
+		padding: 8px 10px 6px;
+		border-radius: 12px;
 	}
 
-	.precip-timeline-current {
-		font-size: 0.72rem;
+	.timeline-current {
+		font-size: 0.75rem;
 	}
 
-	.precip-timeline-play-btn {
-		width: 32px;
-		height: 32px;
-		min-width: 32px;
+	.timeline-play-btn {
+		width: 28px;
+		height: 28px;
+		min-width: 28px;
 	}
 
-	.precip-timeline-play-btn svg {
+	.timeline-play-btn svg {
 		width: 16px;
 		height: 16px;
 	}
 
-	.precip-timeline-start,
-	.precip-timeline-end {
+	.timeline-range {
 		font-size: 0.6rem;
 	}
 }
 
 @media (max-width: 360px) {
-	.precip-timeline {
+	.timeline {
 		width: calc(100% - 16px);
-		padding: 5px 8px 3px;
+		padding: 6px 8px 4px;
 	}
 
-	.precip-timeline-controls {
+	.timeline-controls {
 		gap: 6px;
 	}
 }
