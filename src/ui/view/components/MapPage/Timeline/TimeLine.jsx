@@ -1,10 +1,14 @@
 //src/ui/view/components/MapPage/Timeline/TimeLine.jsx
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useRef } from "react";
 import PlaybackIcon from "./PlaybackIcon";
 import { TimelineModel } from "./TimelineModel.js";
 
+const TIMELINE_STEP_MS = 60_000;
+
 export default function TimeLine(props) {
 	const { isVisible, isPlaying, startMs, endMs, currentMs, timezone, onPlay, onPause, onSeek } = props;
+
+	const wasPlayingRef = useRef(false);
 
 	const model = useMemo(() => {
 		return new TimelineModel({
@@ -22,16 +26,26 @@ export default function TimeLine(props) {
 		onSeek?.(Number(e.target.value));
 	}, [onSeek]);
 
+	const handleSliderStart = useCallback(() => {
+		wasPlayingRef.current = isPlaying;
+		if (isPlaying) {
+			onPause?.();
+		}
+	}, [isPlaying, onPause]);
+
+	const handleSliderEnd = useCallback(() => {
+		if (wasPlayingRef.current) {
+			onPlay?.();
+		}
+	}, [onPlay]);
+
 	const handlePlayPause = useCallback(() => {
 		if (isPlaying) {
 			onPause?.();
-		} 
-
-		else {
+		} else {
 			onPlay?.();
 		}
-	}, 
-	[isPlaying, onPlay, onPause]);
+	}, [isPlaying, onPlay, onPause]);
 
 	if (!isVisible) {
 		return null;
@@ -59,12 +73,14 @@ export default function TimeLine(props) {
 					<input
 						type="range"
 						className="timeline-slider"
-						min={startMs || 0}						//Hvorfor OR 0? Jeg tror disse er undøvendige...
-						max={endMs || 1}						//Hvorfor OR 1?
-						value={currentMs || startMs || 0}		//Hvorfor OR 0?
+						min={startMs}
+						max={endMs}
+						value={Math.max(currentMs, startMs)}
 						onChange={handleSliderChange}
+						onPointerDown={handleSliderStart}
+						onPointerUp={handleSliderEnd}
 						disabled={!hasData}
-						step={60000}					//Dette er codesmell med "Magic numbers midt inne i koden"
+						step={TIMELINE_STEP_MS}
 					/>
 
 					<div
@@ -82,6 +98,5 @@ export default function TimeLine(props) {
 			</div>
 
 		</div>
-		
 	);
 }

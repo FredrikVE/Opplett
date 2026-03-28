@@ -1,5 +1,5 @@
 //src/ui/view/components/MapPage/WeatherMap.jsx
-import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { useState, useRef, useCallback } from "react";
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 
 import { useMapInit } from "./MapHooks/useMapInit.js";
@@ -8,10 +8,7 @@ import { useMapHighlight } from "./MapHooks/useMapHighlight.js";
 import { useLocationPoints } from "./MapHooks/useLocationPoints.js";
 import { useWeatherMarkers } from "./MapHooks/useWeatherMarkers.jsx";
 import { useDeviceLocationDot } from "./MapHooks/useDeviceLocationDot.js";
-import { useWindLayer } from "./MapHooks/useWindlayer.js";
-import { usePrecipitationLayer } from "./MapHooks/usePrecipitationLayer.js";
-import { usePressureLayer } from "./MapHooks/usePressureLayer.js";
-import { useTemperatureLayer } from "./MapHooks/useTemperatureLayer.js";
+import { useWeatherLayers } from "./MapHooks/useWeatherLayers.js";
 import { useMapLayerDimming } from "./MapHooks/useMapLayerDimming.js";
 import { useTimelineController } from "./MapHooks/useTimelineController.js";
 
@@ -45,7 +42,6 @@ export default function WeatherMap(props) {
 	} = props;
 
 	const mapContainerRef = useRef(null);
-
 	const [isLayerToggleOpen, setIsLayerToggleOpen] = useState(false);
 
 	const map = useMapInit(mapContainerRef, mapStyle, activeLocation);
@@ -61,63 +57,30 @@ export default function WeatherMap(props) {
 		pause,
 	} = useTimelineController();
 
-	const isWindActive = activeLayer === LAYER_KEYS.WIND;
-	const windControls = useWindLayer(map, isWindActive, onTimeUpdate);
+	const layerControls = useWeatherLayers(map, activeLayer, onTimeUpdate);
 
 	const isPrecipActive = activeLayer === LAYER_KEYS.PRECIPITATION;
-	const precipControls = usePrecipitationLayer(map, isPrecipActive, onTimeUpdate);
 	useMapLayerDimming(map, isPrecipActive);
 
-	const isPressureActive = activeLayer === LAYER_KEYS.PRESSURE;
-	const pressureControls = usePressureLayer(map, isPressureActive, onTimeUpdate);
-
-	const isTemperatureLayerActive = activeLayer === LAYER_KEYS.TEMPERATURE;
-	const temperatureControls = useTemperatureLayer(map, isTemperatureLayerActive, onTimeUpdate);
-
-	const activeTimelineLayer = useMemo(() => {
-		if (isPrecipActive) return precipControls;
-		if (isWindActive) return windControls;
-		if (isPressureActive) return pressureControls;
-		if (isTemperatureLayerActive) return temperatureControls;
-		return null;
-	}, [
-		isPrecipActive,
-		isWindActive,
-		isPressureActive,
-		isTemperatureLayerActive,
-		temperatureControls,
-		precipControls,
-		windControls,
-		pressureControls,
-	]);
+	const hasActiveOverlayLayer = activeLayer && activeLayer !== LAYER_KEYS.NONE;
 
 	const handlePlay = useCallback(() => {
-		activeTimelineLayer?.play?.();
+		layerControls.play();
 		play();
-	}, [activeTimelineLayer, play]);
+	}, [layerControls, play]);
 
 	const handlePause = useCallback(() => {
-		activeTimelineLayer?.pause?.();
+		layerControls.pause();
 		pause();
-	}, [activeTimelineLayer, pause]);
+	}, [layerControls, pause]);
 
 	const handleSeek = useCallback((timestampMs) => {
-		activeTimelineLayer?.seekTo?.(timestampMs);
-	}, [activeTimelineLayer]);
-
-	const onActiveLayerChangedResetTimeline = useCallback(() => {
-		if (!activeTimelineLayer) {
-			onTimeUpdate({ type: "removed" });
-		}
-	}, [activeTimelineLayer, onTimeUpdate]);
-
-	useEffect(onActiveLayerChangedResetTimeline, [onActiveLayerChangedResetTimeline]);
+		const clampedMs = Math.max(timestampMs, timelineState.startMs);
+		layerControls.seekTo(clampedMs);
+	}, [layerControls, timelineState.startMs]);
 
 	const shouldShowMarkers = activeLayer === LAYER_KEYS.NONE || showMarkersWithLayer;
 	useWeatherMarkers(map, shouldShowMarkers ? weatherPoints : []);
-
-	const hasActiveOverlayLayer =
-		isPrecipActive || isWindActive || isPressureActive || isTemperatureLayerActive;
 
 	const showTimeline = hasActiveOverlayLayer && !isLayerToggleOpen;
 
