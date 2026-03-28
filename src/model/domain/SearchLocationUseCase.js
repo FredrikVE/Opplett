@@ -1,19 +1,20 @@
-// src/model/domain/SearchLocationUseCase.js
+//src/model/domain/SearchLocationUseCase.js
 export default class SearchLocationUseCase {
-	
-	constructor(geocodingRepository) {
-		this.geocodingRepository = geocodingRepository;
-	}
+    
+    constructor(mapTilerRepository) {
+        this.mapTilerRepository = mapTilerRepository;
+    }
 
-	async getSuggestions(query, signal) {
-		if (!query || query.trim().length < 3) {
-			return [];
-		}
+    async getSuggestions(query, signal, proximity = null) {
+        if (!query || query.trim().length < 3) {
+            return [];
+        }
 
-		return this.geocodingRepository.getSuggestions(query.trim(), signal);
-	}
+        // Vi sender proximity (f.eks. {lat: 59, lon: 10}) videre til repo
+        return this.mapTilerRepository.getSuggestions(query.trim(), signal, proximity);
+    }
 
-	async getCoordinates(lat, lon) {
-		return this.geocodingRepository.getCoordinates(lat, lon);
-	}
+    async getCoordinates(lat, lon) {
+        return this.mapTilerRepository.getCoordinates(lat, lon);
+    }
 }

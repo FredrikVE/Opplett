@@ -1,103 +1,65 @@
 // src/utils/location/LocationNameFormatter.js
 export default class LocationNameFormatter {
-	
-	constructor() {
-		this.usaVariants = new Set([
-			"usa", "united states", "united states of america", 
-			"us", "amerikas forente stater", "de forente stater", 
-			"de forente stater i amerika"
-		]);
+    constructor() {
+        this.unnamedMarkers = ["unnamed road", "ubenyttet vei", "ukjent vei", "nordsjøen", "norskehavet"];
+        this.unnamedRegex = new RegExp(this.unnamedMarkers.join('|'), 'i');
+    }
 
-		this.unnamedMarkers = ["unnamed road", "ubenyttet vei", "ukjent vei"];
-		
-		// Lager en ferdig "regnemaskin" (Regex) for å sjekke uønskede veier raskt
-		this.unnamedRegex = new RegExp(this.unnamedMarkers.join('|'), 'i');
-	}
+    /**
+     * @param {Object} loc - Lokasjonsobjektet
+     * @param {boolean} isMapIcon - Hvis true, fjernes ALT unntatt gatenavn/stedsnavn
+     */
+    format(loc, isMapIcon = false) {
+        if (!loc) return "";
 
-	/**
-	 * Hovedmetode som koordinerer formateringen
-	 */
-	format(loc) {
-		if (!loc) {
-			return "";
-		}
+        const rawName = loc.name || loc.displayName || loc.label || "";
+        if (!rawName) return this._getCoordinateFallback(loc.lat, loc.lon);
 
-		const rawName = loc.displayName || loc.label || loc.name || loc.city || "";
+        let parts = this._splitAndClean(rawName);
+        if (parts.length === 0) return rawName;
 
-		if (!rawName) {
-			return this._getCoordinateFallback(loc.lat, loc.lon);
-		}
+        // Standard vasking (fjerner "Norge", fikser "USA")
+        parts = this._applyCountryRules(parts);
 
-		let parts = this._splitAndClean(rawName);
+        // SPESIFIKK LOGIKK FOR VÆRIKONER:
+        if (isMapIcon) {
+            // Vi tar kun det første leddet (gatenavnet)
+            return parts[0]; 
+        }
 
-		if (parts.length === 0) {
-			return rawName;
-		}
+        // LOGIKK FOR OVERSKRIFTER OG SØK:
+        // Her beholder vi f.eks "Mellombølgen, Oslo"
+        return parts.join(", ");
+    }
 
-		parts = this._applyCountryRules(parts);
+    _splitAndClean(rawName) {
+        const rawParts = rawName.split(",");
+        const cleanParts = [];
 
-		return parts.join(", ");
-	}
+        for (let part of rawParts) {
+            // Fjerner tall og husnummer-bokstaver (7b, 150 osv)
+            let cleaned = part.replace(/\b\d+[a-z]?\b/gi, '').trim();
+            
+            if (!cleaned || cleaned.length <= 1) continue;
+            if (this.unnamedRegex.test(cleaned)) continue;
 
-	/**
-	 * Deler opp strengen, fjerner tall og uønskede markører ved bruk av funksjonell programmering
-	 * @private
-	 */
-	_splitAndClean(rawName) {
-		const rawParts = rawName.split(",");
-		const cleanParts = [];
+            if (!cleanParts.some(p => p.toLowerCase() === cleaned.toLowerCase())) {
+                cleanParts.push(cleaned);
+            }
+        }
+        return cleanParts;
+    }
 
-		for (let part of rawParts) {
-			//Fjern tall med Regex fordi dette er raksere enn forløkker
-			const cleaned = part.replace(/\d+/g, '').trim();
-			
-			if (!cleaned) {
-				continue;
-			}
+    _applyCountryRules(parts) {
+        if (parts.length <= 1) return parts;
+        const lastLower = parts[parts.length - 1].toLowerCase();
+        if (lastLower === "norge" || lastLower === "norway") {
+            parts.pop();
+        }
+        return parts;
+    }
 
-			//Sjekk mot "unnamed road" markører (Regex er mer effektivt enn .some())
-			const isUnnamed = this.unnamedRegex.test(cleaned);
-			
-			//Sjekk for duplikater
-			const isDuplicate = cleanParts.includes(cleaned);
-
-			if (!isUnnamed && !isDuplicate) {
-				cleanParts.push(cleaned);
-			}
-		}
-
-		return cleanParts;
-	}
-
-	/**
-	 * Håndterer forkortelser og fjerning av landnavn
-	 * @private
-	 */
-	_applyCountryRules(parts) {
-		const lastIndex = parts.length - 1;
-		const lastLower = parts[lastIndex].toLowerCase();
-
-		const isNorway = lastLower === "norge" || lastLower === "norway";
-		// Bruker Set.has() som er O(1) - lynraskt uansett hvor mange varianter vi har
-		const isUSA = this.usaVariants.has(lastLower);
-
-		if (isNorway && parts.length > 1) {
-			parts.pop();
-		}
-		
-		else if (isUSA) {
-			parts[lastIndex] = "USA";
-		}
-
-		return parts;
-	}
-
-	/**
-	 * Fallback til koordinater med fast presisjon
-	 * @private
-	 */
-	_getCoordinateFallback(lat, lon) {
-		const hasCoords = typeof lat === "number" && typeof lon === "number";
-		return hasCoords ? `${lat.toFixed(4)}, ${lon.toFixed(4)}` : "";
-	}
+    _getCoordinateFallback(lat, lon) {
+        return (lat != null && lon != null) ? `${lat.toFixed(2)}, ${lon.toFixed(2)}` : "";
+    }
 }

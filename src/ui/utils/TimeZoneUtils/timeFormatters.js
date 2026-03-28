@@ -1,75 +1,93 @@
-//src/ui/utils/TimeZoneUtils/timeFormatters.js
+import { DateTime } from "luxon";
+import tzLookup from "tz-lookup";
+
 const UI_LOCALE = "nb-NO";
 
-//Finn aktiv tidssone med fallback
-export function resolveTimezone(explicitTz) {
-    return (
-        explicitTz ??
-        Intl.DateTimeFormat().resolvedOptions().timeZone ??
-        "UTC"
-    );
-}
+/**
+ * SSOT RESOLVER: Sikrer at vi alltid har en gyldig tidssone.
+ * Bruker koordinater for å slå opp tidssone, med spesialhåndtering for 
+ * utfordrende områder som Amerikansk Samoa.
+ */
+export function resolveTimezone(lat, lon, explicitTz, locationName) {
+    if (explicitTz) return explicitTz;
+    if (lat === null || lon === null) return DateTime.local().zoneName;
 
+    let tz = tzLookup(lat, lon);
+    const nameLower = (locationName || "").toLowerCase();
+    const isSamoa = nameLower.includes("samoa");
+    const isAmerican = nameLower.includes("amerikansk") || nameLower.includes("american");
 
-//HH:mm i lokal tid
-export function formatToLocalTime(isoString, tz) {
-    if (!isoString) {
-        return "--:--";
+    if (isSamoa && isAmerican && tz === "Pacific/Apia") {
+        return "Pacific/Pago_Pago";
     }
-
-    return new Date(isoString).toLocaleTimeString(UI_LOCALE, {
-        timeZone: tz,
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false
-    });
+    return tz;
 }
 
+/**
+ * Formaterer ISO-streng til HH:mm (f.eks. 14:00).
+ * Brukes primært til tabellvisning og sol-tider.
+ */
+export function formatToLocalTime(isoString, tz) {
+    if (!isoString) return "--:--";
+    return DateTime.fromISO(isoString).setZone(tz).setLocale(UI_LOCALE).toFormat("HH:mm");
+}
 
-//Dagsetikett: "Mandag 12. feb"
-export function formatToLocalDateLabel(isoString, tz) {
-    const label = new Date(isoString).toLocaleDateString(UI_LOCALE, {
-        weekday: "long",
-        day: "numeric",
-        month: "short",
-        timeZone: tz
-    });
+/**
+ * Henter timetallet (0-23) fra et tidspunkt.
+ * Highcharts akser sender tid som 'number' (ms), mens API-data er 'string' (ISO).
+ * Vi sjekker typen for å velge riktig Luxon-metode (fromMillis vs fromISO).
+ */
+export function getLocalHour(zuluTime, tz) {
+    if (!zuluTime) return 0;
 
-    // Kapitaliser første bokstav (nb-NO gir små bokstaver)
+    const dt = typeof zuluTime === "number" 
+        ? DateTime.fromMillis(zuluTime).setZone(tz) 
+        : DateTime.fromISO(zuluTime).setZone(tz);
+    
+    return dt.hour;
+}
+
+/**
+ * Formaterer dato for x-aksen (f.eks. "tir. 3. mar").
+ * Støtter nå både millisekunder fra Highcharts-ticks og ISO-strenger.
+ * Dette fjerner "NaN" og "Invalid DateTime" feil i grafen.
+ */
+export function formatLocalDate(zuluTime, tz) {
+    if (!zuluTime) return "";
+
+    const dt = typeof zuluTime === "number"             //Hvis datatypen er number
+        ? DateTime.fromMillis(zuluTime).setZone(tz)     //Dersom det er number, bruk Millis-metoden. 
+        : DateTime.fromISO(zuluTime).setZone(tz);       //Hvis ikke (altså tekst), bruk ISO-metoden.
+        
+    return dt.setLocale(UI_LOCALE).toFormat("ccc d. MMM");
+}
+
+/**
+ * Lager en mer detaljert datolabel (f.eks. "Tirsdag 3. mars").
+ * Brukes ofte som overskrifter i værmeldingen.
+ */
+export function formatToLocalDateLabel(dateOrIso, tz) {
+    if (!dateOrIso) return "";
+    
+    // Håndterer både rene dato-strenger (YYYY-MM-DD) og fulle tidsstempler
+    const dt = dateOrIso.length === 10 
+        ? DateTime.fromISO(dateOrIso, { zone: tz }) 
+        : DateTime.fromISO(dateOrIso).setZone(tz);
+
+    const label = dt.setLocale(UI_LOCALE).toFormat("cccc d. MMM");
     return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
-
-//Kort dato: "man. 12. feb"
-export function formatLocalDate(zuluTime, tz) {
-    return new Date(zuluTime).toLocaleDateString(UI_LOCALE, {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-        timeZone: tz
-    });
-}
-
-
- //Time (0–23) i lokal tid
-export function getLocalHour(zuluTime, tz) {
-    return Number(
-        new Date(zuluTime).toLocaleTimeString(UI_LOCALE, {
-            timeZone: tz,
-            hour: "numeric",
-            hour12: false
-        })
-    );
-}
-
-//Full dato og klokkeslett
+/**
+ * Fullstendig formatering for tooltips (f.eks. "tirsdag 3. mars 15:00").
+ * Er robust mot både tall (ms) og strenger (ISO).
+ */
 export function formatLocalDateTime(timestampMs, tz) {
-    return new Date(timestampMs).toLocaleString(UI_LOCALE, {
-        timeZone: tz,
-        weekday: "long",
-        day: "numeric",
-        month: "short",
-        hour: "2-digit",
-        minute: "2-digit"
-    });
+    if (!timestampMs) return "";
+    
+    const dt = typeof timestampMs === "number"
+        ? DateTime.fromMillis(timestampMs).setZone(tz)
+        : DateTime.fromISO(timestampMs).setZone(tz);
+        
+    return dt.setLocale(UI_LOCALE).toFormat("cccc d. MMM HH:mm");
 }

@@ -28,10 +28,122 @@ Hver page består av flere "componenter" som du finner i mappa `src/ui/view/comp
 
 Hver og en av disse initieres i `App.jsx`, som er programmets `main`.
 
+## Bruk av bilioteker i Maptiler
+
+```bash
+npm install @maptiler/marker-layout
+```
+
+```bash
+npm install --save @maptiler/sdk
+```
+
+**For bruk av vindkart osv**
+
+```bash
+npm install @maptiler/weather
+```
+
 ## Bruk av Highcharts
 
 Applikasjonen bruker **Highcharts** (via `highcharts` og `highcharts-react-official`) for å visualisere værdata i grafvisningen. Highcharts brukes til å generere dynamiske og interaktive grafer for blant annet temperatur, vind, UV-indeks og solforhold. Grafkonfigurasjonene er strukturert og organisert i egne konfigurasjons- og hjelpefiler for å holde View-komponentene rene og fokusert på presentasjon.
 
+
+## Håndtering av tidssoner og lokasjon
+
+Applikasjonen er designet for å være geografisk agnostisk. All værdata fra MET leveres i `zulu-tid`, eller UTC (`...Z`), og denne verdien beholdes uendret gjennom hele datastrømmen. Konvertering til lokal tid skjer deterministisk ved bruk av IANA-tidssoner.
+
+### Datastrøm og datastruktur
+
+#### 1. Rådata fra MET
+
+Data hentes fra `LocationForecast/2.0` og lagres som `timeISO` uten modifikasjon:
+
+```js
+{
+  time: "2026-03-02T17:00:00Z", // UTC beholder 'Z' for zulutid
+  data: { ... }
+}
+
+```
+
+#### 2. Lokasjon og tidssone (SSOT)
+
+Ved søk returnerer `MapTilerRepository` et lokasjonsobjekt med en eksplisitt tidssone. Denne lagres som *Single Source of Truth* i `App.jsx` og sendes nedover i systemet.
+
+Hvis API-et mangler tidssonedata, brukes `tz-lookup` som fallback basert på koordinater:
+
+```js
+timezone: item.timezone ?? tzLookup(lat, lon)
+
+```
+
+#### 3. Intern struktur i `getHourlyForecast`
+
+Hver timeserie-entry transformeres i Repository-laget til et objekt der lokal tid er en **derivert verdi**:
+
+```js
+{
+  timeISO: "2026-03-03T12:00:00Z", // Primærkilde (UTC)
+  dateISO: "2026-03-03",           // Utledet lokal dato (YYYY-MM-DD)
+  localTime: 1,                    // Utledet lokal time (0–23)
+  utcHour: 12                      // Utledet UTC-time
+}
+
+```
+
+Dette sikrer korrekt håndtering av:
+
+* **Sommertid (DST):** Luxon beregner riktig offset basert på IANA-navn.
+* **Ukurante tidssoner:** Håndterer sømløst soner med 30 eller 45 minutters offset (f.eks. Nepal eller Chatham Islands).
+* **Grouping:** Gruppering av data i grensesnittet skjer alltid på `dateISO`, som garanterer at værmeldingen havner på riktig lokal dag.
+
+
+
+### Spesialhåndtering av den internasjonale datolinjen (Samoa-paradokset)
+
+Applikasjonen inneholder en spesifikk løsning for å håndtere områder der den internasjonale datolinjen gjør geometrisk tidssone-lookup usikker.
+
+**Problemet:**
+`tz-lookup` bruker et forenklet rutenett for å spare plass. Dette fører til at Amerikansk Samoa (UTC-11) ofte feilaktig plasseres i samme tidssone som den selvstendige staten Samoa (UTC+13). Dette resulterer i en dato-feil på nøyaktig 24 timer.
+
+**Løsningen:**
+`MapTilerRepository` fungerer som en kirurgisk vaktpost. Den kombinerer koordinater med metadata fra søkeresultatet for å verifisere politiske grenser:
+
+```js
+const isAmericanSamoa = item.name.toLowerCase().includes("samoa") && 
+                       (item.name.toLowerCase().includes("amerikansk") || 
+                        item.name.toLowerCase().includes("american"));
+
+if (isAmericanSamoa && finalTz === "Pacific/Apia") {
+    finalTz = "Pacific/Pago_Pago"; // Korrigerer +13 til -11
+}
+
+```
+
+Dette sikrer at to steder som ligger geografisk nær hverandre, men på hver sin side av datolinjen, får korrekt dato. Selv om klokkeslettet er likt, vil appen korrekt vise at de befinner seg i forskjellige døgn:
+
+* **Apia, Samoa:** 02:16, Onsdag 4. mars `(GMT+13)`
+* **Pago Pago, Amerikansk Samoa:** 02:16, Tirsdag 3. mars `(GMT-11)`
+
+
+## Designvalg på datastrukturnivå
+
+* **Immutabilitet:** Ingen mutasjon av rådata fra MET.
+* **Eksplisitte parametere:** Tidssone sendes alltid som en eksplisitt parameter til UseCases og formatters.
+* **Ingen manuell offset:** Vi bruker aldri `+1` eller `-12` i koden; alt overlates til IANA-databasen via Luxon.
+* **Deterministisk modell:** Modellen er stabil uavhengig av om brukeren bytter lokasjon eller om det skjer et skifte mellom sommer- og vintertid.
+
+### Installasjon
+
+For å støtte denne arkitekturen kreves følgende pakker:
+
+```bash
+npm install luxon tz-lookup
+
+```
+
+---
 
 ## Installere Highcharts
 

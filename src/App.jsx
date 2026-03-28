@@ -1,8 +1,9 @@
-//src/App.jsx
-import { useState } from "react";
+// src/App.jsx
+import { useState, useMemo } from "react";
 import { useGeolocation } from "./geolocation/useGeolocation.js";
+import { resolveTimezone } from "./ui/utils/TimeZoneUtils/timeFormatters.js"; // Viktig import for SSOT mtp tidsoner
 
-//Stilark
+// Stilark
 import "./ui/style/App.css";
 import "./ui/style/LoadingSpinner.css";
 import "./ui/style/SolarInfo.css";
@@ -20,23 +21,35 @@ import "./ui/style/NowCard.css";
 import "./ui/style/UVNowBar.css";
 import "./ui/style/WindArrow.css";
 import "./ui/style/FilterDropDown.css";
+import "./ui/style/MapPage.css";
+import "./ui/style/DeviceLocationDot.css"
+
+import "./ui/style/MapLayerToggle.css";
+
+//import "./ui/style/WindLegend.css";
+//import "./ui/style/TemperatureLegend.css";
+//import "./ui/style/PrecipitationLegend.css";
+import "./ui/style/MapLegend.css";
+
+import "./ui/style/Timeline.css";
+
 
 //Navigation
 import { NAV_SCREENS } from "./navigation/navGraph.js";
 
 //DataSources
-import OpenCageGeocodingDataSource from "./model/datasource/OpenCageGeocodingDataSource.js";
 import LocationForecastDataSource from "./model/datasource/LocationForecastDataSource.js";
 import MetAlertsDataSource from "./model/datasource/MetAlertsDataSource.js";
 import SunriseDataSource from "./model/datasource/SunriseDataSource.js";
+import MapTilerDataSource from "./model/datasource/MapTilerDataSource.js";
 
 //Repositories
-import OpenCageGeocodingRepository from "./model/repositories/OpenCageGeocodingRepository.js";
 import LocationForecastRepository from "./model/repositories/LocationForecastRepository.js";
 import MetAlertsRepository from "./model/repositories/MetAlertsRepository.js";
 import SunriseRepository from "./model/repositories/SunriseRepository.js";
+import MapTilerRepository from "./model/repositories/MapTilerRepository.js";
 
-//UseCases fra domain-layer
+//UseCases
 import GetForecastUseCase from "./model/domain/GetForecastUseCase.js";
 import GetAllAlertsUseCase from "./model/domain/GetAllAlertsUseCase.js";
 import GetCurrentWeatherUseCase from "./model/domain/GetCurrentWeatherUseCase.js";
@@ -44,116 +57,162 @@ import SearchLocationUseCase from "./model/domain/SearchLocationUseCase.js";
 import GetLocationNameUseCase from "./model/domain/GetLocationNameUseCase.js";
 import GetSunTimesUseCase from "./model/domain/GetSunTimesUseCase.js";
 import GetAlertsUseCase from "./model/domain/GetAlertsUseCase.js";
+import GetMapWeatherUseCase from "./model/domain/GetMapWeatherUseCase.js";
+import GetLocationGeometryUseCase from "./model/domain/GetLocationGeometryUseCase.js";
+//import GetCountryCitiesUseCase from "./model/domain/GetCountryCitiesUseCase.js";
 
 //ViewModel og View
 import useForecastPageViewModel from "./ui/viewmodel/ForecastPageViewModel.js";
 import useGraphScreenViewModel from "./ui/viewmodel/GraphScreenViewModel.js";
 import useAlertPageViewModel from "./ui/viewmodel/AlertPageViewModel.js";
+import useMapPageViewModel from "./ui/viewmodel/MapPageViewModel.js";
 
 import ForecastPage from "./ui/view/pages/ForecastPage.jsx";
 import GraphPage from "./ui/view/pages/GraphPage.jsx";
 import AlertPage from "./ui/view/pages/AlertPage.jsx";
+import MapPage from "./ui/view/pages/MapPage.jsx";
 
 //Header og footer
 import Header from "./ui/view/components/Common/Layout/Header.jsx";
 import Footer from "./ui/view/components/Common/Layout/Footer.jsx";
 import LoadingSpinner from "./ui/view/components/Common/LoadingSpinner/LoadingSpinner.jsx";
 
-//Importerer klasse for vasking og forenkling av stedsnavn fra OpenCage
-import LocationNameFormatter from "./geolocation/LocationNameFormatter.js";
-
-//Instansierer LocationFormatter of penere formatering av stedsnavn
-const locationNameFormatter = new LocationNameFormatter();
-const formatLocation = (locationData) => {
-	return locationNameFormatter.format(locationData);
-};
-
-// Repositories (composition root)
-const locationRepo = new LocationForecastRepository(new LocationForecastDataSource());
+//Composition Root
+const locationForecastRepository = new LocationForecastRepository(new LocationForecastDataSource());
 const sunriseRepo = new SunriseRepository(new SunriseDataSource());
 const alertsRepo = new MetAlertsRepository(new MetAlertsDataSource());
-const geoRepo = new OpenCageGeocodingRepository(new OpenCageGeocodingDataSource(), formatLocation);
+const mapTilerRepo = new MapTilerRepository(new MapTilerDataSource());
 
-//Oppretter instanser av UseCasees fra domain-layer
-const getForecastUseCase = new GetForecastUseCase(locationRepo, alertsRepo);
+const getForecastUseCase = new GetForecastUseCase(locationForecastRepository);
 const getSunTimesUseCase = new GetSunTimesUseCase(sunriseRepo);
 const getAlertsUseCase = new GetAlertsUseCase(alertsRepo);
 const getAllAlertsUseCase = new GetAllAlertsUseCase(alertsRepo);
-const getCurrentWeatherUseCase = new GetCurrentWeatherUseCase(locationRepo);
-const searchLocationUseCase = new SearchLocationUseCase(geoRepo);
-const getLocationNameUseCase = new GetLocationNameUseCase(geoRepo);
+const getCurrentWeatherUseCase = new GetCurrentWeatherUseCase(locationForecastRepository);
+const searchLocationUseCase = new SearchLocationUseCase(mapTilerRepo);
+const getLocationNameUseCase = new GetLocationNameUseCase(mapTilerRepo);
+const getMapWeatherUseCase = new GetMapWeatherUseCase(getCurrentWeatherUseCase);
+const getLocationGeometryUseCase = new GetLocationGeometryUseCase(mapTilerRepo);
 
 export default function App() {
-	const hoursAhead = 120;
+    const hoursAhead = 120;
+    const [activeScreen, setActiveScreen] = useState(NAV_SCREENS.TABLE);
 
-	const [activeScreen, setActiveScreen] = useState(NAV_SCREENS.TABLE);
+    //Henter ferske GPS-koordinater
+    const { loading, error, coords } = useGeolocation();
 
-	//Henter koordinater fra enheten (starter som null)
-	const { loading, error, coords } = useGeolocation();
+    //State for manuelle valg (søk/kart-klikk)
+    const [manualLocation, setManualLocation] = useState(null);
 
-	//ViewModel får nå usecase istedenfor repositories
-	//Initialiser ViewModel med dependancy injection av useCasees og repositories
-	const forecastPageViewModel = useForecastPageViewModel(
-		getForecastUseCase, 
-		getAlertsUseCase, 
-		getCurrentWeatherUseCase, 
-		searchLocationUseCase,
-		getLocationNameUseCase,
-		getSunTimesUseCase, 
-		coords?.lat, 
-		coords?.lon, 
-		hoursAhead
-	);
-	
-	const graphScreenViewModel = useGraphScreenViewModel(forecastPageViewModel);
-	const alertPageViewModel = useAlertPageViewModel(getAllAlertsUseCase);
-	if (loading) {
-		return (
-			<LoadingSpinner />
-		);
+    //SSOT: LOKASJONSOBJEKTET (Den utledede sannheten)
+    const activeLocation = useMemo(() => {
+        const lat = manualLocation?.lat ?? coords?.lat ?? null;
+        const lon = manualLocation?.lon ?? coords?.lon ?? null;
+        const name = manualLocation?.name ?? (coords ? "Min posisjon" : "");
+        const explicitTz = manualLocation?.timezone ?? null;
+
+        //Her valideres tidssonen via vår sentrale vaktpost
+        const timezone = resolveTimezone(lat, lon, explicitTz, name);
+
+        return { lat, lon, name, timezone,
+            bounds: manualLocation?.bounds ?? null,
+            type: manualLocation?.type ?? null,
+            countryCode: manualLocation?.countryCode ?? null,
+            id: manualLocation?.id ?? null
+        };
+    }, 
+	[manualLocation, coords]);
+
+    //Handlere for lokasjonsendring
+    const handleLocationChange = (newLocation) => {
+        setManualLocation(newLocation);
+    };
+
+    const handleResetToDeviceLocation = () => {
+        setManualLocation(null);
+    };
+
+    //ViewModel-instanser (Injiserer det atomiske objektet)
+    const forecastPageViewModel = useForecastPageViewModel(
+        getForecastUseCase, 
+        getAlertsUseCase, 
+        getCurrentWeatherUseCase, 
+        searchLocationUseCase,
+        getLocationNameUseCase,
+        getSunTimesUseCase, 
+        activeLocation, 		//SSOT objektet
+        hoursAhead,
+        handleLocationChange,
+        handleResetToDeviceLocation
+    );
+
+    const mapPageViewModel = useMapPageViewModel(
+        mapTilerRepo,
+        searchLocationUseCase,
+        getMapWeatherUseCase,
+        getLocationGeometryUseCase,
+        activeLocation, 		//SSOT objektet
+        coords,                    //User location til blue dot
+        handleLocationChange,
+        handleResetToDeviceLocation 
+    );
+    
+    const graphScreenViewModel = useGraphScreenViewModel(forecastPageViewModel);
+    const alertPageViewModel = useAlertPageViewModel(getAllAlertsUseCase);
+
+    if (loading) {
+		return <LoadingSpinner />;
 	}
 
-	if (error) {
-		return (
-			<div className="error-screen">
-				<h2>Posisjon ikke tilgjengelig</h2>
-				<button onClick={() => window.location.reload()}>Prøv GPS på nytt</button>
-		</div>
-		);
-	}
+    if (error) {
+        return (
+            <div className="error-screen">
+                <h2>Posisjon ikke tilgjengelig</h2>
+                <button onClick={() => window.location.reload()}>Prøv GPS på nytt</button>
+            </div>
+        );
+    }
 
-	return (
-		<>
-			<Header />
+    return (
+        <>
+            <Header />
 
-			{activeScreen === NAV_SCREENS.ALERTS && (
-				<AlertPage
-					viewModel={alertPageViewModel}
-					activeScreen={activeScreen}
-					onChangeScreen={setActiveScreen}
-					SCREENS={NAV_SCREENS}
-				/>
-			)}
+            {activeScreen === NAV_SCREENS.ALERTS && (
+                <AlertPage
+                    viewModel={alertPageViewModel}
+                    activeScreen={activeScreen}
+                    onChangeScreen={setActiveScreen}
+                    SCREENS={NAV_SCREENS}
+                />
+            )}
 
-			{activeScreen === NAV_SCREENS.TABLE && (
-				<ForecastPage
-					viewModel={forecastPageViewModel}
-					activeScreen={activeScreen}
-					onChangeScreen={setActiveScreen}
-					SCREENS={NAV_SCREENS}
-				/>
-			)}
+            {activeScreen === NAV_SCREENS.TABLE && (
+                <ForecastPage
+                    viewModel={forecastPageViewModel}
+                    activeScreen={activeScreen}
+                    onChangeScreen={setActiveScreen}
+                    SCREENS={NAV_SCREENS}
+                />
+            )}
 
-			{activeScreen === NAV_SCREENS.GRAPH && (
-				<GraphPage
-					viewModel={graphScreenViewModel}
-					activeScreen={activeScreen}
-					onChangeScreen={setActiveScreen}
-					SCREENS={NAV_SCREENS}
-				/>
-			)}
+            {activeScreen === NAV_SCREENS.GRAPH && (
+                <GraphPage
+                    viewModel={graphScreenViewModel}
+                    activeScreen={activeScreen}
+                    onChangeScreen={setActiveScreen}
+                    SCREENS={NAV_SCREENS}
+                />
+            )}
 
-			<Footer />
-		</>
-	);
+            {activeScreen === NAV_SCREENS.MAP && (
+                <MapPage
+                    viewModel={mapPageViewModel}
+                    activeScreen={activeScreen}
+                    onChangeScreen={setActiveScreen}
+                    SCREENS={NAV_SCREENS}
+                />
+            )}
+            
+            <Footer />
+        </>
+    );
 }

@@ -1,96 +1,101 @@
 // src/ui/viewmodel/SearchViewModel.js
 import { useRef, useState } from "react";
 
-export default function useSearchViewModel(searchLocationUseCase, onLocationSelected) {
-	const SEARCH_DEBOUNCE_DELAY_MS = 350;
+export default function useSearchViewModel(searchLocationUseCase, onLocationSelected, currentLocation, onReset) {
+    const SEARCH_DEBOUNCE_DELAY_MS = 350;
+    const [query, setQuery] = useState("");
+    const [suggestions, setSuggestions] = useState([]);
+    const debounceRef = useRef(null);
+    const abortRef = useRef(null);
+    const requestIdRef = useRef(0);
 
-	const [query, setQuery] = useState("");
-	const [suggestions, setSuggestions] = useState([]);
 
-	const debounceRef = useRef(null);
-	const abortRef = useRef(null);
-	const requestIdRef = useRef(0);
+    //Håndterer tekstendring i søkefeltet med debounce og avbrytingsstøtte (AbortController).
+    const onSearchChange = (text) => {
+        setQuery(text);
 
-	const onSearchChange = (text) => {
-		setQuery(text);
+        //Vi krever minst 3 tegn før vi starter API-kall
+        if (text.length < 3) {
+            if (debounceRef.current) {
+                clearTimeout(debounceRef.current);
+            }
 
-		if (text.length < 3) {
-			if (debounceRef.current) {
-				clearTimeout(debounceRef.current);
-			}
+            if (abortRef.current) {
+                abortRef.current.abort();
+            }
 
-			if (abortRef.current) {
-				abortRef.current.abort();
-			}
+            setSuggestions([]);
+            return;
+        }
 
-			setSuggestions([]);
-			return;
-		}
+        if (debounceRef.current) {
+            clearTimeout(debounceRef.current);
+        }
 
-		if (debounceRef.current) {
-			clearTimeout(debounceRef.current);
-		}
+        debounceRef.current = setTimeout(async () => {
+            // Avbryter eventuelle pågående forespørsler
+            if (abortRef.current) {
+                abortRef.current.abort();
+            }
 
-		debounceRef.current = setTimeout(async () => {
-			if (abortRef.current) {
-				abortRef.current.abort();
-			}
+            const controller = new AbortController();
+            abortRef.current = controller;
+            const requestId = ++requestIdRef.current;
 
-			const controller = new AbortController();
-			abortRef.current = controller;
-			const requestId = ++requestIdRef.current;
+            try {
+                // Sender med currentLocation for å prioritere treff i nærheten av brukeren
+                const results = await searchLocationUseCase.getSuggestions(
+                    text, 
+                    controller.signal, 
+                    currentLocation 
+                );
 
-			try {
-				const results = await searchLocationUseCase.getSuggestions(text, controller.signal);
+                // Sjekker requestId for å unngå "out of order" oppdateringer hvis flere kall er aktive
+                if (requestId === requestIdRef.current) {
+                    setSuggestions(results);
+                }
+            }
 
-				if (requestId === requestIdRef.current) {
-					setSuggestions(results);
-				}
-			}
-			catch (error) {
-				if (error?.name !== "AbortError") {
-					console.warn("Søk feilet:", error);
-				}
-			}
-			finally {
-				if (requestId === requestIdRef.current) {
-					abortRef.current = null;
-				}
-			}
-		}, SEARCH_DEBOUNCE_DELAY_MS);
-	};
+            catch (error) {
+                if (error?.name !== "AbortError") {
+                    console.warn("Søk feilet:", error);
+                }
+            }
 
-	const onSuggestionSelected = (suggestion) => {
-		onLocationSelected({
-			lat: suggestion.lat,
-			lon: suggestion.lon,
-			name: suggestion.name,
-			timezone: suggestion.timezone,
-		});
+            finally {
+                if (requestId === requestIdRef.current) {
+                    abortRef.current = null;
+                }
+            }
+        }, SEARCH_DEBOUNCE_DELAY_MS);
+    };
 
-		setQuery(suggestion.name);
-		setSuggestions([]);
-	};
 
-	const onResetLocation = (lat, lon) => {
-		setQuery("");
-		setSuggestions([]);
-		
-		//Vi setter name til null. 
-		//Dette trigger useEffect i ForecastPageViewModel til å hente navnet på nytt via reverse geocoding.
-		onLocationSelected({
-			lat,
-			lon,
-			name: null,
-			timezone: null
-		});
-	};
+    //Kalles når brukeren klikker på et forslag i listen eller trykker Enter.
+    const onSuggestionSelected = (suggestion) => {
+        onLocationSelected(suggestion); // Oppdaterer SSOT i App.jsx
+        
+        //Tømmer søkefeltet i stedet for å sette navnet inn i det
+        setQuery("");      
+        
+        setSuggestions([]);             // Skjuler forslagslisten
+    };
 
-	return {
-		query,
-		suggestions,
-		onSearchChange,
-		onSuggestionSelected,
-		onResetLocation,
-	};
+    //Nullstiller søket og kaller den globale reset-funksjonen.
+    const onResetLocation = () => {
+        setQuery("");                   // Tømmer tekstfeltet
+        setSuggestions([]);             // Skjuler forslagslisten
+        
+        if (onReset) {
+            onReset(); // Tømmer manualLocation i App.jsx slik at GPS tar over
+        }
+    };
+
+    return {
+        query,
+        suggestions,
+        onSearchChange,
+        onSuggestionSelected,
+        onResetLocation,
+    };
 }

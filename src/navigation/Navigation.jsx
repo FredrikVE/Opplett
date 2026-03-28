@@ -24,6 +24,14 @@ export default function Navigation({ activeScreen, onChangeScreen, SCREENS }) {
 				>
 					Graf
 				</button>
+
+				<button
+					className={activeScreen === SCREENS.MAP ? "active" : ""}
+					onClick={() => onChangeScreen(SCREENS.MAP)}
+				>
+					Kart
+				</button>
+
 			</div>
 		</div>
 	);
