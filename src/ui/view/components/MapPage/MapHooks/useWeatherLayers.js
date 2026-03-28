@@ -6,6 +6,7 @@ import { LAYER_KEYS } from "../MapLayerToggle/MapToggleConfig.js";
 const INSERT_BEFORE_LAYER_ID = "Place labels";
 const WEATHER_ANIMATION_SPEED = 3600;
 
+//HJelpefunksjoner
 function getWeatherLayerDefinition(layerKey) {
 	return WEATHER_LAYER_DEFS.find((definition) => definition.key === layerKey) ?? null;
 }
@@ -35,14 +36,23 @@ export function useWeatherLayers(map, activeLayer, onTimeUpdate) {
 	const isPlayingRef = useRef(false);
 	const onTimeUpdateRef = useRef(onTimeUpdate);
 
+    //Tidsoppdatering
 	const updateOnTimeUpdateRef = useCallback(() => {
 		onTimeUpdateRef.current = onTimeUpdate;
 	}, [onTimeUpdate]);
 
-	const emitLayerReady = useCallback((layer, colorRamp) => {
-		const startMs = Math.max(toMs(layer.getAnimationStartDate()), Date.now());
-		const endMs = toMs(layer.getAnimationEndDate());
-		const currentMs = toMs(layer.getAnimationTimeDate());
+	const emitLayerReady = useCallback((entry) => {
+		if (!entry) {
+			return;
+		}
+
+		const startMs = Math.max(
+			toMs(entry.layer.getAnimationStartDate()),
+			Date.now()
+		);
+
+		const endMs = toMs(entry.layer.getAnimationEndDate());
+		const currentMs = toMs(entry.layer.getAnimationTimeDate());
 
 		onTimeUpdateRef.current?.({
 			type: "ready",
@@ -50,13 +60,7 @@ export function useWeatherLayers(map, activeLayer, onTimeUpdate) {
 			endMs,
 			currentMs,
 			isPlaying: isPlayingRef.current,
-			colorRamp,
-		});
-	}, []);
-
-	const emitLayerRemoved = useCallback(() => {
-		onTimeUpdateRef.current?.({
-			type: "removed",
+			colorRamp: entry.colorRamp,
 		});
 	}, []);
 
@@ -66,6 +70,42 @@ export function useWeatherLayers(map, activeLayer, onTimeUpdate) {
 		});
 	}, []);
 
+	const emitLayerRemoved = useCallback(() => {
+		onTimeUpdateRef.current?.({
+			type: "removed",
+		});
+	}, []);
+
+	const emitLayerTick = useCallback((currentMs) => {
+		onTimeUpdateRef.current?.({
+			type: "tick",
+			currentMs,
+			isPlaying: isPlayingRef.current,
+		});
+	}, []);
+
+	const emitLayerSeek = useCallback((currentMs) => {
+		onTimeUpdateRef.current?.({
+			type: "seek",
+			currentMs,
+			isPlaying: isPlayingRef.current,
+		});
+	}, []);
+
+    //Funksjoner for layer lookup
+	const getLayerEntry = useCallback((layerKey) => {
+		if (!layerKey) {
+			return null;
+		}
+
+		return layerEntriesRef.current.get(layerKey) ?? null;
+	}, []);
+
+	const getActiveLayerEntry = useCallback(() => {
+		return getLayerEntry(activeLayerKeyRef.current);
+	}, [getLayerEntry]);
+
+    //Operasjoner for å vises weather layers
 	const addLayerToMap = useCallback((entry) => {
 		if (!map || !entry) {
 			return;
@@ -79,28 +119,17 @@ export function useWeatherLayers(map, activeLayer, onTimeUpdate) {
 		map.setLayoutProperty(entry.id, "visibility", "none");
 	}, [map]);
 
-	const activateLayer = useCallback((entry) => {
+	const showLayer = useCallback((entry) => {
 		if (!map || !entry) {
 			return;
 		}
 
 		addLayerToMap(entry);
-
 		map.setLayoutProperty(entry.id, "visibility", "visible");
-		entry.layer.animateByFactor(WEATHER_ANIMATION_SPEED);
-		isPlayingRef.current = true;
+	}, [map, addLayerToMap]);
 
-		emitLayerReady(entry.layer, entry.colorRamp);
-	}, [map, addLayerToMap, emitLayerReady]);
-
-	const deactivateLayer = useCallback((layerKey) => {
-		if (!map || !layerKey) {
-			return;
-		}
-
-		const entry = layerEntriesRef.current.get(layerKey);
-
-		if (!entry) {
+	const hideLayer = useCallback((entry) => {
+		if (!map || !entry) {
 			return;
 		}
 
@@ -108,62 +137,92 @@ export function useWeatherLayers(map, activeLayer, onTimeUpdate) {
 			return;
 		}
 
-		entry.layer.animateByFactor(0);
 		map.setLayoutProperty(entry.id, "visibility", "none");
 	}, [map]);
 
+	const startLayerAnimation = useCallback((entry) => {
+		if (!entry) {
+			return;
+		}
+
+		entry.layer.animateByFactor(WEATHER_ANIMATION_SPEED);
+		isPlayingRef.current = true;
+	}, []);
+
+	const stopLayerAnimation = useCallback((entry) => {
+		if (!entry) {
+			return;
+		}
+
+		entry.layer.animateByFactor(0);
+		isPlayingRef.current = false;
+	}, []);
+
+	const activateLayer = useCallback((entry) => {
+		if (!entry) {
+			return;
+		}
+
+		showLayer(entry);
+		startLayerAnimation(entry);
+		emitLayerReady(entry);
+	}, [showLayer, startLayerAnimation, emitLayerReady]);
+
+	const deactivateLayer = useCallback((layerKey) => {
+		const entry = getLayerEntry(layerKey);
+
+		if (!entry) {
+			return;
+		}
+
+		stopLayerAnimation(entry);
+		hideLayer(entry);
+	}, [getLayerEntry, stopLayerAnimation, hideLayer]);
+
+
+    //Eventfunksjoner for weatherlayers
 	const bindLayerEvents = useCallback((entry) => {
 		if (!entry || entry.hasBoundEvents) {
 			return;
 		}
 
-		const { layer, key } = entry;
-
-		layer.on("tick", () => {
-			if (activeLayerKeyRef.current !== key) {
+		const handleLayerTick = () => {
+			if (activeLayerKeyRef.current !== entry.key) {
 				return;
 			}
 
-			const currentMs = toMs(layer.getAnimationTimeDate());
-			const startMs = toMs(layer.getAnimationStartDate());
-			const endMs = toMs(layer.getAnimationEndDate());
+			const currentMs = toMs(entry.layer.getAnimationTimeDate());
+			const startMs = toMs(entry.layer.getAnimationStartDate());
+			const endMs = toMs(entry.layer.getAnimationEndDate());
+
 			const hasReachedEnd = currentMs >= endMs || currentMs < startMs;
 
 			if (hasReachedEnd) {
-				layer.animateByFactor(0);
-				layer.setAnimationTime(toSeconds(endMs));
-				isPlayingRef.current = false;
-
-				onTimeUpdateRef.current?.({
-					type: "tick",
-					currentMs: endMs,
-					isPlaying: false,
-				});
+				stopLayerAnimation(entry);
+				entry.layer.setAnimationTime(toSeconds(endMs));
+				emitLayerTick(endMs);
 				return;
 			}
 
-			onTimeUpdateRef.current?.({
-				type: "tick",
-				currentMs,
-				isPlaying: isPlayingRef.current,
-			});
-		});
+			emitLayerTick(currentMs);
+		};
 
-		layer.on("animationTimeSet", () => {
-			if (activeLayerKeyRef.current !== key) {
+		const handleAnimationTimeSet = () => {
+			if (activeLayerKeyRef.current !== entry.key) {
 				return;
 			}
 
-			onTimeUpdateRef.current?.({
-				type: "seek",
-				currentMs: toMs(layer.getAnimationTimeDate()),
-				isPlaying: isPlayingRef.current,
-			});
-		});
+			const currentMs = toMs(entry.layer.getAnimationTimeDate());
+			emitLayerSeek(currentMs);
+		};
 
+		entry.layer.on("tick", handleLayerTick);
+		entry.layer.on("animationTimeSet", handleAnimationTimeSet);
 		entry.hasBoundEvents = true;
-	}, []);
+	}, [stopLayerAnimation, emitLayerTick, emitLayerSeek]);
 
+
+    //Create og prelode funksjoner
 	const createLayerEntry = useCallback((layerKey) => {
 		const definition = getWeatherLayerDefinition(layerKey);
 
@@ -217,7 +276,7 @@ export function useWeatherLayers(map, activeLayer, onTimeUpdate) {
 			return null;
 		}
 
-		let entry = layerEntriesRef.current.get(layerKey);
+		let entry = getLayerEntry(layerKey);
 
 		if (!entry) {
 			entry = createLayerEntry(layerKey);
@@ -231,18 +290,10 @@ export function useWeatherLayers(map, activeLayer, onTimeUpdate) {
 		preloadLayer(entry);
 
 		return entry;
-	}, [map, createLayerEntry, addLayerToMap, preloadLayer]);
+	}, [map, getLayerEntry, createLayerEntry, addLayerToMap, preloadLayer]);
 
-	const getActiveLayerEntry = useCallback(() => {
-		const activeLayerKey = activeLayerKeyRef.current;
 
-		if (!activeLayerKey) {
-			return null;
-		}
-
-		return layerEntriesRef.current.get(activeLayerKey) ?? null;
-	}, []);
-
+    //Playback controllere
 	const setPlaybackState = useCallback((shouldPlay) => {
 		const entry = getActiveLayerEntry();
 
@@ -250,12 +301,13 @@ export function useWeatherLayers(map, activeLayer, onTimeUpdate) {
 			return;
 		}
 
-		entry.layer.animateByFactor(
-			shouldPlay ? WEATHER_ANIMATION_SPEED : 0
-		);
+		if (shouldPlay) {
+			startLayerAnimation(entry);
+			return;
+		}
 
-		isPlayingRef.current = shouldPlay;
-	}, [getActiveLayerEntry]);
+		stopLayerAnimation(entry);
+	}, [getActiveLayerEntry, startLayerAnimation, stopLayerAnimation]);
 
 	const play = useCallback(() => {
 		setPlaybackState(true);
@@ -275,6 +327,28 @@ export function useWeatherLayers(map, activeLayer, onTimeUpdate) {
 		entry.layer.setAnimationTime(toSeconds(timestampMs));
 	}, [getActiveLayerEntry]);
 
+    //CleanUp av weatherlayer
+	const cleanupWeatherLayers = useCallback(() => {
+		for (const entry of layerEntriesRef.current.values()) {
+			try {
+				stopLayerAnimation(entry);
+
+				if (map?.getLayer(entry.id)) {
+					map.removeLayer(entry.id);
+				}
+			} 
+
+            catch (error) {
+				console.warn("[useWeatherLayers] cleanup feilet:", error);
+			}
+		}
+
+		layerEntriesRef.current.clear();
+		activeLayerKeyRef.current = null;
+		isPlayingRef.current = false;
+	}, [map, stopLayerAnimation]);
+
+    //Handlefunksjoner for useEffects
 	const preloadWeatherLayersOnMapReady = useCallback(() => {
 		if (!map || !map.isStyleLoaded()) {
 			return;
@@ -284,24 +358,8 @@ export function useWeatherLayers(map, activeLayer, onTimeUpdate) {
 			ensureLayer(definition.key);
 		}
 
-		return () => {
-			for (const entry of layerEntriesRef.current.values()) {
-				try {
-					entry.layer.animateByFactor(0);
-
-					if (map.getLayer(entry.id)) {
-						map.removeLayer(entry.id);
-					}
-				} catch (error) {
-					console.warn("[useWeatherLayers] cleanup feilet:", error);
-				}
-			}
-
-			layerEntriesRef.current.clear();
-			activeLayerKeyRef.current = null;
-			isPlayingRef.current = false;
-		};
-	}, [map, ensureLayer]);
+		return cleanupWeatherLayers;
+	}, [map, ensureLayer, cleanupWeatherLayers]);
 
 	const onActiveWeatherLayerChanged = useCallback(() => {
 		if (!map) {
@@ -324,20 +382,25 @@ export function useWeatherLayers(map, activeLayer, onTimeUpdate) {
 		activeLayerKeyRef.current = nextLayerKey;
 
 		if (!nextLayerKey) {
-			isPlayingRef.current = false;
 			emitLayerRemoved();
 			return;
 		}
 
 		const nextEntry = ensureLayer(nextLayerKey);
 
-		if (nextEntry?.isReady) {
-			activateLayer(nextEntry);
-		} else {
-			emitLayerLoading();
+		if (!nextEntry) {
+			return;
 		}
-	}, [map, activeLayer, deactivateLayer, emitLayerRemoved, emitLayerLoading, ensureLayer, activateLayer]);
 
+		if (nextEntry.isReady) {
+			activateLayer(nextEntry);
+			return;
+		}
+
+		emitLayerLoading();
+	}, [map, activeLayer, deactivateLayer, ensureLayer, activateLayer, emitLayerLoading, emitLayerRemoved]);
+
+    //UseEffects
 	useEffect(updateOnTimeUpdateRef, [updateOnTimeUpdateRef]);
 	useEffect(preloadWeatherLayersOnMapReady, [preloadWeatherLayersOnMapReady]);
 	useEffect(onActiveWeatherLayerChanged, [onActiveWeatherLayerChanged]);
