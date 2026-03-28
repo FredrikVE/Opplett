@@ -1,169 +1,278 @@
-/* src/ui/style/MapPage.css */
+/* =========================
+   HOVEDOPPSETT
+========================= */
 
-/* --- Hovedoppsett for kartsiden --- */
 .map-screen {
-    width: 100%;
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 18px 14px 42px;
-    display: flex;
-    flex-direction: column;
+	width: 100%;
+	max-width: 860px;
+	margin: 0 auto;
+	padding: 18px 14px 42px;
+	display: flex;
+	flex-direction: column;
 }
 
 .map-header {
-    margin-bottom: 8px;
-    padding-bottom: 10px;
-    text-align: center;
+	margin-bottom: 8px;
+	padding-bottom: 10px;
+	text-align: center;
 }
 
 .map-header h1 {
-    font-size: 30px;
-    font-weight: bold;
-    letter-spacing: 1.5px;
-    margin: 2rem;
+	font-size: 30px;
+	font-weight: bold;
+	letter-spacing: 1.5px;
+	margin: 2rem;
 }
 
-/* Beholderen for kartet */
+
+/* =========================
+   KART CONTAINER
+========================= */
+
 .map-content {
-    width: 100%;
-    height: 800px;
-    border-radius: 18px;
-    overflow: hidden;
-    background: #ffffff;
-    border: 1px solid rgba(6, 22, 41, 0.08);
-    box-shadow: 0 10px 28px rgba(6, 22, 41, 0.08);
-    position: relative; /* Kritisk: Lar absolutt posisjonerte markører ligge inni her */
+	width: 100%;
+	height: 800px;
+
+	border-radius: 18px;
+	overflow: hidden;
+
+	background: #ffffff;
+	border: 1px solid rgba(6, 22, 41, 0.08);
+
+	box-shadow: 0 10px 28px rgba(6, 22, 41, 0.08);
+
+	position: relative;
 }
 
 .map-page-wrap,
 .map {
-    width: 100%;
-    height: 100%;
-    position: relative;
+	width: 100%;
+	height: 100%;
+	position: relative;
 }
 
-/* --- Marker Wrapper (Forelder-div generert i useMapTiler) --- */
+
+/* =========================
+   OVERLAY SYSTEM (YR STYLE)
+
+   wrap-reverse: når det ikke er plass til
+   både Timeline og MapLayerToggle på én rad,
+   wrapper MapLayerToggle opp og legger seg
+   oppå Timeline (som på yr.no).
+
+   Når MapLayerToggle er åpen (håndtert i JS),
+   skjules Timeline, og knappen sitter alene
+   nederst til høyre.
+========================= */
+
+.map-overlays {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+
+	pointer-events: none;
+
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap-reverse;
+
+	align-items: flex-end;
+	align-content: flex-end;
+	justify-content: center;
+
+	padding: 12px;
+	gap: 8px;
+}
+
+/* Overlays skal fortsatt være klikkbare */
+.map-overlays > * {
+	pointer-events: auto;
+}
+
+
+/* =========================
+   TIMELINE FLEX-REGLER
+
+   min-width hindrer at Timeline skvises.
+   Når containeren er for smal, tvinger
+   min-width wrapping i stedet for å krympe.
+========================= */
+
+.map-overlays .timeline {
+	min-width: 320px;
+}
+
+
+/* =========================
+   MARKERS
+========================= */
+
 .map-marker-wrapper {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 10; /* Ligger oppå kart-canvaset */
-    pointer-events: auto; /* Gjør markøren klikkbar */
-    will-change: transform;
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 10;
+	pointer-events: auto;
+	will-change: transform;
 }
 
-/* --- Værmarkør / Boble styling --- */
 .map-weather-marker {
-    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
-    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    /* Forankrer markøren sentralt over punktet fra MarkerLayout */
-    transform: translate(-50%, -50%);
-    will-change: transform;
+	filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
+
+	transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+	transform: translate(-50%, -50%);
+	will-change: transform;
 }
 
 .map-weather-marker:hover {
-    transform: translate(-50%, -50%) scale(1.1);
-    z-index: 1000;
+	transform: translate(-50%, -50%) scale(1.1);
+	z-index: 1000;
 }
 
 .marker-container {
-    display: flex;
-    align-items: center;
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1.5px solid #ffffff;
-    padding: 4px 12px 4px 6px;
-    border-radius: 40px;
-    gap: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.12);
-    min-width: fit-content;
+	display: flex;
+	align-items: center;
+
+	background: rgba(255, 255, 255, 0.92);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+
+	border: 1.5px solid #ffffff;
+
+	padding: 4px 12px 4px 6px;
+	border-radius: 40px;
+
+	gap: 8px;
+
+	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+	min-width: fit-content;
 }
 
 .marker-icon {
-    width: 34px;
-    height: 34px;
-    object-fit: contain;
-    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+	width: 34px;
+	height: 34px;
+	object-fit: contain;
+	filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.1));
 }
 
 .marker-details {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    line-height: 1.1;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	line-height: 1.1;
 }
 
 .marker-temp {
-    font-weight: 800;
-    font-size: 15px;
-    color: #061629;
-    letter-spacing: -0.5px;
+	font-weight: 800;
+	font-size: 15px;
+	color: #061629;
+	letter-spacing: -0.5px;
 }
 
 .marker-name {
-    font-size: 10.5px;
-    font-weight: 600;
-    color: #556b82;
-    white-space: nowrap;
-    max-width: 90px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-transform: capitalize;
+	font-size: 10.5px;
+	font-weight: 600;
+	color: #556b82;
+
+	white-space: nowrap;
+	max-width: 90px;
+
+	overflow: hidden;
+	text-overflow: ellipsis;
+
+	text-transform: capitalize;
 }
 
-/* --- Loading overlay --- */
+
+/* =========================
+   LOADING OVERLAY
+========================= */
+
 .map-loading-overlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.25);
-    z-index: 20;
-    pointer-events: none;
+	position: absolute;
+	inset: 0;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	background: rgba(0, 0, 0, 0.25);
+
+	z-index: 20;
+	pointer-events: none;
 }
 
-/* --- Zoom Indicator --- */
+
+/* =========================
+   ZOOM INDICATOR
+========================= */
+
 .zoom-indicator {
-    position: absolute;
-    bottom: 20px;
-    left: 20px;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: bold;
-    z-index: 15;
-    border: 1px solid rgba(0,0,0,0.1);
+	position: absolute;
+	bottom: 20px;
+	left: 20px;
+
+	background: rgba(255, 255, 255, 0.9);
+
+	padding: 4px 10px;
+	border-radius: 8px;
+
+	font-size: 12px;
+	font-weight: bold;
+
+	z-index: 15;
+	border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-/* --- Animasjon når nye markører dukker opp --- */
+
+/* =========================
+   ANIMASJONER
+========================= */
+
 @keyframes fadeInMarker {
-    from { opacity: 0; transform: translate(-50%, -40%); }
-    to { opacity: 1; transform: translate(-50%, -50%); }
+	from { opacity: 0; transform: translate(-50%, -40%); }
+	to   { opacity: 1; transform: translate(-50%, -50%); }
 }
 
 .fade-in-animation {
-    animation: fadeInMarker 0.4s ease-out forwards;
+	animation: fadeInMarker 0.4s ease-out forwards;
 }
 
-/* --- Responsivitet --- */
+
+/* =========================
+   RESPONSIVE
+
+   På veldig smale skjermer, la Timeline
+   fylle hele bredden og senk min-width.
+========================= */
+
 @media (max-width: 600px) {
-    .map-content {
-        height: 400px;
-    }
-    
-    .marker-name {
-        max-width: 60px;
-    }
+	.map-content {
+		height: 400px;
+	}
+
+	.marker-name {
+		max-width: 60px;
+	}
+
+	.map-overlays .timeline {
+		min-width: 260px;
+		flex-basis: 100%;
+	}
 }
 
 @media (max-width: 400px) {
-    .marker-name {
-        display: none;
-    }
-    .marker-container {
-        padding: 4px 8px 4px 4px;
-    }
+	.marker-name {
+		display: none;
+	}
+
+	.marker-container {
+		padding: 4px 8px 4px 4px;
+	}
+
+	.map-overlays .timeline {
+		min-width: 200px;
+	}
 }

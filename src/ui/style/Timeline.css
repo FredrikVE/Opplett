@@ -1,18 +1,12 @@
-/*src/ui/style/Timeline.css*/
-
 /* ===========================
-   TIMELINE (LIGHT)
+   TIMELINE (YR FLEX-COMPAT)
    =========================== */
 
 .timeline {
-	position: absolute;
-	bottom: 12px;
-	left: 50%;
-	transform: translateX(-50%);
-	z-index: 10;
-
-	width: calc(100% - 24px);
+	/* viktig for flex-systemet */
+	flex: 1 1 320px;
 	max-width: 480px;
+	min-width: 0;
 
 	padding: 10px 14px 8px;
 
@@ -23,8 +17,7 @@
 	border-radius: 16px;
 	border: 1px solid rgba(0, 0, 0, 0.06);
 
-	box-shadow:
-		0 8px 24px rgba(0, 0, 0, 0.12);
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 
 	color: #1a1a1a;
 	font-family: inherit;
@@ -185,8 +178,7 @@
 
 	cursor: pointer;
 
-	box-shadow:
-		0 0 0 4px rgba(47, 128, 237, 0.2);
+	box-shadow: 0 0 0 4px rgba(47, 128, 237, 0.2);
 }
 
 /* Firefox */
@@ -200,8 +192,7 @@
 
 	cursor: pointer;
 
-	box-shadow:
-		0 0 0 4px rgba(47, 128, 237, 0.2);
+	box-shadow: 0 0 0 4px rgba(47, 128, 237, 0.2);
 }
 
 .timeline-slider::-moz-range-track {
@@ -232,7 +223,6 @@
 
 @media (max-width: 480px) {
 	.timeline {
-		bottom: 8px;
 		padding: 8px 10px 6px;
 		border-radius: 12px;
 	}
@@ -259,7 +249,6 @@
 
 @media (max-width: 360px) {
 	.timeline {
-		width: calc(100% - 16px);
 		padding: 6px 8px 4px;
 	}
 

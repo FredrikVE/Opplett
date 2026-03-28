@@ -1,10 +1,9 @@
-//src/ui/view/components/MapPage/MapLayerToggle/MapLayerToggle.jsx
 import { useState, useRef, useEffect, useCallback } from "react";
 import MapLayerButton from "./MapLayerButton.jsx";
 import MapLayerDropdown from "./MapLayerDropdown.jsx";
 import { WEATHER_LAYERS, LAYER_KEYS } from "./MapToggleConfig.js";
 
-export default function MapLayerToggle({ activeLayer, onLayerChange, showMarkers, onToggleMarkers }) {
+export default function MapLayerToggle({ activeLayer, onLayerChange, showMarkers, onToggleMarkers, onOpenChange }) {
 	const [isOpen, setIsOpen] = useState(false);
 	const dropdownRef = useRef(null);
 
@@ -14,21 +13,21 @@ export default function MapLayerToggle({ activeLayer, onLayerChange, showMarkers
 
 	const hasActiveOverlay = activeLayer !== LAYER_KEYS.NONE;
 
+	/* ---- Varsle parent når åpen-tilstand endres ---- */
+	useEffect(() => {
+		onOpenChange?.(isOpen);
+	}, [isOpen, onOpenChange]);
+
 	const toggleDropdown = useCallback(() => {
 		setIsOpen(prev => !prev);
-	}, 
-
-	[]);
+	}, []);
 
 	const selectLayer = useCallback((key) => {
 		onLayerChange(key);
 		setIsOpen(false);
-	},
-
-	[onLayerChange]);
+	}, [onLayerChange]);
 
 	useEffect(() => {
-
 		if (!isOpen) {
 			return;
 		}
@@ -41,9 +40,7 @@ export default function MapLayerToggle({ activeLayer, onLayerChange, showMarkers
 
 		document.addEventListener("mousedown", handleClickOutside);
 		return () => document.removeEventListener("mousedown", handleClickOutside);
-	},
-
-	[isOpen]);
+	}, [isOpen]);
 
 	return (
 		<div className="map-layer-toggle" ref={dropdownRef}>
