@@ -2,6 +2,7 @@
 /* ===========================
    TIMELINE
    =========================== */
+
 .timeline {
 	width: 480px;
 	max-width: 100%;
@@ -243,41 +244,43 @@
 	}
 }
 
+
 /* =========================
-   SMAL SKJERM (Oppdatert fiks)
+   SMAL SKJERM
+   Overstyr grid-oppsettet i MapPage.css
+   slik at timeline og toggle stacker
+   og krymper riktig.
 ========================= */
+
 @media (max-width: 760px) {
-    .map-overlays {
-        grid-template-columns: 1fr;
-        /* Legg til litt ekstra luft på sidene så boksen ikke klistrer seg til kanten */
-        padding: 8px; 
-    }
+	.map-overlays {
+		grid-template-columns: 1fr;
+		padding: 8px;
+	}
 
-    .map-overlays-toggle-slot {
-        grid-column: 1;
-        grid-row: 1;
-        justify-self: end;
-    }
+	.map-overlays-toggle-slot {
+		grid-column: 1;
+		grid-row: 1;
+		justify-self: end;
+	}
 
-    .map-overlays-timeline-slot {
-        grid-column: 1;
-        grid-row: 2;
-        justify-self: center;
-        /* VIKTIG: Tillat boksen å krympe */
-        width: 100%;
-        max-width: 480px; 
-        min-width: 0; 
-    }
+	.map-overlays-timeline-slot {
+		grid-column: 1;
+		grid-row: 2;
+		justify-self: center;
+		width: 100%;
+		max-width: 480px;
+		min-width: 0;
+	}
 
-    .map-overlays.has-timeline .map-overlays-toggle-slot {
-        /* Matcher timeline-slotten over */
-        width: 100%;
-        max-width: 480px;
-        justify-self: center;
+	.map-overlays.has-timeline .map-overlays-toggle-slot {
+		width: 100%;
+		max-width: 480px;
+		justify-self: center;
 
-        display: flex;
-        justify-content: flex-end;
-    }
+		display: flex;
+		justify-content: flex-end;
+	}
 }
 
 @media (max-width: 360px) {

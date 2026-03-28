@@ -1,3 +1,4 @@
+//src/ui/view/components/MapPage/MapLayerToggle/MapLayerToggle.jsx
 import { useState, useRef, useEffect, useCallback } from "react";
 import MapLayerButton from "./MapLayerButton.jsx";
 import MapLayerDropdown from "./MapLayerDropdown.jsx";
@@ -13,7 +14,6 @@ export default function MapLayerToggle({ activeLayer, onLayerChange, showMarkers
 
 	const hasActiveOverlay = activeLayer !== LAYER_KEYS.NONE;
 
-	//Varsle parent når åpen-tilstand endres
 	useEffect(() => {
 		onOpenChange?.(isOpen);
 	}, [isOpen, onOpenChange]);

@@ -55,16 +55,6 @@
 
 /* =========================
    OVERLAY SYSTEM (CSS GRID)
-
-   Bred skjerm (>760px):
-   3-kolonne grid: [1fr] [Timeline] [Toggle + 1fr]
-
-   Smal skjerm (<=760px):
-   1-kolonne grid.
-   - Uten Timeline: toggle nederst til høyre (default).
-   - Med Timeline (.has-timeline): toggle sentrert
-     med same bredde som Timeline, høyrejustert inni,
-     slik at den flukter med Timeline-boksens høyrekant.
 ========================= */
 
 .map-overlays {
@@ -87,62 +77,27 @@
 .map-overlays-timeline-slot,
 .map-overlays-toggle-slot {
 	pointer-events: auto;
+	min-width: 0;
 }
 
-/* Timeline i midten — ekte sentrert */
+/* Timeline i midten */
 .map-overlays-timeline-slot {
 	grid-column: 2;
 	grid-row: 1;
 	justify-self: center;
 	align-self: end;
 	min-width: 0;
+	max-width: 100%;
 	z-index: 2;
 }
 
-/* Toggle til høyre, bunnfluktet */
+/* Toggle til høyre */
 .map-overlays-toggle-slot {
 	grid-column: 3;
 	grid-row: 1;
 	justify-self: end;
 	align-self: end;
 	z-index: 3;
-}
-
-
-/* =========================
-   SMAL SKJERM
-========================= */
-
-@media (max-width: 760px) {
-	.map-overlays {
-		grid-template-columns: 1fr;
-	}
-
-	/* Uten timeline: toggle nederst til høyre */
-	.map-overlays-toggle-slot {
-		grid-column: 1;
-		grid-row: 1;
-		justify-self: end;
-	}
-
-	/* Timeline under toggle, sentrert */
-	.map-overlays-timeline-slot {
-		grid-column: 1;
-		grid-row: 2;
-		justify-self: center;
-	}
-
-	/* MED timeline: toggle-slotten matcher
-	   Timeline-boksens bredde og sentrering,
-	   slik at knappen flukter med høyrekanten */
-	.map-overlays.has-timeline .map-overlays-toggle-slot {
-		width: 480px;
-		max-width: 100%;
-		justify-self: center;
-
-		display: flex;
-		justify-content: flex-end;
-	}
 }
 
 
