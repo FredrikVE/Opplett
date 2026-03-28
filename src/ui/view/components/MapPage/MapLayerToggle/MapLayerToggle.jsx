@@ -13,7 +13,7 @@ export default function MapLayerToggle({ activeLayer, onLayerChange, showMarkers
 
 	const hasActiveOverlay = activeLayer !== LAYER_KEYS.NONE;
 
-	/* ---- Varsle parent når åpen-tilstand endres ---- */
+	//Varsle parent når åpen-tilstand endres
 	useEffect(() => {
 		onOpenChange?.(isOpen);
 	}, [isOpen, onOpenChange]);

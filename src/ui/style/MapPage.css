@@ -1,3 +1,4 @@
+/*src/ui/style/MapPage.css*/
 /* =========================
    HOVEDOPPSETT
 ========================= */
@@ -53,43 +54,78 @@
 
 
 /* =========================
-   OVERLAY SYSTEM (YR STYLE)
+   OVERLAY SYSTEM (CSS GRID)
 
-   wrap-reverse: MapLayerToggle wrapper
-   opp OVER Timeline når det ikke er plass
-   på samme rad (som alltid, pga Timeline
-   har flex-basis: 100%).
+   3-kolonne grid:
+   [tom 1fr] [Timeline auto] [Toggle + tom 1fr]
 
-   justify-content: center sentrerer
-   Timeline horisontalt.
+   Timeline sitter i midtkolonnen = ekte sentrert.
+   Toggle sitter i høyre kolonne = alltid til høyre.
+   Begge er align-items: end = bunnkant flukter.
 
-   align-items: flex-end flukter bunnkant
-   når de ER på samme rad (bred skjerm).
+   På smale skjermer (<=760px) bytter vi til
+   1-kolonne layout der toggle er rad 1 (øverst
+   til høyre) og timeline er rad 2 (under, sentrert).
 ========================= */
 
 .map-overlays {
 	position: absolute;
-	bottom: 0;
 	left: 0;
 	right: 0;
-
-	pointer-events: none;
-
-	display: flex;
-	flex-direction: row;
-	flex-wrap: wrap-reverse;
-
-	align-items: flex-end;
-	align-content: flex-end;
-	justify-content: center;
+	bottom: 0;
 
 	padding: 12px;
-	gap: 8px;
+
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+	align-items: end;
+	column-gap: 8px;
+	row-gap: 8px;
+
+	pointer-events: none;
 }
 
-/* Overlays skal fortsatt være klikkbare */
-.map-overlays > * {
+.map-overlays-timeline-slot,
+.map-overlays-toggle-slot {
 	pointer-events: auto;
+}
+
+/* Timeline i midten — ekte sentrert */
+.map-overlays-timeline-slot {
+	grid-column: 2;
+	grid-row: 1;
+	justify-self: center;
+	align-self: end;
+	min-width: 0;
+	z-index: 2;
+}
+
+/* Toggle til høyre, bunnfluktet */
+.map-overlays-toggle-slot {
+	grid-column: 3;
+	grid-row: 1;
+	justify-self: end;
+	align-self: end;
+	z-index: 3;
+}
+
+/* Smal skjerm: toggle over timeline */
+@media (max-width: 760px) {
+	.map-overlays {
+		grid-template-columns: 1fr;
+	}
+
+	.map-overlays-toggle-slot {
+		grid-column: 1;
+		grid-row: 1;
+		justify-self: end;
+	}
+
+	.map-overlays-timeline-slot {
+		grid-column: 1;
+		grid-row: 2;
+		justify-self: center;
+	}
 }
 
 

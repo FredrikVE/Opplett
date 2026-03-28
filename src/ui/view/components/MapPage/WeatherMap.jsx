@@ -81,7 +81,6 @@ export default function WeatherMap(props) {
 		if (isWindActive) return windControls;
 		if (isPressureActive) return pressureControls;
 		if (isTemperatureLayerActive) return temperatureControls;
-
 		return null;
 	}, [
 		isPrecipActive,
@@ -138,27 +137,33 @@ export default function WeatherMap(props) {
 			<TemperatureLegend isVisible={isTemperatureLayerActive} />
 			<PressureLegend isVisible={isPressureActive} />
 
-			{/* Overlay-bunnlinje: Timeline + LayerToggle */}
+			{/* Overlay grid: Timeline sentrert, Toggle til høyre */}
 			<div className="map-overlays">
-				<TimeLine
-					isVisible={showTimeline}
-					isPlaying={timelineState.isPlaying}
-					startMs={timelineState.startMs}
-					endMs={timelineState.endMs}
-					currentMs={timelineState.currentMs}
-					timezone={activeLocation?.timezone}
-					onPlay={handlePlay}
-					onPause={handlePause}
-					onSeek={handleSeek}
-				/>
+				{showTimeline && (
+					<div className="map-overlays-timeline-slot">
+						<TimeLine
+							isVisible={showTimeline}
+							isPlaying={timelineState.isPlaying}
+							startMs={timelineState.startMs}
+							endMs={timelineState.endMs}
+							currentMs={timelineState.currentMs}
+							timezone={activeLocation?.timezone}
+							onPlay={handlePlay}
+							onPause={handlePause}
+							onSeek={handleSeek}
+						/>
+					</div>
+				)}
 
-				<MapLayerToggle
-					activeLayer={activeLayer}
-					onLayerChange={onLayerChange}
-					showMarkers={showMarkersWithLayer}
-					onToggleMarkers={onToggleMarkers}
-					onOpenChange={setIsLayerToggleOpen}
-				/>
+				<div className="map-overlays-toggle-slot">
+					<MapLayerToggle
+						activeLayer={activeLayer}
+						onLayerChange={onLayerChange}
+						showMarkers={showMarkersWithLayer}
+						onToggleMarkers={onToggleMarkers}
+						onOpenChange={setIsLayerToggleOpen}
+					/>
+				</div>
 			</div>
 		</div>
 	);

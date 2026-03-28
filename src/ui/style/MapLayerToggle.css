@@ -1,15 +1,11 @@
+/*src/ui/style/MapLayerToggle.css*/
 /* =========================
-   POSISJONERING (FLEX-BASED)
-
-   margin-left: auto dytter knappen til
-   høyre på sin rad i wrap-reverse systemet.
+   POSISJONERING
 ========================= */
 .map-layer-toggle {
-	flex: 0 0 auto;
 	display: flex;
 	flex-direction: column;
 	align-items: flex-end;
-	margin-left: auto;
 }
 
 
