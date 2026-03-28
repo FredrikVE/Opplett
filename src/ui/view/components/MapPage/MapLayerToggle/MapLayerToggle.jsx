@@ -16,16 +16,19 @@ export default function MapLayerToggle({ activeLayer, onLayerChange, showMarkers
 
 	useEffect(() => {
 		onOpenChange?.(isOpen);
-	}, [isOpen, onOpenChange]);
+	}, 
+	[isOpen, onOpenChange]);
 
 	const toggleDropdown = useCallback(() => {
 		setIsOpen(prev => !prev);
-	}, []);
+	}, 
+	[]);
 
 	const selectLayer = useCallback((key) => {
 		onLayerChange(key);
 		setIsOpen(false);
-	}, [onLayerChange]);
+	},
+	[onLayerChange]);
 
 	useEffect(() => {
 		if (!isOpen) {
@@ -40,7 +43,8 @@ export default function MapLayerToggle({ activeLayer, onLayerChange, showMarkers
 
 		document.addEventListener("mousedown", handleClickOutside);
 		return () => document.removeEventListener("mousedown", handleClickOutside);
-	}, [isOpen]);
+	},
+	[isOpen]);
 
 	return (
 		<div className="map-layer-toggle" ref={dropdownRef}>

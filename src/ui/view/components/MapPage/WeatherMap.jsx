@@ -1,3 +1,4 @@
+//src/ui/view/components/MapPage/WeatherMap.jsx
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import "@maptiler/sdk/dist/maptiler-sdk.css";
 

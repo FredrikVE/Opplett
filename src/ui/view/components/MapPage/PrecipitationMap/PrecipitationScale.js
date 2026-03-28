@@ -1,5 +1,4 @@
 //src/ui/view/components/MapPage/PrecipitationMap/PrecipitationScale.js
-
 export const PRECIP_SCALE = [
 	{ mmFrom: 0,    mmTo: 0.1,  color: [200, 220, 240,   0],  label: null      },  // Transparent
 	{ mmFrom: 0.1,  mmTo: 0.2,  color: [185, 225, 255, 150],  label: "<0.2"    },  // Svak lysblå

@@ -4,17 +4,7 @@ import PlaybackIcon from "./PlaybackIcon";
 import { TimelineModel } from "./TimelineModel.js";
 
 export default function TimeLine(props) {
-	const {
-		isVisible,
-		isPlaying,
-		startMs,
-		endMs,
-		currentMs,
-		timezone,
-		onPlay,
-		onPause,
-		onSeek
-	} = props;
+	const { isVisible, isPlaying, startMs, endMs, currentMs, timezone, onPlay, onPause, onSeek } = props;
 
 	const model = useMemo(() => {
 		return new TimelineModel({
@@ -35,10 +25,13 @@ export default function TimeLine(props) {
 	const handlePlayPause = useCallback(() => {
 		if (isPlaying) {
 			onPause?.();
-		} else {
+		} 
+
+		else {
 			onPlay?.();
 		}
-	}, [isPlaying, onPlay, onPause]);
+	}, 
+	[isPlaying, onPlay, onPause]);
 
 	if (!isVisible) {
 		return null;
