@@ -1,0 +1,67 @@
+/* src/ui/style/PrecipitationLegend.css */
+
+/* ===========================
+   PRECIPITATION LEGEND
+   Kompakt, fargekloss per trinn fra SSOT
+   =========================== */
+.precip-legend {
+	position: absolute;
+	top: 12px;
+	left: 12px;
+	z-index: 10;
+
+	background: rgba(255, 255, 255, 0.92);
+	backdrop-filter: blur(6px);
+	-webkit-backdrop-filter: blur(6px);
+	border-radius: 6px;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+
+	padding: 6px 8px;
+	color: #333;
+	font-family: inherit;
+}
+
+.precip-legend-header {
+	display: flex;
+	align-items: center;
+	gap: 3px;
+	margin-bottom: 4px;
+	padding-bottom: 3px;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.precip-legend-icon {
+	font-size: 0.7rem;
+	line-height: 1;
+}
+
+.precip-legend-unit {
+	font-size: 0.62rem;
+	font-weight: 600;
+	opacity: 0.7;
+}
+
+.precip-legend-scale {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+}
+
+.precip-legend-step {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+}
+
+.precip-legend-color {
+	width: 14px;
+	height: 8px;
+	border-radius: 1px;
+	flex-shrink: 0;
+}
+
+.precip-legend-label {
+	font-size: 0.58rem;
+	opacity: 0.7;
+	line-height: 1.3;
+}

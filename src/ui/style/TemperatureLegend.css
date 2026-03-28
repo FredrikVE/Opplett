@@ -1,0 +1,29 @@
+/* src/ui/style/TemperatureLegend.css */
+
+.temperature-legend {
+	position: absolute;
+	bottom: 80px;
+	left: 10px;
+	background: rgba(0,0,0,0.6);
+	padding: 8px;
+	border-radius: 6px;
+	color: white;
+	font-size: 12px;
+}
+
+.temperature-legend-scale {
+	display: flex;
+	flex-direction: column;
+}
+
+.temperature-legend-step {
+	display: flex;
+	align-items: center;
+	margin: 2px 0;
+}
+
+.temperature-legend-color {
+	width: 20px;
+	height: 10px;
+	margin-right: 6px;
+}

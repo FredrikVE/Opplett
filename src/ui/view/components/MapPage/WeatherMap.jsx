@@ -15,9 +15,11 @@ import { useTemperatureLayer } from "./MapHooks/useTemperatureLayer.js";
 import { useMapLayerDimming } from "./MapHooks/useMapLayerDimming.js";
 import { useTimelineController } from "./MapHooks/useTimelineController.js";
 
-import MapLayerToggle from "./MapLayerToggle/MapLayerToggle.jsx";
 import WindLegend from "./Windmap/WindLegend.jsx";
 import PrecipitationLegend from "./PrecipitationMap/Precipitationlegend.jsx";
+import TemperatureLegend from "./TemperatureMap/TemperatureLegend.jsx";
+
+import MapLayerToggle from "./MapLayerToggle/MapLayerToggle.jsx";
 import TimeLine from "./Timeline/TimeLine.jsx";
 import { LAYER_KEYS } from "./MapLayerToggle/MapToggleConfig.js";
 
@@ -128,6 +130,7 @@ export default function WeatherMap(props) {
 			{/* Legends */}
 			<WindLegend isVisible={isWindActive} />
 			<PrecipitationLegend isVisible={isPrecipActive} />
+			<TemperatureLegend isVisible={isTemperatureLayerActive} />
 
 			{/* Timeline */}
 			<TimeLine
