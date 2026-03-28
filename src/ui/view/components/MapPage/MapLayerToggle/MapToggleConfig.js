@@ -1,9 +1,9 @@
 // src/ui/view/components/MapPage/MapLayerToggle/MapToggleConfig.js
-import MapStandardIcon from "../../Common/Icons/MapStandardIcon.jsx";
 import WindIcon from "../../Common/Icons/WindIcon.jsx";
 import PrecipitationIcon from "../../Common/Icons/PrecipitationIcon.jsx";
 import PressureIcon from "../../Common/Icons/PressureIcon.jsx";
 import TemperatureIcon from "../../Common/Icons/TemperatureIcon.jsx";
+import WeatherMarkerIcon from "../../Common/Icons/WeatherMarkerIcon.jsx";
 
 export const LAYER_KEYS = {
 	NONE: "none",
@@ -16,12 +16,6 @@ export const LAYER_KEYS = {
 const ICON_SIZE = 18;
 
 export const WEATHER_LAYERS = [
-	{
-		key: LAYER_KEYS.NONE,
-		label: "Standard",
-		icon: MapStandardIcon,
-		iconSize: ICON_SIZE,
-	},
 	{
 		key: LAYER_KEYS.WIND,
 		label: "Vind",
@@ -44,6 +38,12 @@ export const WEATHER_LAYERS = [
 		key: LAYER_KEYS.TEMPERATURE,
 		label: "Temperatur",
 		icon: TemperatureIcon,
+		iconSize: ICON_SIZE,
+	},
+	{
+		key: LAYER_KEYS.NONE,
+		label: "Værmelding",
+		icon: WeatherMarkerIcon,
 		iconSize: ICON_SIZE,
 	},
 ];

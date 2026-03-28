@@ -4,7 +4,7 @@ import MapLayerButton from "./MapLayerButton.jsx";
 import MapLayerDropdown from "./MapLayerDropdown.jsx";
 import { WEATHER_LAYERS, LAYER_KEYS } from "./MapToggleConfig.js";
 
-export default function MapLayerToggle({ activeLayer, onLayerChange, showMarkers, onToggleMarkers, onOpenChange }) {
+export default function MapLayerToggle({ activeLayer, onLayerChange, onOpenChange }) {
 	const [isOpen, setIsOpen] = useState(false);
 	const dropdownRef = useRef(null);
 
@@ -25,10 +25,10 @@ export default function MapLayerToggle({ activeLayer, onLayerChange, showMarkers
 	[]);
 
 	const selectLayer = useCallback((key) => {
-		onLayerChange(key);
+		const nextLayer = key === activeLayer ? LAYER_KEYS.NONE : key;
+		onLayerChange(nextLayer);
 		setIsOpen(false);
-	},
-	[onLayerChange]);
+	}, [onLayerChange, activeLayer]);
 
 	useEffect(() => {
 		if (!isOpen) {
@@ -53,9 +53,6 @@ export default function MapLayerToggle({ activeLayer, onLayerChange, showMarkers
 					layers={WEATHER_LAYERS}
 					activeLayer={activeLayer}
 					onSelect={selectLayer}
-					hasActiveOverlay={hasActiveOverlay}
-					showMarkers={showMarkers}
-					onToggleMarkers={onToggleMarkers}
 				/>
 			)}
 

@@ -1,14 +1,19 @@
 // src/ui/view/components/MapPage/MapLayerToggle/MapLayerOption.jsx
+import { useCallback } from "react";
 import CheckIcon from "../../Common/Icons/CheckIcon.jsx";
 
-export default function MapLayerOption({ layer, isActive, onClick }) {
+export default function MapLayerOption({ layer, isActive, onSelect }) {
+
+	const handleClick = useCallback(() => {
+		onSelect(layer.key);
+	}, [onSelect, layer.key]);
 
 	const IconComponent = layer.icon;
 
 	return (
 		<button
 			className={`map-layer-option ${isActive ? "active" : ""}`}
-			onClick={onClick}
+			onClick={handleClick}
 		>
 			<span className="map-layer-option-icon">
 				<IconComponent size={layer.iconSize} />

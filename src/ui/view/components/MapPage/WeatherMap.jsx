@@ -80,7 +80,7 @@ export default function WeatherMap(props) {
 		layerControls.seekTo(clampedMs);
 	}, [layerControls, timelineState.startMs]);
 
-	const shouldShowMarkers = activeLayer === LAYER_KEYS.NONE || showMarkersWithLayer;
+	const shouldShowMarkers = activeLayer === LAYER_KEYS.NONE;
 	useWeatherMarkers(map, shouldShowMarkers ? weatherPoints : []);
 
 	const showTimeline = hasActiveOverlayLayer && !isLayerToggleOpen;
