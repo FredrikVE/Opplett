@@ -1,0 +1,24 @@
+/* src/ui/style/index.css */
+/* Samler alle stilark på ett sted */
+@import "./App.css";
+@import "./LoadingSpinner.css";
+@import "./SolarInfo.css";
+@import "./SearchFeild.css";
+@import "./AlertCard.css";
+@import "./ForecastTable.css";
+@import "./DayForecastCard.css";
+@import "./ForecastPage.css";
+@import "./GraphPage.css";
+@import "./AlertPage.css";
+@import "./Header.css";
+@import "./Footer.css";
+@import "./NavButton.css";
+@import "./NowCard.css";
+@import "./UVNowBar.css";
+@import "./WindArrow.css";
+@import "./FilterDropDown.css";
+@import "./MapPage.css";
+@import "./DeviceLocationDot.css";
+@import "./MapLayerToggle.css";
+@import "./MapLegend.css";
+@import "./Timeline.css";

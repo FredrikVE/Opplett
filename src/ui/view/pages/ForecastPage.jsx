@@ -1,4 +1,4 @@
-//src/ui/view/pages/ForecastPage.jsx
+// src/ui/view/pages/ForecastPage.jsx
 import { useState } from "react";
 import Navigation from "../../../navigation/Navigation.jsx";
 import LoadingSpinner from "../components/Common/LoadingSpinner/LoadingSpinner.jsx";
@@ -6,99 +6,97 @@ import SearchField from "../components/Common/SearchFeild/SearchField.jsx";
 import DayForecastCard from "../components/ForecastPage/ForecastTable/DayForecastCard.jsx";
 import NowCard from "../components/ForecastPage/NowCard/NowCard.jsx";
 
-export default function ForecastPage({ viewModel, activeScreen, onChangeScreen, SCREENS }) {
+export default function ForecastPage({ viewModel, searchProps, activeScreen, onChangeScreen, SCREENS }) {
 
-	const [openDate, setOpenDate] = useState(null);
+    const [openDate, setOpenDate] = useState(null);
 
-	const tableConfig = [
-		{ id: "date", label: "" },
-		{ id: "night", label: "Natt" },
-		{ id: "morning", label: "Morgen" },
-		{ id: "afternoon", label: "Ettermiddag" },
-		{ id: "evening", label: "Kveld" },
-		{ id: "temp", label: "Temp høy/lav" },
-		{ id: "precip", label: "Nedbør" },
-		{ id: "wind", label: "Vind" },
-		{ id: "toggle", label: "" }
-	];
+    const tableConfig = [
+        { id: "date", label: "" },
+        { id: "night", label: "Natt" },
+        { id: "morning", label: "Morgen" },
+        { id: "afternoon", label: "Ettermiddag" },
+        { id: "evening", label: "Kveld" },
+        { id: "temp", label: "Temp høy/lav" },
+        { id: "precip", label: "Nedbør" },
+        { id: "wind", label: "Vind" },
+        { id: "toggle", label: "" }
+    ];
 
-	const colCount = tableConfig.length;
+    const colCount = tableConfig.length;
 
-	if (viewModel.loading) {
-		return <LoadingSpinner />;
-	}
+    if (viewModel.loading) {
+        return <LoadingSpinner />;
+    }
 
-	if (viewModel.error) {
-		return <p className="error-message">Feil: {viewModel.error}</p>;
-	}
+    if (viewModel.error) {
+        return <p className="error-message">Feil: {viewModel.error}</p>;
+    }
 
-	const entries = Object.entries(viewModel.forecast);
-	const firstDate = entries[0]?.[0];
+    const entries = Object.entries(viewModel.forecast);
+    const firstDate = entries[0]?.[0];
 
-	const toggleDate = (dateISO) => {
-		setOpenDate((prev) => (
-			prev === dateISO ? null : dateISO
-		));
-	};
+    const toggleDate = (dateISO) => {
+        setOpenDate((prev) => (prev === dateISO ? null : dateISO));
+    };
 
-	const hideHeader = openDate === firstDate;
+    const hideHeader = openDate === firstDate;
 
-	return (
-		<div className="home-screen">
-			<header className="page-header">
-				<h1>{viewModel.location.name || "Min posisjon"}</h1>
-			</header>
+    return (
+        <div className="home-screen">
+            <header className="page-header">
+                <h1>{viewModel.location.name || "Min posisjon"}</h1>
+            </header>
 
-			<SearchField
-				query={viewModel.query}
-				suggestions={viewModel.suggestions}
-				onSearchChange={viewModel.onSearchChange}
-				onSuggestionSelected={viewModel.onSuggestionSelected}
-				onResetToDeviceLocation={viewModel.onResetToDeviceLocation}
-			/>
+            <SearchField
+                query={searchProps.query}
+                suggestions={searchProps.suggestions}
+                onSearchChange={searchProps.onSearchChange}
+                onSuggestionSelected={searchProps.onSuggestionSelected}
+                onResetToDeviceLocation={searchProps.onResetToDeviceLocation}
+            />
 
-			<Navigation
-				activeScreen={activeScreen}
-				onChangeScreen={onChangeScreen}
-				SCREENS={SCREENS}
-			/>
+            <Navigation
+                activeScreen={activeScreen}
+                onChangeScreen={onChangeScreen}
+                SCREENS={SCREENS}
+            />
 
-			{viewModel.currentWeather && (
-				<NowCard
-					current={viewModel.currentWeather}
-					alerts={viewModel.alerts}
-				/>
-			)}
+            {viewModel.currentWeather && (
+                <NowCard
+                    current={viewModel.currentWeather}
+                    alerts={viewModel.alerts}
+                />
+            )}
 
-			<main className="content-area">
-				<table className="forecast-overview-table">
-					<thead className={hideHeader ? "visual-hide" : ""}>
-						<tr className="table-header-row">
-							{tableConfig.map((col) => (
-								<th key={col.id} className={`col-${col.id}`}>
-									{col.label}
-								</th>
-							))}
-						</tr>
-					</thead>
+            <main className="content-area">
+                <table className="forecast-overview-table">
+                    <thead className={hideHeader ? "visual-hide" : ""}>
+                        <tr className="table-header-row">
+                            {tableConfig.map((col) => (
+                                <th key={col.id} className={`col-${col.id}`}>
+                                    {col.label}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
 
-					{entries.map(([dateISO, dayData], index) => (
-						<DayForecastCard
-							key={dateISO}
-							date={dayData.label}
-							hourly={dayData.hours}
-							colCount={colCount}
-							summary={viewModel.dailySummaryByDate[dateISO]}
-							sunTimes={viewModel.sunTimesByDate[dateISO]}
-							isOpen={openDate === dateISO}
-							isFirst={index === 0}
-							onToggle={() => toggleDate(dateISO)}
-							dayAlerts={viewModel.alertsByDate[dateISO] || []}
-							formatLocalDateTime={viewModel.formatLocalDateTime}
-						/>
-					))}
-				</table>
-			</main>
-		</div>
-	);
+                    {entries.map(([dateISO, dayData], index) => (
+                        <DayForecastCard
+                            key={dateISO}
+                            date={dayData.label}
+                            hourly={dayData.hours}
+                            colCount={colCount}
+                            summary={viewModel.dailySummaryByDate[dateISO]}
+                            sunTimes={viewModel.sunTimesByDate[dateISO]}
+                            isOpen={openDate === dateISO}
+                            isFirst={index === 0}
+                            onToggle={() => toggleDate(dateISO)}
+                            dayAlerts={viewModel.alertsByDate[dateISO] || []}
+                            formatLocalDateTime={viewModel.formatLocalDateTime}
+                        />
+                    ))}
+                </table>
+            </main>
+        </div>
+    );
 }

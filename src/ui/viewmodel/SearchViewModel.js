@@ -9,8 +9,7 @@ export default function useSearchViewModel(searchLocationUseCase, onLocationSele
     const abortRef = useRef(null);
     const requestIdRef = useRef(0);
 
-
-    //Håndterer tekstendring i søkefeltet med debounce og avbrytingsstøtte (AbortController).
+    //Håndterer tekstendring i søkefeltet med debounce og avbrytingsstøtte
     const onSearchChange = (text) => {
         setQuery(text);
 
@@ -33,7 +32,7 @@ export default function useSearchViewModel(searchLocationUseCase, onLocationSele
         }
 
         debounceRef.current = setTimeout(async () => {
-            // Avbryter eventuelle pågående forespørsler
+            //Avbryter eventuelle pågående forespørsler
             if (abortRef.current) {
                 abortRef.current.abort();
             }
@@ -43,25 +42,23 @@ export default function useSearchViewModel(searchLocationUseCase, onLocationSele
             const requestId = ++requestIdRef.current;
 
             try {
-                // Sender med currentLocation for å prioritere treff i nærheten av brukeren
+                //Sender med currentLocation for å prioritere treff i nærheten
                 const results = await searchLocationUseCase.getSuggestions(
-                    text, 
-                    controller.signal, 
-                    currentLocation 
+                    text,
+                    controller.signal,
+                    currentLocation
                 );
 
-                // Sjekker requestId for å unngå "out of order" oppdateringer hvis flere kall er aktive
+                //Sjekker requestId for å unngå "out of order" oppdateringer
                 if (requestId === requestIdRef.current) {
                     setSuggestions(results);
                 }
-            }
-
+            } 
             catch (error) {
                 if (error?.name !== "AbortError") {
                     console.warn("Søk feilet:", error);
                 }
-            }
-
+            } 
             finally {
                 if (requestId === requestIdRef.current) {
                     abortRef.current = null;
@@ -70,24 +67,20 @@ export default function useSearchViewModel(searchLocationUseCase, onLocationSele
         }, SEARCH_DEBOUNCE_DELAY_MS);
     };
 
-
-    //Kalles når brukeren klikker på et forslag i listen eller trykker Enter.
+    //Kalles når brukeren klikker på et forslag eller trykker Enter
     const onSuggestionSelected = (suggestion) => {
-        onLocationSelected(suggestion); // Oppdaterer SSOT i App.jsx
-        
-        //Tømmer søkefeltet i stedet for å sette navnet inn i det
-        setQuery("");      
-        
-        setSuggestions([]);             // Skjuler forslagslisten
+        onLocationSelected(suggestion);
+        setQuery("");
+        setSuggestions([]);
     };
 
-    //Nullstiller søket og kaller den globale reset-funksjonen.
+    //Nullstiller søket og kaller den globale reset-funksjonen
     const onResetLocation = () => {
-        setQuery("");                   // Tømmer tekstfeltet
-        setSuggestions([]);             // Skjuler forslagslisten
-        
+        setQuery("");
+        setSuggestions([]);
+
         if (onReset) {
-            onReset(); // Tømmer manualLocation i App.jsx slik at GPS tar over
+            onReset();
         }
     };
 

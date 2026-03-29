@@ -1,53 +1,53 @@
-//src/ui/view/pages/MapPage.jsx
+// src/ui/view/pages/MapPage.jsx
 import Navigation from "../../../navigation/Navigation.jsx";
 import SearchField from "../components/Common/SearchFeild/SearchField.jsx";
 import WeatherMap from "../components/MapPage/WeatherMap.jsx";
 import LoadingSpinner from "../components/Common/LoadingSpinner/LoadingSpinner.jsx";
 
-export default function MapPage({ viewModel, activeScreen, onChangeScreen, SCREENS }) {
-	
-	return (
-		<div className="map-screen">
-			<div className="map-screen-top">
-				<header className="map-header">
-					<h1>{viewModel.activeLocation.name || "Værkart"}</h1>
-				</header>
+export default function MapPage({ viewModel, searchProps, activeScreen, onChangeScreen, SCREENS }) {
 
-				<SearchField
-					query={viewModel.query}
-					suggestions={viewModel.suggestions}
-					onSearchChange={viewModel.onSearchChange}
-					onSuggestionSelected={viewModel.onSuggestionSelected}
-					onResetToDeviceLocation={viewModel.onResetToDeviceLocation}
-				/>
+    return (
+        <div className="map-screen">
+            <div className="map-screen-top">
+                <header className="map-header">
+                    <h1>{viewModel.activeLocation.name || "Værkart"}</h1>
+                </header>
 
-				<Navigation
-					activeScreen={activeScreen}
-					onChangeScreen={onChangeScreen}
-					SCREENS={SCREENS}
-				/>
-			</div>
+                <SearchField
+                    query={searchProps.query}
+                    suggestions={searchProps.suggestions}
+                    onSearchChange={searchProps.onSearchChange}
+                    onSuggestionSelected={searchProps.onSuggestionSelected}
+                    onResetToDeviceLocation={searchProps.onResetToDeviceLocation}
+                />
 
-			<main className="map-content">
-				{viewModel.isLoading && (
-					<div className="map-loading-overlay">
-						<LoadingSpinner />
-					</div>
-				)}
+                <Navigation
+                    activeScreen={activeScreen}
+                    onChangeScreen={onChangeScreen}
+                    SCREENS={SCREENS}
+                />
+            </div>
 
-				<WeatherMap
-					mapStyle={viewModel.mapStyle}
-					mapTarget={viewModel.mapTarget}
-					weatherPoints={viewModel.weatherPoints}
-					onMapChange={viewModel.onMapChange}
-					activeLocation={viewModel.activeLocation}
-					deviceCoords={viewModel.deviceCoords}
-					highlightGeometry={viewModel.highlightGeometry}
-					countryCode={viewModel.countryCode}
-					activeLayer={viewModel.activeLayer}
-					onLayerChange={viewModel.onLayerChange}
-				/>
-			</main>
-		</div>
-	);
+            <main className="map-content">
+                {viewModel.isLoading && (
+                    <div className="map-loading-overlay">
+                        <LoadingSpinner />
+                    </div>
+                )}
+
+                <WeatherMap
+                    mapStyle={viewModel.mapStyle}
+                    mapTarget={viewModel.mapTarget}
+                    weatherPoints={viewModel.weatherPoints}
+                    onMapChange={viewModel.onMapChange}
+                    activeLocation={viewModel.activeLocation}
+                    deviceCoords={viewModel.deviceCoords}
+                    highlightGeometry={viewModel.highlightGeometry}
+                    countryCode={viewModel.countryCode}
+                    activeLayer={viewModel.activeLayer}
+                    onLayerChange={viewModel.onLayerChange}
+                />
+            </main>
+        </div>
+    );
 }

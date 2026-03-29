@@ -1,4 +1,10 @@
 // src/model/repositories/LocationForecastRepository.js
+//
+// Ansvar: Cache, koordinatvasking og transformering av MET-data
+// til timebaserte forecast-objekter.
+//
+// MERK: getCurrentWeather() er FJERNET herfra.
+// Den logikken lever nå kun i GetCurrentWeatherUseCase.
 import { DateTime } from "luxon";
 
 export default class LocationForecastRepository {
@@ -7,61 +13,37 @@ export default class LocationForecastRepository {
         this.cache = new Map();
     }
 
-    //Hjelpemetode for caching, koordinatvasking og henting av timeseries
-    async #getTimeseries(lat, lon) { // ENDRET: Fjernet hoursAhead som parameter her
+    // Hjelpemetode for caching, koordinatvasking og henting av timeseries
+    async #getTimeseries(lat, lon) {
         const cleanLat = Math.max(-90, Math.min(90, Number(lat)));
         const cleanLon = ((Number(lon) + 180) % 360 + 360) % 360 - 180;
 
-        const cacheLat = cleanLat.toFixed(2);       //BØr denne egentlig rundes ned?
-        const cacheLon = cleanLon.toFixed(2);       //Kan dette gi følgefeil andre steder i programmet??
-        const key = `${cacheLat},${cacheLon}`; // ENDRET: Nøkkelen trenger ikke hoursAhead
-        
+        const cacheLat = cleanLat.toFixed(2);
+        const cacheLon = cleanLon.toFixed(2);
+        const key = `${cacheLat},${cacheLon}`;
+
         if (this.cache.has(key)) {
             return this.cache.get(key);
         }
 
         const res = await this.datasource.fetchLocationForecast(cleanLat, cleanLon);
-        
-        //Henter hele listen fra API-et uten å kutte noe her. 
-        //Det er tryggere å la getHourlyForecast bestemme utsnittet.
-        const ts = res.properties.timeseries; 
+        const ts = res.properties.timeseries;
 
         this.cache.set(key, ts);
         return ts;
     }
 
-    async getCurrentWeather(lat, lon, timeZone) {
-        const hourly = await this.getHourlyForecast(lat, lon, 1, timeZone);
-        const now = hourly[0];
-
-        if (!now) {
-            return null;
-        }
-
-        return {
-            weatherSymbol: now.weatherSymbol,
-            temp: now.temp,
-            feelsLike: now.details.apparent_temperature ?? now.temp,
-            precip: now.precipitation.amount,
-            wind: now.wind,
-            gust: now.details.wind_speed_of_gust ?? now.wind,
-            windDir: now.details.wind_from_direction ?? 0,
-            uv: now.uv
-        };
-    }
-
-    //Metode for å finne langtidsvarsel
+    // Henter time-for-time værdata
     async getHourlyForecast(lat, lon, hoursAhead, timeZone) {
-        // ENDRET: Sender ikke lenger hoursAhead inn til hjelpemetoden
-        const timeseries = await this.#getTimeseries(lat, lon); 
+        const timeseries = await this.#getTimeseries(lat, lon);
         const now = DateTime.now().setZone(timeZone);
 
         let startIndex = -1;
         for (let i = 0; i < timeseries.length; i++) {
             const entryStart = DateTime.fromISO(timeseries[i].time).setZone(timeZone);
-            
+
             const nextEntry = timeseries[i + 1];
-            const entryEnd = nextEntry 
+            const entryEnd = nextEntry
                 ? DateTime.fromISO(nextEntry.time).setZone(timeZone)
                 : entryStart.plus({ hours: 1 });
 
@@ -76,22 +58,20 @@ export default class LocationForecastRepository {
             startIndex = 0;
         }
 
-        // Vi starter på startIndex (nåtid) og tar med nøyaktig så mange timer som ble forespurt.
         const effectiveSeries = timeseries.slice(startIndex, startIndex + hoursAhead);
-        
         const hourly = [];
 
         for (const entry of effectiveSeries) {
             const timeISO = entry.time;
             const dt = DateTime.fromISO(timeISO).setZone(timeZone);
-            const dateISO = dt.toISODate(); 
+            const dateISO = dt.toISODate();
             const localTime = dt.hour;
             const localMinute = dt.minute;
-            const utcHour = dt.toUTC().hour; 
+            const utcHour = dt.toUTC().hour;
 
-            const weatherSymbol = 
-                entry.data.next_1_hours?.summary?.symbol_code ?? 
-                entry.data.next_6_hours?.summary?.symbol_code ?? 
+            const weatherSymbol =
+                entry.data.next_1_hours?.summary?.symbol_code ??
+                entry.data.next_6_hours?.summary?.symbol_code ??
                 null;
 
             const next1h = entry.data.next_1_hours?.details;
@@ -118,8 +98,8 @@ export default class LocationForecastRepository {
                 localMinute,
                 utcHour,
                 weatherSymbol,
-                precipitation, 
-                precipitation1h, 
+                precipitation,
+                precipitation1h,
                 precipitation6h,
                 temp: entry.data.instant.details.air_temperature,
                 wind: entry.data.instant.details.wind_speed,
@@ -158,7 +138,7 @@ export default class LocationForecastRepository {
         return dailySummary;
     }
 
-    //Private hjelpemetoder for beregning
+    // Private hjelpemetoder
     #groupHoursByDate(hourlyForecast) {
         const result = {};
         for (const hour of hourlyForecast) {
@@ -185,10 +165,7 @@ export default class LocationForecastRepository {
         let best = null;
         let minDiff = Infinity;
         for (const h of hours) {
-            if (!h.precipitation6h) {
-                continue;
-            }
-
+            if (!h.precipitation6h) continue;
             const diff = Math.abs(h.localTime - targetHour);
             if (diff < minDiff) {
                 minDiff = diff;
@@ -205,9 +182,7 @@ export default class LocationForecastRepository {
         const blocks = [];
 
         for (const t of targets) {
-
             const best = this.#getBestHourWith6hPrecipAt(hours, t);
-
             if (best && !used.has(best.timeISO)) {
                 used.add(best.timeISO);
                 blocks.push(best.precipitation6h);
@@ -220,19 +195,18 @@ export default class LocationForecastRepository {
                 min += p.min ?? 0;
                 max += p.max ?? 0;
             }
-        } 
-        
-        else {
+        } else {
             for (const h of hours) {
                 total += h.precipitation?.amount ?? 0;
                 min += h.precipitation?.min ?? 0;
                 max += h.precipitation?.max ?? 0;
             }
         }
-        return { 
-            total: Number(total.toFixed(1)), 
-            min: Number(min.toFixed(1)), 
-            max: Number(max.toFixed(1)) 
+
+        return {
+            total: Number(total.toFixed(1)),
+            min: Number(min.toFixed(1)),
+            max: Number(max.toFixed(1))
         };
     }
 
@@ -247,12 +221,9 @@ export default class LocationForecastRepository {
             for (const h of hours) winds.push(h.wind);
         }
 
-        if (winds.length === 0) {
-            return 0;
-        }
+        if (winds.length === 0) return 0;
 
         winds.sort((a, b) => a - b);
-
         return Math.ceil(winds[Math.floor(winds.length * 0.75)]);
     }
 
@@ -261,7 +232,6 @@ export default class LocationForecastRepository {
         let minDiff = Infinity;
 
         for (const h of hours) {
-
             const diff = Math.abs(h.localTime - targetHour);
             if (diff < minDiff) {
                 minDiff = diff;
