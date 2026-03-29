@@ -13,22 +13,6 @@ I tillegg bruker appen **MapTiler** for kart og stedsdata, **MapTiler Weather** 
 
 ---
 
-## Hurtigstart
-
-Installer avhengigheter:
-
-```bash
-npm install
-````
-
-Start utviklingsserver:
-
-```bash
-npm run dev
-```
-
----
-
 ## Dokumentasjon
 
 <table>
@@ -61,6 +45,90 @@ npm run dev
         <td><a href="./docs/TESTING.md">Teststruktur, testformål og hvordan testene kjøres.</a></td>
     </tr>
 </table>
+
+---
+
+## Hurtigstart
+
+**Installer avhengigheter:**
+
+```bash
+npm install
+```
+
+**Installer sentrale pakker i prosjektet:**
+
+```bash
+npm install @maptiler/sdk
+npm install @maptiler/weather
+npm install @maptiler/marker-layout
+npm install highcharts highcharts-react-official
+npm install luxon tz-lookup
+```
+
+**Opprett bruker hos MapTiler, API-nøkke og `.env` fil for miljøvariabler**
+
+Legg inn nødvendige miljøvariabler for karttjenesten, må du opprette en MapTiler-bruker og API-nøkkel. 
+Dette er gratis og gjøres på følgende måte:
+
+<table>
+    <tr>
+        <th>Steg</th>
+        <th>Beskrivelse</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>Gå til <a href="https://www.maptiler.com/">MapTiler</a>.</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>Opprett en bruker og logg inn i kontoen din.</td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td>Opprett eller hent en API-nøkkel.</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>Opprett en <code>.env</code>-fil i prosjektroten, altså på øverste nivå i prosjektmappen.</td>
+    </tr>
+</table>
+
+**Legg deretter inn nøkkelen slik:**
+
+```env
+VITE_MAPTILER_API_KEY=din_maptiler_nøkkel
+```
+
+**Når dette er gjort vil `MapTilerDataSource.js` laste inn nøkkelen**
+
+I modellen og datalaget ligger filen `MapTilerDataSource.js`. 
+Denne vil da laste inn API-nøkkelen og gjøre stedsøk og bruk av kartløsning mulig.
+
+Dette ser du øverst i denne kodeblokken:
+
+```javascript
+//src/model/datasource/MapTilerDataSource.js
+const API_KEY = import.meta.env.VITE_MAPTILER_API_KEY;
+
+export default class MapTilerDataSource {
+	#apiKey = API_KEY;
+	#baseUrl = "https://api.maptiler.com/geocoding";
+
+...
+
+}
+```
+
+Når API-nøkkel er lagt inn i `.env`-filen så kan du
+
+**Starte utviklingsserveren og kjøre prosjektet lokalt på maskinen din**
+
+```bash
+npm run dev
+```
+
+Se <a href="./docs/SETUP.md">SETUP.md</a> for mer informasjon om installasjon, miljøvariabler og lokal konfigurasjon.
 
 ---
 
