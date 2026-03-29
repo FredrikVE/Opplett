@@ -267,7 +267,7 @@ Applikasjonens footer oppsummerer prosjektet slik:
 - Kart og kartrelatert visualisering leveres med støtte fra **MapTiler**
 - Grafvisning er bygget med **Highcharts**
 
-### Kildehenvisning for ikoner
+### Kildehenvisning for ikoner og eksterne biblioteker
 
 **NRK. (u.å.)** *Yr weather symbols.*  
 Hentet fra:  
@@ -276,3 +276,15 @@ Hentet fra:
 **NRK. (u.å.)** *Yr Warning Icons.*  
 Hentet fra:  
 <a href="https://nrkno.github.io/yr-warning-icons/">https://nrkno.github.io/yr-warning-icons/</a>
+
+**MapTiler. (u.å.)** *MapTiler.*  
+Hentet fra:  
+<a href="https://www.maptiler.com/">https://www.maptiler.com/</a>
+
+**MapTiler. (u.å.)** *MapTiler Weather.*  
+Hentet fra:  
+<a href="https://www.maptiler.com/weather/">https://www.maptiler.com/weather/</a>
+
+**Luxon. (u.å.)** *Luxon.*  
+Hentet fra:  
+<a href="https://moment.github.io/luxon/">https://moment.github.io/luxon/</a>
