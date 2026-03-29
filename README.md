@@ -198,13 +198,13 @@ npm install
 ```
 
 **Prosjektet bruker blant annet disse eksterne pakkene**
-> - `@maptiler/sdk`, 
-> - `@maptiler/weather`, 
-> - `@maptiler/marker-layout`, 
-> - `highcharts`, 
-> - `highcharts-react-official`,
-> - `luxon`
-> - `tz-lookup`.
+- `@maptiler/sdk`,  
+- `@maptiler/weather`, 
+- `@maptiler/marker-layout`, 
+- `highcharts`, 
+- `highcharts-react-official`,
+- `luxon`
+- `tz-lookup`.
 
 **Opprett MapTiler-bruker, API-nøkkel og `.env`-fil**
 
