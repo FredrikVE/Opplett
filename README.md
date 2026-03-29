@@ -5,6 +5,7 @@
   
 </h1>
 
+<br>
 Opplett er et personlig prosjekt laget for å lære og utforske **MVVM-arkitektur i React**.  
 Applikasjonen henter værdata fra **Meteorologisk institutt (MET)**, er inspirert av **Yr.no**, og kombinerer dette med kart, værvisualisering, grafvisning og stedssøk.
 
