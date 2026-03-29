@@ -156,8 +156,15 @@ Se <a href="./docs/SETUP.md">SETUP.md</a> for mer informasjon om installasjon, m
 
 ---
 
-## Forenklet mappestruktur
 
+## Arkitektur
+
+Under ser du en overordnet skisse av appen arkitektur og lagindeling.
+
+![Arkitekturdiagram](./images/Arkitektur.png)
+
+
+Denne arkitekturen fordeler seg slik i prosjektets mappestruktur.
 
 ```bash
 .
@@ -195,12 +202,6 @@ Se <a href="./docs/SETUP.md">SETUP.md</a> for mer informasjon om installasjon, m
     ├── model
     └── ui
 ```
-
----
-
-## Arkitekturdiagram
-
-![Arkitekturdiagram](./images/Arkitektur.png)
 
 ---
 
