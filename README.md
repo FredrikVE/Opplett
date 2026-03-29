@@ -29,9 +29,9 @@ Sentrale features i appen er værvarsel for valgt lokasjon, grafvisning av værd
 
 ## Langtidsvarsel
 
-<p align="center">
-  <img src="./images/LangtidsVarsel.gif" alt="Langtidsvarsel" width="700" />
-</p>
+![Langtidsvarsel](./images/LangtidsVarsel.png)
+
+![Timevarsel](./images/Timevarsel.png)
 
 <table align="center">
   <tr>
