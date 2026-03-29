@@ -235,11 +235,21 @@ For å bruke kartfunksjonaliteten må du opprette en MapTiler-bruker og hente en
 
 **Gjør altså følgende**
 
-1) Gå til <a href="https://www.maptiler.com/">MapTiler</a> opprett bruker. Finn API-key i margen.
-![Maptiler_cloud](./images/Maptiler_cloud.png)
+1) Gå til <a href="https://www.maptiler.com/">MapTiler</a>, opprett bruker, og finn API-nøkkelen i margen.
 
-2) Opprett en `.env`-fil og legg inn dette
-![Api_key_instructions](./images/Api_key_instructions.png)
+<p align="left">
+  <img src="./images/Maptiler_cloud.png" alt="MapTiler cloud" width="150" />
+</p>
+
+<br>
+
+2) Opprett en <code>.env</code>-fil og legg inn dette:
+
+<p align="left">
+  <img src="./images/Api_key_instructions.png" alt="API key instructions" />
+</p>
+
+<br>
 
 
 **Legg deretter inn nøkkelen slik:**
