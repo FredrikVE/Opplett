@@ -29,7 +29,9 @@ export default class MapTilerRepository {
             if (!timezone) {
                 try {
                     timezone = tzLookup(lat, lon);
-                } catch {
+                } 
+                
+                catch {
                     timezone = null;
                 }
             }

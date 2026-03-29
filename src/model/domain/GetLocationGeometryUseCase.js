@@ -19,6 +19,7 @@ export default class GetLocationGeometryUseCase {
 			return geometry;
 
 		}
+		
 		catch (error) {
 
 			console.error("[UseCase] Klarte ikke hente geometri:", error);

@@ -1,3 +1,4 @@
+//src/ui/view/pages/ForecastPage.jsx
 import { useState } from "react";
 import Navigation from "../../../navigation/Navigation.jsx";
 import LoadingSpinner from "../components/Common/LoadingSpinner/LoadingSpinner.jsx";
