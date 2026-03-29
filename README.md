@@ -208,12 +208,12 @@ Denne arkitekturen fordeler seg slik i prosjektets mappestruktur.
 
 ## Kreditering og datakilder
 
-VærVarselet bygger på flere eksterne datakilder, biblioteker og visuelle ressurser.
+VærVarselet bygger på eksterne datakilder, biblioteker og visuelle ressurser for værdata, kart, grafer, tidssoner og ikoner.
 
 <table border="1">
     <tr>
         <th>Ressurs</th>
-        <th>Bruk i prosjektet</th>
+        <th>Bruk</th>
         <th>Lenke</th>
     </tr>
     <tr>
@@ -227,14 +227,9 @@ VærVarselet bygger på flere eksterne datakilder, biblioteker og visuelle ressu
         <td><a href="https://www.yr.no/">yr.no</a></td>
     </tr>
     <tr>
-        <td>MapTiler</td>
-        <td>Kartvisning og kartrelaterte tjenester</td>
-        <td><a href="https://www.maptiler.com/">maptiler.com</a></td>
-    </tr>
-    <tr>
-        <td>MapTiler Weather</td>
-        <td>Vær-layers og væranimasjoner i kartet</td>
-        <td><a href="https://www.maptiler.com/weather/">maptiler.com/weather</a></td>
+        <td>MapTiler / MapTiler Weather</td>
+        <td>Kartvisning, stedsdata og vær-layers</td>
+        <td><a href="https://www.maptiler.com/">MapTiler</a> / <a href="https://www.maptiler.com/weather/">MapTiler Weather</a></td>
     </tr>
     <tr>
         <td>Highcharts</td>
@@ -242,61 +237,15 @@ VærVarselet bygger på flere eksterne datakilder, biblioteker og visuelle ressu
         <td><a href="https://www.highcharts.com/">highcharts.com</a></td>
     </tr>
     <tr>
-        <td>Luxon</td>
-        <td>Dato-, tid- og tidssonehåndtering</td>
-        <td><a href="https://moment.github.io/luxon/">Luxon</a></td>
+        <td>Luxon / tz-lookup</td>
+        <td>Tidssone- og lokasjonshåndtering</td>
+        <td><a href="https://moment.github.io/luxon/">Luxon</a> / <a href="https://www.npmjs.com/package/tz-lookup">tz-lookup</a></td>
     </tr>
     <tr>
-        <td>tz-lookup</td>
-        <td>Fallback for tidssone basert på koordinater</td>
-        <td><a href="https://www.npmjs.com/package/tz-lookup">tz-lookup</a></td>
-    </tr>
-    <tr>
-        <td>Yr Weather Symbols</td>
-        <td>Værikoner</td>
-        <td><a href="https://nrkno.github.io/yr-weather-symbols/">Yr Weather Symbols</a></td>
-    </tr>
-    <tr>
-        <td>Yr Warning Icons</td>
-        <td>Fareikoner</td>
-        <td><a href="https://nrkno.github.io/yr-warning-icons/">Yr Warning Icons</a></td>
+        <td>Yr Weather Symbols / Yr Warning Icons</td>
+        <td>Værikoner og fareikoner</td>
+        <td><a href="https://nrkno.github.io/yr-weather-symbols/">Weather Symbols</a> / <a href="https://nrkno.github.io/yr-warning-icons/">Warning Icons</a></td>
     </tr>
 </table>
 
-### Kreditering i applikasjonen
-
-Applikasjonens footer oppsummerer prosjektet slik:
-
-- Dette er et personlig prosjekt for å lære MVVM-arkitektur i React
-- All data er hentet fra Meteorologisk institutt (MET)
-- Løsningen er inspirert av Yr.no
-- Værikoner er hentet fra **Yr Weather Symbols**
-- Fareikoner er hentet fra **Yr Warning Icons**
-- Kart og kartrelatert visualisering leveres med støtte fra **MapTiler**
-- Grafvisning er bygget med **Highcharts**
-
-### Kildehenvisning for ikoner og eksterne biblioteker
-
-**NRK. (u.å.)** *Yr weather symbols.*  
-Hentet fra:  
-<a href="https://nrkno.github.io/yr-weather-symbols/">https://nrkno.github.io/yr-weather-symbols/</a>
-
-**NRK. (u.å.)** *Yr Warning Icons.*  
-Hentet fra:  
-<a href="https://nrkno.github.io/yr-warning-icons/">https://nrkno.github.io/yr-warning-icons/</a>
-
-**MapTiler. (u.å.)** *MapTiler.*  
-Hentet fra:  
-<a href="https://www.maptiler.com/">https://www.maptiler.com/</a>
-
-**MapTiler. (u.å.)** *MapTiler Weather.*  
-Hentet fra:  
-<a href="https://www.maptiler.com/weather/">https://www.maptiler.com/weather/</a>
-
-**Highcharts. (u.å.)** *Highcharts.*  
-Hentet fra:  
-<a href="https://www.highcharts.com/">https://www.highcharts.com/</a>
-
-**Luxon. (u.å.)** *Luxon.*  
-Hentet fra:  
-<a href="https://moment.github.io/luxon/">https://moment.github.io/luxon/</a>
+Prosjektets footer oppsummerer også krediteringen i applikasjonen, inkludert MET, Yr, MapTiler, Highcharts og ikonressursene fra NRK.
