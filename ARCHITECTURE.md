@@ -1,15 +1,13 @@
-# ARCHITECTURE.md
-
-## Arkitektur-tegning
-![Arkitekturdiagram](images/Arkitektur.png)
-
-## Mermaidkode for arkitektur-tegning
-
-```javaScript
+```mermaid
 ---
 config:
+  layout: elk
+  elk:
+    mergeEdges: true
+    nodePlacementStrategy: NETWORK_SIMPLEX
+    cycleBreakingStrategy: DEPTH_FIRST
+    edgeRouting: ORTHOGONAL
   theme: forest
-  layout: fixed
 ---
 flowchart TB
 
@@ -29,12 +27,20 @@ subgraph NavigationLayer["Navigation"]
 end
 
 %% =========================
+%% DEVICE
+%% =========================
+subgraph Device["Device"]
+	GeoHook["useGeolocation"]
+end
+
+%% =========================
 %% SCREENS
 %% =========================
 subgraph Screens["Screens / Views"]
 	ForecastPage["ForecastPage.jsx"]
 	GraphPage["GraphPage.jsx"]
 	AlertPage["AlertPage.jsx"]
+	MapPage["MapPage.jsx"]
 end
 
 %% =========================
@@ -44,6 +50,7 @@ subgraph Hooks["ViewModels (Hooks)"]
 	ForecastVM["useForecastPageViewModel"]
 	GraphVM["useGraphScreenViewModel"]
 	AlertVM["useAlertPageViewModel"]
+	MapVM["useMapPageViewModel"]
 	SearchVM["useSearchViewModel"]
 end
 
@@ -58,6 +65,8 @@ subgraph UseCases["Domain Layer (UseCases)"]
 	GetSunTimesUC["GetSunTimesUseCase"]
 	SearchLocationUC["SearchLocationUseCase"]
 	GetLocationNameUC["GetLocationNameUseCase"]
+	GetMapWeatherUC["GetMapWeatherUseCase"]
+	GetLocationGeometryUC["GetLocationGeometryUseCase"]
 end
 
 %% =========================
@@ -67,7 +76,7 @@ subgraph Repositories["Repositories"]
 	ForecastRepo["LocationForecastRepository"]
 	AlertsRepo["MetAlertsRepository"]
 	SunriseRepo["SunriseRepository"]
-	GeoRepo["OpenCageGeocodingRepository"]
+	MapTilerRepo["MapTilerRepository"]
 end
 
 %% =========================
@@ -78,14 +87,7 @@ subgraph DataSources["DataSources"]
 	ForecastDS["LocationForecastDataSource"]
 	AlertsDS["MetAlertsDataSource"]
 	SunriseDS["SunriseDataSource"]
-	GeoDS["OpenCageGeocodingDataSource"]
-end
-
-%% =========================
-%% DEVICE
-%% =========================
-subgraph Device["Device"]
-	GeoHook["useGeolocation"]
+	MapTilerDS["MapTilerDataSource"]
 end
 
 %% =========================
@@ -93,7 +95,7 @@ end
 %% =========================
 subgraph ExternalAPI["External APIs"]
 	MET["api.met.no"]
-	OpenCage["api.opencagedata.com"]
+	MapTiler["api.maptiler.com"]
 end
 
 %% =========================
@@ -104,6 +106,7 @@ App --> GeoHook
 App --> ForecastPage
 App --> GraphPage
 App --> AlertPage
+App --> MapPage
 
 %% =========================
 %% SCREEN → VIEWMODEL
@@ -111,9 +114,11 @@ App --> AlertPage
 ForecastPage --> ForecastVM
 GraphPage --> GraphVM
 AlertPage --> AlertVM
+MapPage --> MapVM
 
 GraphVM --> ForecastVM
 ForecastVM --> SearchVM
+MapVM --> SearchVM
 
 %% =========================
 %% VIEWMODEL → USECASE
@@ -125,6 +130,10 @@ ForecastVM --> GetSunTimesUC
 ForecastVM --> GetLocationNameUC
 
 AlertVM --> GetAllAlertsUC
+
+MapVM --> GetMapWeatherUC
+MapVM --> GetLocationGeometryUC
+
 SearchVM --> SearchLocationUC
 
 %% =========================
@@ -138,8 +147,11 @@ GetAllAlertsUC --> AlertsRepo
 
 GetSunTimesUC --> SunriseRepo
 
-SearchLocationUC --> GeoRepo
-GetLocationNameUC --> GeoRepo
+SearchLocationUC --> MapTilerRepo
+GetLocationNameUC --> MapTilerRepo
+GetLocationGeometryUC --> MapTilerRepo
+
+GetMapWeatherUC --> GetCurrentUC
 
 %% =========================
 %% REPOSITORY → DATASOURCE
@@ -147,7 +159,7 @@ GetLocationNameUC --> GeoRepo
 ForecastRepo --> ForecastDS
 AlertsRepo --> AlertsDS
 SunriseRepo --> SunriseDS
-GeoRepo --> GeoDS
+MapTilerRepo --> MapTilerDS
 
 ForecastDS --> BaseDS
 AlertsDS --> BaseDS
@@ -157,7 +169,7 @@ SunriseDS --> BaseDS
 %% DATASOURCE → EXTERNAL
 %% =========================
 BaseDS --> MET
-GeoDS --> OpenCage
+MapTilerDS --> MapTiler
 
 %% =========================
 %% STYLING
