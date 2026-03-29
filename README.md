@@ -9,11 +9,10 @@ Prosjektet er bygget som en MVVM-inspirert frontend-applikasjon der ansvaret er 
 - **ViewModel** – hooks som holder UI-tilstand og presentasjonslogikk
 - **View** – React-komponenter og pages
 
-**Målet med prosjektet har vært å:**
-Målet med denne appen har vært å lære MVVM-arkitektur i React.
-Hensikten med å skrive koden etter denne arkitekturen, er at dette igjennom tydelig lagdeling og ansvarsdeling vil kunne redusere komplesitene og håndtere den på en måte gjør appen mer testbar, utvidbar, forståelig og vedlikeholdbar. 
+**Målet med prosjektet har vært å lære MVVM-arkitektur i React.**  
+Hensikten med å strukturere appen på denne måten er å bruke tydelig lagdeling og ansvarsdeling for å redusere kompleksitet, og samtidig gjøre appen mer testbar, utvidbar, forståelig og vedlikeholdbar.
 
-**Teknologier og eksterne biblioteker som brukes av appen er:**
+**Prosjektet bruker blant annet:**
 - <a href="https://react.dev/">**React**</a>
 - <a href="https://vite.dev/">**Vite**</a>
 - <a href="https://www.maptiler.com/">**MapTiler**</a>
@@ -22,11 +21,53 @@ Hensikten med å skrive koden etter denne arkitekturen, er at dette igjennom tyd
 - <a href="https://moment.github.io/luxon/">**Luxon**</a>
 - <a href="https://www.npmjs.com/package/tz-lookup">**tz-lookup**</a>
 
+**Sentrale funksjoner i appen**  
+Appen tilbyr værvarsel for valgt lokasjon, grafvisning av værdata, farevarsler og kartvisning med markører og geometri. Den bruker også vær-layers via MapTiler Weather for å visualisere værforhold direkte i kartet, og støtter søk og håndtering av aktiv lokasjon. I tillegg er presentasjonen av data tidssonebevisst, slik at værinformasjonen vises i riktig lokal tid for stedet som er valgt.
 
-**Features i appen**  
-Sentrale features i appen er værvarsel for valgt lokasjon, grafvisning av værdata, farevarsler og kartvisning med markører og geometri. Appen bruker også vær-layers via MapTiler Weather for å visualisere værforhold direkte i kartet, og den støtter søk og håndtering av aktiv lokasjon. I tillegg er presentasjonen av data tidssonebevisst, slik at værinformasjonen vises i riktig lokal tid for stedet som er valgt.
+<br>
 
-## Showcase av features
+---
+
+## 1) Innholdsfortegnelse
+
+<table>
+    <tr>
+        <th>Seksjon</th>
+        <th>Beskrivelse</th>
+    </tr>
+    <tr>
+        <td>Showcase</td>
+        <td><a href="#2-showcase-av-features">Visuell demonstrasjon av sentrale funksjoner i appen.</a></td>
+    </tr>
+    <tr>
+        <td>Oppsett</td>
+        <td><a href="./docs/SETUP.md">Installasjon, oppstart, miljøvariabler og lokal konfigurasjon.</a></td>
+    </tr>
+    <tr>
+        <td>Arkitektur</td>
+        <td><a href="./docs/ARCHITECTURE.md">Beskrivelse av MVVM-strukturen, lagdeling og designvalg.</a></td>
+    </tr>
+    <tr>
+        <td>Pages</td>
+        <td><a href="./docs/PAGES.md">Oversikt over sidene i appen og hva de har ansvar for.</a></td>
+    </tr>
+    <tr>
+        <td>MapPage</td>
+        <td><a href="./docs/MAP_PAGE.md">Detaljert dokumentasjon av MapPage, kartlag, markører, highlight og kartlogikk.</a></td>
+    </tr>
+    <tr>
+        <td>Tidssoner</td>
+        <td><a href="./docs/TIMEZONES.md">Hvordan appen håndterer UTC, lokal tid, tidssoner og lokasjonsdata.</a></td>
+    </tr>
+    <tr>
+        <td>Testing</td>
+        <td><a href="./docs/TESTING.md">Teststruktur, testformål og hvordan testene kjøres.</a></td>
+    </tr>
+</table>
+
+---
+
+## 2) Showcase av features
 
 <p align="center">
   <img src="./images/VærMeldingLand.gif" alt="Stedsøk med nasjonal værmelding og highlighting av grenser" width="980" />
@@ -36,11 +77,11 @@ Sentrale features i appen er værvarsel for valgt lokasjon, grafvisning av værd
 
 <br>
 
-Denne featuren lar brukeren søke etter steder og få opp nasjonal værmelding knyttet til valgt område. Når lokasjonen representerer et geografisk område, kan appen også highlighte grensene i kartet for å gjøre det tydelig hvilket sted eller område værdataene gjelder for.
+Denne funksjonen lar brukeren søke etter steder og få opp nasjonal værmelding knyttet til valgt område. Når lokasjonen representerer et geografisk område, kan appen også highlighte grensene i kartet for å gjøre det tydelig hvilket sted eller område værdataene gjelder for.
 
 <br>
 
-## Varselvisning
+### Varselvisning
 
 <table align="center">
   <tr>
@@ -61,7 +102,7 @@ Denne delen av appen gir både en overordnet og detaljert presentasjon av værut
 
 <br>
 
-## Grafvisning
+### Grafvisning
 
 <table align="center">
   <tr>
@@ -109,7 +150,7 @@ I tillegg til meteogram og vindgraf støtter appen også egne grafer for UV-inde
 
 <br>
 
-## Kart og vær-layers
+### Kart og vær-layers
 
 <table align="center">
   <tr>
@@ -134,7 +175,7 @@ Kartdelen av appen gjør det mulig å visualisere været direkte i geografisk ko
 
 <br>
 
-## Bytte av kartlag
+### Bytte av kartlag
 
 <p align="center">
   <img src="./images/LayerSwitch.gif" alt="Bytte av kartlag" width="980" />
@@ -144,71 +185,23 @@ Kartdelen av appen gjør det mulig å visualisere været direkte i geografisk ko
 
 <br>
 
-Denne featuren gjør det mulig å bytte mellom ulike kartlag og vær-layers i samme kartvisning. Det gir brukeren fleksibilitet til å veksle mellom forskjellige perspektiver på værdataene, og gjør kartet til et mer interaktivt og utforskende verktøy.
+Denne funksjonen gjør det mulig å bytte mellom ulike kartlag og vær-layers i samme kartvisning. Det gir brukeren fleksibilitet til å veksle mellom forskjellige perspektiver på værdataene, og gjør kartet til et mer interaktivt og utforskende verktøy.
 
 ---
 
-<br>
-<br>
-<br>
-
-## Dokumentasjon
-
-<table>
-    <tr>
-        <th>Seksjon</th>
-        <th>Beskrivelse</th>
-    </tr>
-    <tr>
-        <td>Oppsett</td>
-        <td><a href="./docs/SETUP.md">Installasjon, oppstart, miljøvariabler og lokal konfigurasjon.</a></td>
-    </tr>
-    <tr>
-        <td>Arkitektur</td>
-        <td><a href="./docs/ARCHITECTURE.md">Beskrivelse av MVVM-strukturen, lagdeling og designvalg.</a></td>
-    </tr>
-    <tr>
-        <td>Pages</td>
-        <td><a href="./docs/PAGES.md">Oversikt over sidene i appen og hva de har ansvar for.</a></td>
-    </tr>
-    <tr>
-        <td>MapPage</td>
-        <td><a href="./docs/MAP_PAGE.md">Detaljert dokumentasjon av MapPage, kartlag, markører, highlight og kartlogikk.</a></td>
-    </tr>
-    <tr>
-        <td>Tidssoner</td>
-        <td><a href="./docs/TIMEZONES.md">Hvordan appen håndterer UTC, lokal tid, tidssoner og lokasjonsdata.</a></td>
-    </tr>
-    <tr>
-        <td>Testing</td>
-        <td><a href="./docs/TESTING.md">Teststruktur, testformål og hvordan testene kjøres.</a></td>
-    </tr>
-</table>
-
----
-
-## Hurtigstart
+## 3) Hurtigstart og oppsett
 
 **Installer avhengigheter:**
 
 ```bash
 npm install
-```
+````
 
-**Installer sentrale pakker i prosjektet:**
+> Prosjektet bruker blant annet `@maptiler/sdk`, `@maptiler/weather`, `@maptiler/marker-layout`, `highcharts`, `highcharts-react-official`, `luxon` og `tz-lookup`.
 
-```bash
-npm install @maptiler/sdk
-npm install @maptiler/weather
-npm install @maptiler/marker-layout
-npm install highcharts highcharts-react-official
-npm install luxon tz-lookup
-```
+**Opprett MapTiler-bruker, API-nøkkel og `.env`-fil**
 
-**Opprett bruker hos MapTiler, API-nøkke og `.env` fil for miljøvariabler**
-
-Legg inn nødvendige miljøvariabler for karttjenesten, må du opprette en MapTiler-bruker og API-nøkkel. 
-Dette er gratis og gjøres på følgende måte:
+For å bruke kartfunksjonaliteten må du opprette en MapTiler-bruker og hente en API-nøkkel. Dette er gratis og kan gjøres slik:
 
 <table>
     <tr>
@@ -239,29 +232,23 @@ Dette er gratis og gjøres på følgende måte:
 VITE_MAPTILER_API_KEY=din_maptiler_nøkkel
 ```
 
-**Når dette er gjort vil `MapTilerDataSource.js` laste inn nøkkelen**
+**Slik brukes nøkkelen i prosjektet**
 
-I modellen og datalaget ligger filen `MapTilerDataSource.js`. 
-Denne vil da laste inn API-nøkkelen og gjøre stedsøk og bruk av kartløsning mulig.
-
-Dette ser du øverst i denne kodeblokken:
+I modellaget ligger filen `MapTilerDataSource.js`. Denne leser inn API-nøkkelen fra miljøvariablene og gjør stedsøk og bruk av kartløsning mulig.
 
 ```javascript
-//src/model/datasource/MapTilerDataSource.js
+// src/model/datasource/MapTilerDataSource.js
 const API_KEY = import.meta.env.VITE_MAPTILER_API_KEY;
 
 export default class MapTilerDataSource {
-	#apiKey = API_KEY;
-	#baseUrl = "https://api.maptiler.com/geocoding";
+    #apiKey = API_KEY;
+    #baseUrl = "https://api.maptiler.com/geocoding";
 
-...
-
+    ...
 }
 ```
 
-Når API-nøkkel er lagt inn i `.env`-filen så kan du
-
-**Starte utviklingsserveren og kjøre prosjektet lokalt på maskinen din**
+Når API-nøkkelen er lagt inn i `.env`-filen, kan du starte utviklingsserveren og kjøre prosjektet lokalt:
 
 ```bash
 npm run dev
@@ -271,15 +258,13 @@ Se <a href="./docs/SETUP.md">SETUP.md</a> for mer informasjon om installasjon, m
 
 ---
 
+## 4) Arkitektur
 
-## Arkitektur
-
-Under ser du en overordnet skisse av appen arkitektur og lagindeling.
+Under ser du en overordnet skisse av appens arkitektur og laginndeling.
 
 ![Arkitekturdiagram](./images/Arkitektur.png)
 
-
-Denne arkitekturen fordeler seg slik i prosjektets mappestruktur.
+Denne arkitekturen gjenspeiles i prosjektets mappestruktur:
 
 ```bash
 .
@@ -288,7 +273,7 @@ Denne arkitekturen fordeler seg slik i prosjektets mappestruktur.
 ├── src
 │   ├── geolocation
 │   ├── navigation
-│   ├── model                               <- Model
+│   ├── model                               <- Model (M)
 │   │   ├── datasource
 │   │   ├── domain
 │   │   └── repositories
@@ -296,7 +281,7 @@ Denne arkitekturen fordeler seg slik i prosjektets mappestruktur.
 │       ├── hooks
 │       ├── style
 │       ├── utils
-│       ├── view                            <- View
+│       ├── view                            <- View (V)
 │       │   ├── components
 │       │   │   ├── Common
 │       │   │   ├── ForecastPage
@@ -308,7 +293,7 @@ Denne arkitekturen fordeler seg slik i prosjektets mappestruktur.
 │       │       ├── GraphPage.jsx
 │       │       ├── AlertPage.jsx
 │       │       └── MapPage.jsx
-│       └── viewmodel                       <- ViewModel
+│       └── viewmodel                       <- ViewModel (VM)
 │           ├── ForecastPageViewModel.js
 │           ├── GraphPageViewModel.js
 │           ├── AlertPageViewModel.js
@@ -318,10 +303,13 @@ Denne arkitekturen fordeler seg slik i prosjektets mappestruktur.
     └── ui
 ```
 
+<p>
+  <a href="./docs/ARCHITECTURE.md"><b>Trykk her for mer informasjon om arkitekturen</b></a>
+</p>
+
 ---
 
-
-## Kreditering og datakilder
+## 5) Kreditering og datakilder
 
 VærVarselet bygger på eksterne datakilder, biblioteker og visuelle ressurser for værdata, kart, grafer, tidssoner og ikoner.
 
@@ -378,4 +366,4 @@ VærVarselet bygger på eksterne datakilder, biblioteker og visuelle ressurser f
     </tr>
 </table>
 
-Prosjektets footer oppsummerer også krediteringen i applikasjonen, inkludert MET, Yr, MapTiler, Highcharts og ikonressursene fra NRK.
+Prosjektets `Footer-komponent` oppsummerer også krediteringen i applikasjonen, inkludert MET, Yr, MapTiler, Highcharts og ikonressursene fra NRK.
