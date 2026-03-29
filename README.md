@@ -29,14 +29,14 @@ Sentrale features i appen er værvarsel for valgt lokasjon, grafvisning av værd
 ## Showcase av features
 
 <p align="center">
-  <img src="./images/VærMeldingLand.gif" alt="Stedsøk med nasjonal værmelding og highlighting av grenser" width="980" />
+  <img src="./images/VærMeldingLand_small.gif" alt="Stedsøk med nasjonal værmelding og highlighting av grenser" width="980" />
   <br>
   <sub><b>Stedsøk med nasjonal værmelding og highlighting av grenser</b></sub>
 </p>
 
 <br>
 
-Denne featuren lar brukeren søke etter steder og få opp nasjonal værmelding knyttet til valgt område. Når lokasjonen representerer et geografisk område, kan appen også highlight-e grensene i kartet for å gjøre det tydelig hvilket sted eller område værdataene gjelder for.
+Denne featuren lar brukeren søke etter steder og få opp nasjonal værmelding knyttet til valgt område. Når lokasjonen representerer et geografisk område, kan appen også highlighte grensene i kartet for å gjøre det tydelig hvilket sted eller område værdataene gjelder for.
 
 <br>
 
