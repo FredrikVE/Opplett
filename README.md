@@ -1,6 +1,6 @@
-# VærVarselet
+# Hva bør du vite om Opplett?
 
-VærVarselet er et personlig prosjekt laget for å lære og utforske **MVVM-arkitektur i React**.  
+Opplett er et personlig prosjekt laget for å lære og utforske **MVVM-arkitektur i React**.  
 Applikasjonen henter værdata fra **Meteorologisk institutt (MET)**, er inspirert av **Yr.no**, og kombinerer dette med kart, værvisualisering, grafvisning og stedssøk.
 
 Prosjektet er bygget som en MVVM-inspirert frontend-applikasjon der ansvaret er delt mellom:
@@ -337,7 +337,7 @@ Denne arkitekturen gjenspeiles i prosjektets mappestruktur:
 
 ## 5) Kreditering og datakilder
 
-VærVarselet bygger på eksterne datakilder, biblioteker og visuelle ressurser for værdata, kart, grafer, tidssoner og ikoner.
+VærVarselet i Opplett bygger på eksterne datakilder, biblioteker og visuelle ressurser for værdata, kart, grafer, tidssoner og ikoner.
 
 <table border="1">
     <tr>
