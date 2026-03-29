@@ -238,7 +238,7 @@ For å bruke kartfunksjonaliteten må du opprette en MapTiler-bruker og hente en
 1) Gå til <a href="https://www.maptiler.com/">MapTiler</a>, opprett bruker, og finn API-nøkkelen i margen. Opprett API-nøkkel.
 
 <p align="left">
-  <img src="./images/Maptiler_cloud.png" alt="MapTiler cloud" width="150" />
+  <img src="./images/Maptiler_cloud.png" alt="MapTiler cloud" width="200" />
 </p>
 
 <br>
