@@ -23,76 +23,134 @@ Hensikten med å skrive koden etter denne arkitekturen, er at dette igjennom tyd
 - <a href="https://www.npmjs.com/package/tz-lookup">**tz-lookup**</a>
 
 
-**Features i appen**
+**Features i appen**  
 Sentrale features i appen er værvarsel for valgt lokasjon, grafvisning av værdata, farevarsler og kartvisning med markører og geometri. Appen bruker også vær-layers via MapTiler Weather for å visualisere værforhold direkte i kartet, og den støtter søk og håndtering av aktiv lokasjon. I tillegg er presentasjonen av data tidssonebevisst, slik at værinformasjonen vises i riktig lokal tid for stedet som er valgt.
 
+## Showcase av features
 
-## Langtidsvarsel
+<p align="center">
+  <img src="./images/VærMeldingLand.gif" alt="Stedsøk med nasjonal værmelding og highlighting av grenser" width="980" />
+  <br>
+  <sub><b>Stedsøk med nasjonal værmelding og highlighting av grenser</b></sub>
+</p>
 
-![Langtidsvarsel](./images/LangtidsVarsel.png)
+<br>
 
-![Timevarsel](./images/Timevarsel.png)
+Denne featuren lar brukeren søke etter steder og få opp nasjonal værmelding knyttet til valgt område. Når lokasjonen representerer et geografisk område, kan appen også highlight-e grensene i kartet for å gjøre det tydelig hvilket sted eller område værdataene gjelder for.
+
+<br>
+
+## Varselvisning
 
 <table align="center">
   <tr>
-    <th>Meteogram</th>
-    <th>Vindgraf</th>
-  </tr>
-  <tr>
-    <td>
-      <img src="./images/MeteoGramChart.png" alt="Meteogram-graf" width="420" />
+    <td align="center" width="55%">
+      <b>Langtidsvarsel</b><br><br>
+      <img src="./images/LangtidsVarsel.png" alt="Langtidsvarsel" />
     </td>
-    <td>
-      <img src="./images/WindChart.png" alt="Vindgraf" width="420" />
-    </td>
-  </tr>
-  <tr>
-    <th>UV-graf</th>
-    <th>Dagslysgraf</th>
-  </tr>
-  <tr>
-    <td>
-      <img src="./images/UVChart.png" alt="UV-graf" width="420" />
-    </td>
-    <td>
-      <img src="./images/DayLigthChart.png" alt="Dagslysgraf" width="420" />
+    <td align="center" width="45%">
+      <b>Timevarsel</b><br><br>
+      <img src="./images/Timevarsel.png" alt="Timevarsel" />
     </td>
   </tr>
 </table>
 
+<br>
 
-**Stedsøk med nasjonal værmelding og highlighting av grenser**
-![Demo av VærVarselet](./images/VærMeldingLand.gif)
+Denne delen av appen gir både en overordnet og detaljert presentasjon av værutviklingen. Langtidsvarselet viser utviklingen dag for dag, mens timevarselet gir en mer finmasket oversikt over temperatur, nedbør, vind og andre værforhold gjennom døgnet.
 
+<br>
+
+## Grafvisning
 
 <table align="center">
   <tr>
-    <th>Nedbørskart</th>
-    <th>Temperaturkart</th>
-  </tr>
-  <tr>
-    <td>
-      <img src="./images/PrecipitationLayer.gif" alt="Nedbørslag i kartet" width="420" />
+    <td align="center">
+      <b>Meteogram</b><br><br>
+      <img src="./images/MeteoGramChart.png" alt="Meteogram" width="320" />
     </td>
-    <td>
-      <img src="./images/TemperatureLayer.gif" alt="Temperaturlag i kartet" width="420" />
+    <td align="center">
+      <b>Vindgraf</b><br><br>
+      <img src="./images/WindChart.png" alt="Vindgraf" width="320" />
     </td>
-  </tr>
-  <tr>
-    <th>Bytte av kartlag</th>
-    <th>Vindkart</th>
-  </tr>
-  <tr>
-    <td>
-      <img src="./images/LayerSwitch.gif" alt="Bytte mellom kartlag" width="420" />
-    </td>
-    <td>
-      <img src="./images/WindLayer.gif" alt="Vindlag i kartet" width="420" />
+    <td align="center">
+      <b>Grafscroll</b><br><br>
+      <img src="./images/GraphScroll.gif" alt="Grafscroll" width="320" />
     </td>
   </tr>
 </table>
+
+<br>
+
+Grafvisningen gjør det mulig å utforske værdata mer analytisk. I stedet for å bare lese tall og ikoner kan brukeren se utviklingen over tid i form av grafer, og scrolle gjennom visualiseringene for å få en mer detaljert forståelse av hvordan været endrer seg.
+
+<br>
+
+<table align="center">
+  <tr>
+    <td align="center">
+      <b>UV-graf</b><br><br>
+      <img src="./images/UVChart.png" alt="UV-graf" width="320" />
+    </td>
+    <td align="center">
+      <b>Dagslysgraf</b><br><br>
+      <img src="./images/DayLigthChart.png" alt="Dagslysgraf" width="320" />
+    </td>
+    <td align="center">
+      <b>Langtidsvarsel i bruk</b><br><br>
+      <img src="./images/LangtidsVarsel.gif" alt="Langtidsvarsel demo" width="320" />
+    </td>
+  </tr>
+</table>
+
+<br>
+
+I tillegg til meteogram og vindgraf støtter appen også egne grafer for UV-indeks og dagslys. Dette gjør at brukeren kan se flere sider av værbildet i samme grensesnitt, og langtidsvarselet kan brukes sammen med grafene for å gi både visuell oversikt og detaljert innsikt.
+
+<br>
+
+## Kart og vær-layers
+
+<table align="center">
+  <tr>
+    <td align="center">
+      <b>Nedbørskart</b><br><br>
+      <img src="./images/PrecipitationLayer.gif" alt="Nedbørskart" width="320" />
+    </td>
+    <td align="center">
+      <b>Temperaturkart</b><br><br>
+      <img src="./images/TemperatureLayer.gif" alt="Temperaturkart" width="320" />
+    </td>
+    <td align="center">
+      <b>Vindkart</b><br><br>
+      <img src="./images/WindLayer.gif" alt="Vindkart" width="320" />
+    </td>
+  </tr>
+</table>
+
+<br>
+
+Kartdelen av appen gjør det mulig å visualisere været direkte i geografisk kontekst. Ved hjelp av egne vær-layers kan brukeren se nedbør, temperatur og vind i kartet, noe som gir en mer intuitiv forståelse av hvordan værforholdene fordeler seg over ulike områder.
+
+<br>
+
+## Bytte av kartlag
+
+<p align="center">
+  <img src="./images/LayerSwitch.gif" alt="Bytte av kartlag" width="980" />
+  <br>
+  <sub><b>Veksling mellom ulike vær-layers og kartvisninger</b></sub>
+</p>
+
+<br>
+
+Denne featuren gjør det mulig å bytte mellom ulike kartlag og vær-layers i samme kartvisning. Det gir brukeren fleksibilitet til å veksle mellom forskjellige perspektiver på værdataene, og gjør kartet til et mer interaktivt og utforskende verktøy.
 
 ---
+
+<br>
+<br>
+<br>
 
 ## Dokumentasjon
 
