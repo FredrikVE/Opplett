@@ -26,20 +26,12 @@ Hensikten med å skrive koden etter denne arkitekturen, er at dette igjennom tyd
 **Features i appen**
 Sentrale features i appen er værvarsel for valgt lokasjon, grafvisning av værdata, farevarsler og kartvisning med markører og geometri. Appen bruker også vær-layers via MapTiler Weather for å visualisere værforhold direkte i kartet, og den støtter søk og håndtering av aktiv lokasjon. I tillegg er presentasjonen av data tidssonebevisst, slik at værinformasjonen vises i riktig lokal tid for stedet som er valgt.
 
-<table align="center">
-  <tr>
-    <th>Grafscroll</th>
-    <th>Langtidsvarsel</th>
-  </tr>
-  <tr>
-    <td>
-      <img src="./images/GraphScroll.gif" alt="Scroll gjennom grafvisning" width="420" />
-    </td>
-    <td>
-      <img src="./images/LangtidsVarsel.gif" alt="Langtidsvarsel" width="420" />
-    </td>
-  </tr>
-</table>
+
+## Langtidsvarsel
+
+<p align="center">
+  <img src="./images/LangtidsVarsel.gif" alt="Langtidsvarsel" width="700" />
+</p>
 
 <table align="center">
   <tr>
