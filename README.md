@@ -9,9 +9,33 @@ Prosjektet er bygget som en MVVM-inspirert frontend-applikasjon der ansvaret er 
 - **ViewModel** – hooks som holder UI-tilstand og presentasjonslogikk
 - **View** – React-komponenter og pages
 
-I tillegg bruker appen **MapTiler** for kart og stedsdata, **MapTiler Weather** for væranimasjoner på kartet og **Highcharts** for grafvisualisering.
+**Målet med prosjektet har vært å:**
+Målet med denne appen har vært å lære MVVM-arkitektur i React.
+Hensikten med å skrive koden etter denne arkitekturen, er at dette igjennom tydelig lagdeling og ansvarsdeling vil kunne redusere komplesitene og håndtere den på en måte gjør appen mer testbar, utvidbar, forståelig og vedlikeholdbar. 
+
+**Teknologier og eksterne biblioteker som brukes av appen er:**
+- <a href="https://react.dev/">**React**</a>
+- <a href="https://vite.dev/">**Vite**</a>
+- <a href="https://www.maptiler.com/">**MapTiler**</a>
+- <a href="https://www.maptiler.com/weather/">**MapTiler Weather**</a>
+- <a href="https://www.highcharts.com/">**Highcharts**</a>
+- <a href="https://moment.github.io/luxon/">**Luxon**</a>
+- <a href="https://www.npmjs.com/package/tz-lookup">**tz-lookup**</a>
+
+
+**Sentrale features i appen er**
+
+* værvarsel for valgt lokasjon
+* grafvisning av værdata
+* farevarsler
+* kartvisning med markører og geometri
+* vær-layers via MapTiler Weather
+* søk og håndtering av aktiv lokasjon
+* tidssonebevisst presentasjon av data
+
 
 ---
+
 
 ## Dokumentasjon
 
@@ -132,35 +156,44 @@ Se <a href="./docs/SETUP.md">SETUP.md</a> for mer informasjon om installasjon, m
 
 ---
 
-## Sentrale funksjoner
-
-* værvarsel for valgt lokasjon
-* grafvisning av værdata
-* farevarsler
-* kartvisning med markører og geometri
-* vær-layers via MapTiler Weather
-* søk og håndtering av aktiv lokasjon
-* tidssonebevisst presentasjon av data
-
----
-
 ## Forenklet mappestruktur
+
 
 ```bash
 .
-├── README.md
-├── docs
-│   ├── ARCHITECTURE.md
-│   ├── SETUP.md
-│   ├── PAGES.md
-│   ├── MAP_PAGE.md
-│   ├── TIMEZONES.md
-│   ├── TESTING.md
-│   └── CREDITS.md
 ├── images
 ├── public
 ├── src
+│   ├── geolocation
+│   ├── navigation
+│   ├── model                               <- Model
+│   │   ├── datasource
+│   │   ├── domain
+│   │   └── repositories
+│   └── ui
+│       ├── hooks
+│       ├── style
+│       ├── utils
+│       ├── view                            <- View
+│       │   ├── components
+│       │   │   ├── Common
+│       │   │   ├── ForecastPage
+│       │   │   ├── GraphPage
+│       │   │   ├── AlertPage
+│       │   │   └── MapPage
+│       │   └── pages
+│       │       ├── ForecastPage.jsx
+│       │       ├── GraphPage.jsx
+│       │       ├── AlertPage.jsx
+│       │       └── MapPage.jsx
+│       └── viewmodel                       <- ViewModel
+│           ├── ForecastPageViewModel.js
+│           ├── GraphPageViewModel.js
+│           ├── AlertPageViewModel.js
+│           └── MapPageViewModel.js
 └── test
+    ├── model
+    └── ui
 ```
 
 ---
@@ -171,32 +204,6 @@ Se <a href="./docs/SETUP.md">SETUP.md</a> for mer informasjon om installasjon, m
 
 ---
 
-## Teknologioversikt
-
-* React
-* Vite
-* MapTiler
-* MapTiler Weather
-* Highcharts
-* Luxon
-* tz-lookup
-
----
-
-## Om prosjektet
-
-Dette prosjektet er først og fremst et læringsprosjekt for å utforske hvordan en React-applikasjon kan struktureres med en MVVM-inspirert arkitektur.
-
-Målet har vært å:
-
-* redusere kompleksitet i UI-laget
-* få tydeligere ansvarsdeling
-* gjøre logikken lettere å teste og videreutvikle
-* samle presentasjonslogikk i ViewModels og applikasjonslogikk i Model-laget
-
-
-
----
 
 ## Kreditering og datakilder
 
