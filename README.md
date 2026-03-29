@@ -29,13 +29,9 @@ Sentrale features i appen er værvarsel for valgt lokasjon, grafvisning av værd
 ## Showcase av features
 
 <p align="center">
-  <a href="./images/VærMeldingLand.mp4">
-    <img src="./images/VærMeldingLand_small.gif" alt="Stedsøk med nasjonal værmelding og highlighting av grenser" width="980" />
-  </a>
+  <img src="./images/VærMeldingLand.gif" alt="Stedsøk med nasjonal værmelding og highlighting av grenser" width="980" />
   <br>
   <sub><b>Stedsøk med nasjonal værmelding og highlighting av grenser</b></sub>
-  <br><br>
-  <a href="./images/VærMeldingLand.mp4">Åpne full video</a>
 </p>
 
 <br>
