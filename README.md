@@ -1,8 +1,8 @@
-<p align="center">
-  <img src="./images/Opplett_logo.png" alt="Opplett logo" width="200" />
-</p>
-
-<h1 align="center">Hva bør du vite om Opplett?</h1>
+<h1 align="center">
+  Hva bør du vite om Opplett?
+  <br>
+  <img src="./images/Opplett_logo.png" alt="Opplett logo" width="150" />
+</h1>
 
 Opplett er et personlig prosjekt laget for å lære og utforske **MVVM-arkitektur i React**.  
 Applikasjonen henter værdata fra **Meteorologisk institutt (MET)**, er inspirert av **Yr.no**, og kombinerer dette med kart, værvisualisering, grafvisning og stedssøk.
