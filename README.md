@@ -285,6 +285,10 @@ Hentet fra:
 Hentet fra:  
 <a href="https://www.maptiler.com/weather/">https://www.maptiler.com/weather/</a>
 
+**Highcharts. (u.å.)** *Highcharts.*  
+Hentet fra:  
+<a href="https://www.highcharts.com/">https://www.highcharts.com/</a>
+
 **Luxon. (u.å.)** *Luxon.*  
 Hentet fra:  
 <a href="https://moment.github.io/luxon/">https://moment.github.io/luxon/</a>
