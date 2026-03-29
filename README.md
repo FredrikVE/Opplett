@@ -26,35 +26,51 @@ I tillegg bruker appen **MapTiler** for kart og stedsdata, **MapTiler Weather** 
     </tr>
     <tr>
         <td>3</td>
-        <td><a href="#3-arkitektur-og-oppbygging">Arkitektur og oppbygging</a></td>
+        <td><a href="#3-miljøvariabler-og-konfigurasjon">Miljøvariabler og konfigurasjon</a></td>
     </tr>
     <tr>
         <td>4</td>
-        <td><a href="#4-mappage-og-ny-struktur">MapPage og ny struktur</a></td>
+        <td><a href="#4-arkitektur-og-oppbygging">Arkitektur og oppbygging</a></td>
     </tr>
     <tr>
         <td>5</td>
-        <td><a href="#5-tidssoner-og-lokasjon">Tidssoner og lokasjon</a></td>
+        <td><a href="#5-pages-og-hovedfunksjonalitet">Pages og hovedfunksjonalitet</a></td>
     </tr>
     <tr>
         <td>6</td>
-        <td><a href="#6-biblioteker-datakilder-og-kreditering">Biblioteker, datakilder og kreditering</a></td>
+        <td><a href="#6-mappage-og-ny-struktur">MapPage og ny struktur</a></td>
     </tr>
     <tr>
         <td>7</td>
-        <td><a href="#7-forenklet-mappestruktur">Forenklet mappestruktur</a></td>
+        <td><a href="#7-tidssoner-og-lokasjon">Tidssoner og lokasjon</a></td>
     </tr>
     <tr>
         <td>8</td>
-        <td><a href="#8-arkitekturdiagram">Arkitekturdiagram</a></td>
+        <td><a href="#8-biblioteker-datakilder-og-kreditering">Biblioteker, datakilder og kreditering</a></td>
     </tr>
     <tr>
         <td>9</td>
-        <td><a href="#9-varslingsområder-for-hav-og-kyst">Varslingsområder for hav og kyst</a></td>
+        <td><a href="#9-forenklet-mappestruktur">Forenklet mappestruktur</a></td>
     </tr>
     <tr>
         <td>10</td>
-        <td><a href="#10-kildehenvisning-for-ikoner">Kildehenvisning for ikoner</a></td>
+        <td><a href="#10-arkitekturdiagram">Arkitekturdiagram</a></td>
+    </tr>
+    <tr>
+        <td>11</td>
+        <td><a href="#11-varslingområder-for-hav-og-kyst">Varslingsområder for hav og kyst</a></td>
+    </tr>
+    <tr>
+        <td>12</td>
+        <td><a href="#12-testing">Testing</a></td>
+    </tr>
+    <tr>
+        <td>13</td>
+        <td><a href="#13-videre-arbeid-og-kjente-begrensninger">Videre arbeid og kjente begrensninger</a></td>
+    </tr>
+    <tr>
+        <td>14</td>
+        <td><a href="#14-kildehenvisning-for-ikoner">Kildehenvisning for ikoner</a></td>
     </tr>
 </table>
 
@@ -98,7 +114,7 @@ npm install
 
 fordi alle dependencies ligger i `package.json`.
 
-Hvis du setter opp tilsvarende prosjekt manuelt, er dette pakkene som brukes for sentral funksjonalitet i appen:
+Hvis du setter opp et tilsvarende prosjekt manuelt, er dette pakkene som brukes for sentral funksjonalitet i appen:
 
 ## 2.1 Kart og kartvær
 
@@ -141,11 +157,33 @@ Disse brukes til:
 
 ---
 
-# 3. Arkitektur og oppbygging
+# 3. Miljøvariabler og konfigurasjon
+
+Prosjektet bruker eksterne tjenester for blant annet kart og lokasjonsdata. Dersom prosjektet krever API-nøkler eller annen konfigurasjon, bør disse legges i en `.env`-fil og ikke hardkodes direkte i kildekoden.
+
+Et typisk oppsett kan for eksempel se slik ut:
+
+```env
+VITE_MAPTILER_API_KEY=din_maptiler_nøkkel
+```
+
+Dersom prosjektet senere utvides med flere eksterne tjenester, bør disse også konfigureres via miljøvariabler.
+
+### Hvorfor dette er nyttig
+
+* nøkler holdes utenfor kodebasen
+* det blir enklere å bytte mellom utvikling og produksjon
+* man unngår å publisere sensitiv konfigurasjon ved en feil
+
+> NB: Nøyaktige variabelnavn må samsvare med det prosjektet faktisk bruker i kildekoden.
+
+---
+
+# 4. Arkitektur og oppbygging
 
 Prosjektet er strukturert etter en **MVVM-inspirert arkitektur**.
 
-## 3.1 Model
+## 4.1 Model
 
 Model-laget består av:
 
@@ -175,7 +213,7 @@ Dette gjør flyten tydeligere og flytter applikasjonslogikk bort fra UI-laget.
 
 ---
 
-## 3.2 ViewModel
+## 4.2 ViewModel
 
 Hver side har sin egen ViewModel, implementert som en custom hook.
 
@@ -197,7 +235,7 @@ ViewModel-laget skal **ikke** kjenne til detaljer om hvordan data hentes fra API
 
 ---
 
-## 3.3 View
+## 4.3 View
 
 View-laget består av React-komponenter og pages.
 
@@ -212,20 +250,87 @@ Typisk oppdeling:
 
 ---
 
-## 3.4 App.jsx som komposisjonsrot
+## 4.4 App.jsx som komposisjonsrot
 
 `App.jsx` fungerer som appens komposisjonsrot og samlingspunkt for delt tilstand.
 
-Her settes sentrale avhengigheter sammen, og felles state løftes opp når flere sider trenger samme datagrunnlag.
-Et viktig eksempel er aktiv lokasjon, som fungerer som en **single source of truth** for flere sider i appen.
+Her settes sentrale avhengigheter sammen, og felles state løftes opp når flere sider trenger samme datagrunnlag. Et viktig eksempel er aktiv lokasjon, som fungerer som en **single source of truth** for flere sider i appen.
 
 ---
 
-# 4. MapPage og ny struktur
+## 4.5 Hvorfor MVVM i dette prosjektet
+
+Målet med denne strukturen er ikke å gjøre prosjektet mer komplisert enn nødvendig, men å gjøre det lettere å håndtere en app som kombinerer:
+
+* søk
+* værdata
+* kart
+* geometri
+* varsler
+* grafer
+* delt lokasjonsstate
+
+Ved å flytte logikk ut av komponentene og inn i ViewModels og UseCases, blir UI-laget enklere å lese, teste og videreutvikle.
+
+---
+
+# 5. Pages og hovedfunksjonalitet
+
+Applikasjonen består av flere pages, der hver page representerer et tydelig ansvarsområde i UI-laget.
+
+## 5.1 ForecastPage
+
+`ForecastPage` fokuserer på værvarsel og presentasjon av værdata for valgt lokasjon.
+
+Typiske ansvarsområder:
+
+* visning av værvarsel
+* oppdeling av værdata i passende presentasjonsformat
+* kobling mellom valgt lokasjon og forecast-visning
+
+## 5.2 GraphPage
+
+`GraphPage` viser værdata som grafer ved hjelp av Highcharts.
+
+Typiske ansvarsområder:
+
+* temperaturgrafer
+* vindgrafer
+* UV-indeks
+* andre tidsseriebaserte visualiseringer
+
+## 5.3 AlertPage
+
+`AlertPage` viser farevarsler og relevant varslingsinformasjon.
+
+Typiske ansvarsområder:
+
+* innhenting og presentasjon av varsler
+* kobling mellom varsler og lokasjon/område
+* bruk av fareikoner og metadata
+
+## 5.4 MapPage
+
+`MapPage` samler all kartrelatert funksjonalitet i én side.
+
+Typiske ansvarsområder:
+
+* kartvisning
+* kartlag
+* markører
+* vær-layers
+* highlight av områder
+* navigasjon til aktiv lokasjon
+
+Denne oppdelingen gjør det lettere å holde hver page fokusert på sin del av funksjonaliteten.
+
+---
+
+# 6. MapPage og ny struktur
 
 En viktig del av den nyere arkitekturen er at kartfunksjonaliteten er skilt tydeligere ut i egen page og egne komponenter.
 
-## 4.1 Hva MapPage har ansvar for
+## 6.1 Hva MapPage har ansvar for
 
 `MapPage` er siden som håndterer kartrelatert funksjonalitet, blant annet:
 
@@ -240,7 +345,7 @@ En viktig del av den nyere arkitekturen er at kartfunksjonaliteten er skilt tyde
 
 Dette gjør at kartlogikken ikke lenger ligger spredt i tilfeldige komponenter, men er samlet i en egen del av appen.
 
-## 4.2 MapPageViewModel
+## 6.2 MapPageViewModel
 
 `MapPageViewModel` har ansvar for kartets presentasjonslogikk og UI-state, som for eksempel:
 
@@ -254,7 +359,7 @@ Dette gjør at kartlogikken ikke lenger ligger spredt i tilfeldige komponenter, 
 
 Med andre ord holder ViewModelen styr på **hvordan kartet skal oppføre seg**, mens View kun gjengir tilstanden.
 
-## 4.3 MapPage-komponenter
+## 6.3 MapPage-komponenter
 
 Komponentene knyttet til kartsiden ligger typisk under en egen mappe for `MapPage`, slik at kartrelatert UI er samlet og enklere å vedlikeholde.
 
@@ -269,7 +374,7 @@ Det kan for eksempel være komponenter for:
 
 Denne strukturen gir høyere kohesjon og gjør det lettere å videreutvikle kartfunksjonaliteten uten å påvirke resten av appen unødvendig.
 
-## 4.4 Lokasjonshåndtering
+## 6.4 Lokasjonshåndtering
 
 Lokasjon er nå tydeligere modellert som et eget konsept i appen.
 
@@ -281,13 +386,23 @@ Appen skiller mellom:
 
 Dette gjør at kart, søk og værpresentasjon kan bruke samme lokasjonsgrunnlag på en mer konsistent måte.
 
+## 6.5 State hoisting og delt lokasjonstilstand
+
+Aktiv lokasjon løftes opp og deles mellom flere sider i applikasjonen. Dette gjør at:
+
+* kartet kan reagere på samme lokasjon som forecast-visningen
+* grafvisningen kan bruke samme sted og tidssone
+* søk og manuell lokasjonsendring påvirker hele appen konsistent
+
+Dette støtter en mer forutsigbar dataflyt og gjør det enklere å holde appen synkronisert.
+
 ---
 
-# 5. Tidssoner og lokasjon
+# 7. Tidssoner og lokasjon
 
 Applikasjonen er designet for å være geografisk agnostisk. All værdata fra MET leveres i UTC (`...Z`), og denne beholdes uendret gjennom datastrømmen. Konvertering til lokal tid skjer deterministisk ved bruk av IANA-tidssoner.
 
-## 5.1 Rådata fra MET
+## 7.1 Rådata fra MET
 
 Data hentes fra MET og lagres med UTC som primærkilde:
 
@@ -298,7 +413,7 @@ Data hentes fra MET og lagres med UTC som primærkilde:
 }
 ```
 
-## 5.2 Lokasjon og tidssone som single source of truth
+## 7.2 Lokasjon og tidssone som single source of truth
 
 Når brukeren søker etter en lokasjon, eller når appen bruker device location, bygges det opp et aktivt lokasjonsobjekt som inneholder informasjon som:
 
@@ -311,7 +426,7 @@ Når brukeren søker etter en lokasjon, eller når appen bruker device location,
 
 Hvis en ekstern tjeneste ikke returnerer tidssone eksplisitt, brukes `tz-lookup` som fallback basert på koordinater.
 
-## 5.3 Hvorfor dette er nyttig
+## 7.3 Hvorfor dette er nyttig
 
 Dette sikrer korrekt håndtering av:
 
@@ -320,7 +435,7 @@ Dette sikrer korrekt håndtering av:
 * steder med uvanlige UTC-offsets
 * visning av riktig lokal dato og klokkeslett i hele appen
 
-## 5.4 Designvalg
+## 7.4 Designvalg
 
 Prosjektet følger noen bevisste prinsipper:
 
@@ -331,7 +446,7 @@ Prosjektet følger noen bevisste prinsipper:
 
 ---
 
-# 6. Biblioteker, datakilder og kreditering
+# 8. Biblioteker, datakilder og kreditering
 
 Under er en samlet oversikt over eksterne biblioteker, dataleverandører og visuelle ressurser som brukes i prosjektet.
 
@@ -346,85 +461,85 @@ Under er en samlet oversikt over eksterne biblioteker, dataleverandører og visu
         <td>Meteorologisk institutt (MET)</td>
         <td>Dataleverandør</td>
         <td>Leverer værdata og varseldata som brukes i appen.</td>
-        <td>https://www.met.no/</td>
+        <td><a href="https://www.met.no/">met.no</a></td>
     </tr>
     <tr>
         <td>Yr.no</td>
         <td>Inspirasjon / datanær kontekst</td>
         <td>Appen er inspirert av Yr.no sin presentasjon av værdata. Footer og kreditering peker også til Yr som del av datakonteksten.</td>
-        <td>https://www.yr.no/</td>
+        <td><a href="https://www.yr.no/">yr.no</a></td>
     </tr>
     <tr>
         <td>MapTiler</td>
         <td>Kartplattform</td>
         <td>Brukes til kartvisning, stedsdata og kartrelaterte tjenester.</td>
-        <td>https://www.maptiler.com/</td>
+        <td><a href="https://www.maptiler.com/">maptiler.com</a></td>
     </tr>
     <tr>
         <td>MapTiler Weather</td>
         <td>Værvisualisering på kart</td>
         <td>Brukes til animerte vær-layers som vind og andre værvisualiseringer på kartet.</td>
-        <td>https://www.maptiler.com/weather/</td>
+        <td><a href="https://www.maptiler.com/weather/">maptiler.com/weather</a></td>
     </tr>
     <tr>
         <td>@maptiler/sdk</td>
         <td>JavaScript-bibliotek</td>
         <td>SDK for kartfunksjonalitet fra MapTiler i React-applikasjonen.</td>
-        <td>https://www.maptiler.com/</td>
+        <td><a href="https://www.maptiler.com/">MapTiler SDK</a></td>
     </tr>
     <tr>
         <td>@maptiler/weather</td>
         <td>JavaScript-bibliotek</td>
         <td>Brukes for vær-layers og animasjoner på kartet.</td>
-        <td>https://www.maptiler.com/weather/</td>
+        <td><a href="https://www.maptiler.com/weather/">MapTiler Weather</a></td>
     </tr>
     <tr>
         <td>@maptiler/marker-layout</td>
         <td>JavaScript-bibliotek</td>
         <td>Brukes til håndtering av kartmarkører og marker-relatert layout.</td>
-        <td>https://www.maptiler.com/</td>
+        <td><a href="https://www.maptiler.com/">MapTiler Marker Layout</a></td>
     </tr>
     <tr>
         <td>Highcharts</td>
         <td>Visualiseringsbibliotek</td>
         <td>Brukes til å vise interaktive grafer for værdata.</td>
-        <td>https://www.highcharts.com/</td>
+        <td><a href="https://www.highcharts.com/">highcharts.com</a></td>
     </tr>
     <tr>
         <td>highcharts-react-official</td>
         <td>React-wrapper</td>
         <td>Brukes som React-integrasjon for Highcharts.</td>
-        <td>https://www.highcharts.com/</td>
+        <td><a href="https://www.highcharts.com/">Highcharts React</a></td>
     </tr>
     <tr>
         <td>Luxon</td>
         <td>Tidsbibliotek</td>
         <td>Brukes til robust håndtering av dato, tid, UTC og tidssoner.</td>
-        <td>https://moment.github.io/luxon/</td>
+        <td><a href="https://moment.github.io/luxon/">Luxon</a></td>
     </tr>
     <tr>
         <td>tz-lookup</td>
         <td>Hjelpebibliotek</td>
         <td>Brukes som fallback for å finne tidssone basert på koordinater.</td>
-        <td>https://www.npmjs.com/package/tz-lookup</td>
+        <td><a href="https://www.npmjs.com/package/tz-lookup">tz-lookup</a></td>
     </tr>
     <tr>
         <td>Yr Weather Symbols</td>
         <td>Ikonsett</td>
         <td>Brukes til værikoner i applikasjonen.</td>
-        <td>https://nrkno.github.io/yr-weather-symbols/</td>
+        <td><a href="https://nrkno.github.io/yr-weather-symbols/">Yr Weather Symbols</a></td>
     </tr>
     <tr>
         <td>Yr Warning Icons</td>
         <td>Ikonsett</td>
         <td>Brukes til fareikoner og varslingsikoner i applikasjonen.</td>
-        <td>https://nrkno.github.io/yr-warning-icons/</td>
+        <td><a href="https://nrkno.github.io/yr-warning-icons/">Yr Warning Icons</a></td>
     </tr>
 </table>
 
 ---
 
-# 6.1 Kreditering fra applikasjonen
+# 8.1 Kreditering fra applikasjonen
 
 Applikasjonens footer oppsummerer prosjektet slik:
 
@@ -438,7 +553,7 @@ Applikasjonens footer oppsummerer prosjektet slik:
 
 ---
 
-# 7. Forenklet mappestruktur
+# 9. Forenklet mappestruktur
 
 ```bash
 .
@@ -479,7 +594,7 @@ Applikasjonens footer oppsummerer prosjektet slik:
 
 ---
 
-# 8. Arkitekturdiagram
+# 10. Arkitekturdiagram
 
 Prosjektet inneholder også en arkitekturtegning som illustrerer lagdelingen i løsningen.
 
@@ -487,7 +602,7 @@ Prosjektet inneholder også en arkitekturtegning som illustrerer lagdelingen i l
 
 ---
 
-# 9. Varslingsområder for hav og kyst
+# 11. Varslingsområder for hav og kyst
 
 Applikasjonen forholder seg også til polygoner og geografiske områder for varslinger knyttet til hav og kyst.
 
@@ -495,11 +610,58 @@ Applikasjonen forholder seg også til polygoner og geografiske områder for vars
 
 Se mer informasjon hos Meteorologisk institutt:
 
-[https://www.met.no/vaer-og-klima/ekstremvaervarsler-og-andre-farevarsler/varslingsomrader-kyst-og-hav](https://www.met.no/vaer-og-klima/ekstremvaervarsler-og-andre-farevarsler/varslingsomrader-kyst-og-hav)
+[Varslingsområder for kyst og hav](https://www.met.no/vaer-og-klima/ekstremvaervarsler-og-andre-farevarsler/varslingsomrader-kyst-og-hav)
 
 ---
 
-# 10. Kildehenvisning for ikoner
+# 12. Testing
+
+Prosjektet inneholder en egen `test`-mappe for testing av deler av applikasjonen.
+
+Typisk teststruktur:
+
+* `test/model` – tester for datasource, repositories og modellrelatert logikk
+* `test/ui` – tester for UI-relatert logikk og eventuelt ViewModel-atferd
+
+Dersom prosjektet har testoppsett konfigurert, kan tester typisk kjøres med en kommando som:
+
+```bash
+npm test
+```
+
+eller, dersom Vite/Vitest brukes:
+
+```bash
+npm run test
+```
+
+Testene er spesielt nyttige for å verifisere:
+
+* mapping av rådata
+* logikk i use cases
+* håndtering av lokasjon og tidssone
+* presentasjonslogikk i ViewModels
+
+---
+
+# 13. Videre arbeid og kjente begrensninger
+
+Dette prosjektet er først og fremst et læringsprosjekt, og arkitekturen er utviklet med fokus på å utforske god struktur i React.
+
+Mulige forbedringsområder videre er blant annet:
+
+* mer omfattende testdekning
+* forbedret error handling
+* bedre caching av data og API-kall
+* enda tydeligere separasjon av enkelte ansvarsområder i UI-laget
+* videre refaktorering av kartlogikk ved behov
+* eventuell dokumentasjon av konkrete dataflyter mellom pages og ViewModels
+
+Siden appen kombinerer kart, søk, varsler, grafvisning og lokasjonslogikk, vil enkelte deler naturlig ha høyere kompleksitet enn resten. Arkitekturen er derfor et pragmatisk kompromiss mellom læring, struktur og praktisk gjennomføring.
+
+---
+
+# 14. Kildehenvisning for ikoner
 
 **NRK. (u.å.)** *Yr weather symbols.*
 Hentet fra:
