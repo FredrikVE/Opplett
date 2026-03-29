@@ -13,18 +13,50 @@ I tillegg bruker appen **MapTiler** for kart og stedsdata, **MapTiler Weather** 
 
 ---
 
-# Innholdsfortegnelse
+## Innholdsfortegnelse
 
-1. [Kjøre prosjektet](#1-kjøre-prosjektet)  
-2. [Installasjon](#2-installasjon)  
-3. [Arkitektur og oppbygging](#3-arkitektur-og-oppbygging)  
-4. [MapPage og ny struktur](#4-mappage-og-ny-struktur)  
-5. [Tidssoner og lokasjon](#5-tidssoner-og-lokasjon)  
-6. [Biblioteker, datakilder og kreditering](#6-biblioteker-datakilder-og-kreditering)  
-7. [Forenklet mappestruktur](#7-forenklet-mappestruktur)  
-8. [Arkitekturdiagram](#8-arkitekturdiagram)  
-9. [Varslingsområder for hav og kyst](#9-varslingsområder-for-hav-og-kyst)  
-10. [Kildehenvisning for ikoner](#10-kildehenvisning-for-ikoner)  
+<table>
+    <tr>
+        <td>1</td>
+        <td><a href="#1-kjøre-prosjektet">Kjøre prosjektet</a></td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td><a href="#2-installasjon">Installasjon</a></td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td><a href="#3-arkitektur-og-oppbygging">Arkitektur og oppbygging</a></td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td><a href="#4-mappage-og-ny-struktur">MapPage og ny struktur</a></td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td><a href="#5-tidssoner-og-lokasjon">Tidssoner og lokasjon</a></td>
+    </tr>
+    <tr>
+        <td>6</td>
+        <td><a href="#6-biblioteker-datakilder-og-kreditering">Biblioteker, datakilder og kreditering</a></td>
+    </tr>
+    <tr>
+        <td>7</td>
+        <td><a href="#7-forenklet-mappestruktur">Forenklet mappestruktur</a></td>
+    </tr>
+    <tr>
+        <td>8</td>
+        <td><a href="#8-arkitekturdiagram">Arkitekturdiagram</a></td>
+    </tr>
+    <tr>
+        <td>9</td>
+        <td><a href="#9-varslingsområder-for-hav-og-kyst">Varslingsområder for hav og kyst</a></td>
+    </tr>
+    <tr>
+        <td>10</td>
+        <td><a href="#10-kildehenvisning-for-ikoner">Kildehenvisning for ikoner</a></td>
+    </tr>
+</table>
 
 ---
 
