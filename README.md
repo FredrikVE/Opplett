@@ -213,7 +213,7 @@ VærVarselet bygger på eksterne datakilder, biblioteker og visuelle ressurser f
 <table border="1">
     <tr>
         <th>Ressurs</th>
-        <th>Bruk</th>
+        <th>Bruk i prosjektet</th>
         <th>Lenke</th>
     </tr>
     <tr>
@@ -227,9 +227,14 @@ VærVarselet bygger på eksterne datakilder, biblioteker og visuelle ressurser f
         <td><a href="https://www.yr.no/">yr.no</a></td>
     </tr>
     <tr>
-        <td>MapTiler / MapTiler Weather</td>
-        <td>Kartvisning, stedsdata og vær-layers</td>
-        <td><a href="https://www.maptiler.com/">MapTiler</a> / <a href="https://www.maptiler.com/weather/">MapTiler Weather</a></td>
+        <td>MapTiler</td>
+        <td>Kartvisning og kartrelaterte tjenester</td>
+        <td><a href="https://www.maptiler.com/">maptiler.com</a></td>
+    </tr>
+    <tr>
+        <td>MapTiler Weather</td>
+        <td>Vær-layers og væranimasjoner i kartet</td>
+        <td><a href="https://www.maptiler.com/weather/">maptiler.com/weather</a></td>
     </tr>
     <tr>
         <td>Highcharts</td>
@@ -237,14 +242,24 @@ VærVarselet bygger på eksterne datakilder, biblioteker og visuelle ressurser f
         <td><a href="https://www.highcharts.com/">highcharts.com</a></td>
     </tr>
     <tr>
-        <td>Luxon / tz-lookup</td>
-        <td>Tidssone- og lokasjonshåndtering</td>
-        <td><a href="https://moment.github.io/luxon/">Luxon</a> / <a href="https://www.npmjs.com/package/tz-lookup">tz-lookup</a></td>
+        <td>Luxon</td>
+        <td>Dato-, tid- og tidssonehåndtering</td>
+        <td><a href="https://moment.github.io/luxon/">Luxon</a></td>
     </tr>
     <tr>
-        <td>Yr Weather Symbols / Yr Warning Icons</td>
-        <td>Værikoner og fareikoner</td>
-        <td><a href="https://nrkno.github.io/yr-weather-symbols/">Weather Symbols</a> / <a href="https://nrkno.github.io/yr-warning-icons/">Warning Icons</a></td>
+        <td>tz-lookup</td>
+        <td>Fallback for tidssone basert på koordinater</td>
+        <td><a href="https://www.npmjs.com/package/tz-lookup">tz-lookup</a></td>
+    </tr>
+    <tr>
+        <td>Yr Weather Symbols</td>
+        <td>Værikoner</td>
+        <td><a href="https://nrkno.github.io/yr-weather-symbols/">Yr Weather Symbols</a></td>
+    </tr>
+    <tr>
+        <td>Yr Warning Icons</td>
+        <td>Fareikoner</td>
+        <td><a href="https://nrkno.github.io/yr-warning-icons/">Yr Warning Icons</a></td>
     </tr>
 </table>
 
