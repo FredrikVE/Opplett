@@ -33,35 +33,31 @@ npm run dev
 
 <table>
     <tr>
-        <th>Dokument</th>
+        <th>Seksjon</th>
         <th>Beskrivelse</th>
     </tr>
     <tr>
-        <td>README.md</td>
-        <td><a href="./README.md">Forside og oversikt over prosjektet.</a></td>
-    </tr>
-    <tr>
-        <td>SETUP.md</td>
+        <td>Oppsett</td>
         <td><a href="./docs/SETUP.md">Installasjon, oppstart, miljøvariabler og lokal konfigurasjon.</a></td>
     </tr>
     <tr>
-        <td>ARCHITECTURE.md</td>
+        <td>Arkitektur</td>
         <td><a href="./docs/ARCHITECTURE.md">Beskrivelse av MVVM-strukturen, lagdeling og designvalg.</a></td>
     </tr>
     <tr>
-        <td>PAGES.md</td>
+        <td>Pages</td>
         <td><a href="./docs/PAGES.md">Oversikt over sidene i appen og hva de har ansvar for.</a></td>
     </tr>
     <tr>
-        <td>MAP_PAGE.md</td>
+        <td>MapPage</td>
         <td><a href="./docs/MAP_PAGE.md">Detaljert dokumentasjon av MapPage, kartlag, markører, highlight og kartlogikk.</a></td>
     </tr>
     <tr>
-        <td>TIMEZONES.md</td>
+        <td>Tidssoner</td>
         <td><a href="./docs/TIMEZONES.md">Hvordan appen håndterer UTC, lokal tid, tidssoner og lokasjonsdata.</a></td>
     </tr>
     <tr>
-        <td>TESTING.md</td>
+        <td>Testing</td>
         <td><a href="./docs/TESTING.md">Teststruktur, testformål og hvordan testene kjøres.</a></td>
     </tr>
 </table>
