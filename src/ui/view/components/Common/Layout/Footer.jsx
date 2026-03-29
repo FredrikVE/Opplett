@@ -33,8 +33,8 @@ export default function Footer() {
                                     src="/credit_icons/met/Met_RGB_Horisontal.jpg"
                                     alt="Meteorologisk institutt"
                                     className="credit-logo"
-                                    width="88" // Fast bredde hindrer layout-hopp
-                                    height="40" // Fast høyde reserverer plassen
+                                    width="88"
+                                    height="40"
                                     loading="lazy"
                                 />
                             </a>
@@ -50,12 +50,12 @@ export default function Footer() {
                                 />
                             </a>
 
-                            <a href="https://opencagedata.com/" target="_blank" rel="noreferrer" title="OpenCage">
+                            <a href="https://www.maptiler.com/" target="_blank" rel="noreferrer" title="MapTiler">
                                 <img
-                                    src="/credit_icons/open_cage/opencage-logo.svg"
-                                    alt="OpenCage"
+                                    src="/credit_icons/maptiler/maptiler_logo.png"
+                                    alt="MapTiler"
                                     className="credit-logo"
-                                    width="120" 
+                                    width="120"
                                     height="24"
                                     loading="lazy"
                                 />
