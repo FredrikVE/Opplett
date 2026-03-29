@@ -195,9 +195,16 @@ Denne funksjonen gjør det mulig å bytte mellom ulike kartlag og vær-layers i 
 
 ```bash
 npm install
-````
+```
 
-> Prosjektet bruker blant annet `@maptiler/sdk`, `@maptiler/weather`, `@maptiler/marker-layout`, `highcharts`, `highcharts-react-official`, `luxon` og `tz-lookup`.
+**Prosjektet bruker blant annet disse eksterne pakkene**
+> - `@maptiler/sdk`, 
+> - `@maptiler/weather`, 
+> - `@maptiler/marker-layout`, 
+> - `highcharts`, 
+> - `highcharts-react-official`,
+> - `luxon`
+> - `tz-lookup`.
 
 **Opprett MapTiler-bruker, API-nøkkel og `.env`-fil**
 
