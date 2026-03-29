@@ -23,15 +23,8 @@ Hensikten med å skrive koden etter denne arkitekturen, er at dette igjennom tyd
 - <a href="https://www.npmjs.com/package/tz-lookup">**tz-lookup**</a>
 
 
-**Sentrale features i appen er**
-
-* værvarsel for valgt lokasjon
-* grafvisning av værdata
-* farevarsler
-* kartvisning med markører og geometri
-* vær-layers via MapTiler Weather
-* søk og håndtering av aktiv lokasjon
-* tidssonebevisst presentasjon av data
+**Features i appen**
+Sentrale features i appen er værvarsel for valgt lokasjon, grafvisning av værdata, farevarsler og kartvisning med markører og geometri. Appen bruker også vær-layers via MapTiler Weather for å visualisere værforhold direkte i kartet, og den støtter søk og håndtering av aktiv lokasjon. I tillegg er presentasjonen av data tidssonebevisst, slik at værinformasjonen vises i riktig lokal tid for stedet som er valgt.
 
 
 ---
