@@ -1,7 +1,7 @@
 <h1 align="center">
   Hva bør du vite om
   <br>
-  <img src="./images/Opplett_logo.png" alt="Opplett logo" width="100" />
+  <img src="./images/Opplett_logo.png" alt="Opplett logo" width="120" />
   
 </h1>
 
