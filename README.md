@@ -1,7 +1,8 @@
 <h1 align="center">
-  Hva bør du vite om Opplett?
+  Hva bør du vite om
   <br>
-  <img src="./images/Opplett_logo.png" alt="Opplett logo" width="150" />
+  <img src="./images/Opplett_logo.png" alt="Opplett logo" width="100" />
+  
 </h1>
 
 Opplett er et personlig prosjekt laget for å lære og utforske **MVVM-arkitektur i React**.  
