@@ -26,11 +26,57 @@ Hensikten med å skrive koden etter denne arkitekturen, er at dette igjennom tyd
 **Features i appen**
 Sentrale features i appen er værvarsel for valgt lokasjon, grafvisning av værdata, farevarsler og kartvisning med markører og geometri. Appen bruker også vær-layers via MapTiler Weather for å visualisere værforhold direkte i kartet, og den støtter søk og håndtering av aktiv lokasjon. I tillegg er presentasjonen av data tidssonebevisst, slik at værinformasjonen vises i riktig lokal tid for stedet som er valgt.
 
+<table align="center">
+  <tr>
+    <th>Grafscroll</th>
+    <th>Langtidsvarsel</th>
+  </tr>
+  <tr>
+    <td>
+      <img src="./images/GraphScroll.gif" alt="Scroll gjennom grafvisning" width="420" />
+    </td>
+    <td>
+      <img src="./images/LangtidsVarsel.gif" alt="Langtidsvarsel" width="420" />
+    </td>
+  </tr>
+</table>
 
 <table align="center">
   <tr>
-    <th>Kartlag: Nedbør</th>
-    <th>Kartlag: Temperatur</th>
+    <th>Meteogram</th>
+    <th>Vindgraf</th>
+  </tr>
+  <tr>
+    <td>
+      <img src="./images/MeteoGramChart.png" alt="Meteogram-graf" width="420" />
+    </td>
+    <td>
+      <img src="./images/WindChart.png" alt="Vindgraf" width="420" />
+    </td>
+  </tr>
+  <tr>
+    <th>UV-graf</th>
+    <th>Dagslysgraf</th>
+  </tr>
+  <tr>
+    <td>
+      <img src="./images/UVChart.png" alt="UV-graf" width="420" />
+    </td>
+    <td>
+      <img src="./images/DayLigthChart.png" alt="Dagslysgraf" width="420" />
+    </td>
+  </tr>
+</table>
+
+
+**Stedsøk med nasjonal værmelding og highlighting av grenser**
+![Demo av VærVarselet](./images/VærMeldingLand.gif)
+
+
+<table align="center">
+  <tr>
+    <th>Nedbørskart</th>
+    <th>Temperaturkart</th>
   </tr>
   <tr>
     <td>
@@ -42,7 +88,7 @@ Sentrale features i appen er værvarsel for valgt lokasjon, grafvisning av værd
   </tr>
   <tr>
     <th>Bytte av kartlag</th>
-    <th>Kartlag: Vind</th>
+    <th>Vindkart</th>
   </tr>
   <tr>
     <td>
