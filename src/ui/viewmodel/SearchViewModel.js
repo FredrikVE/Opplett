@@ -69,6 +69,7 @@ export default function useSearchViewModel(searchLocationUseCase, onLocationSele
 
     //Kalles når brukeren klikker på et forslag eller trykker Enter
     const onSuggestionSelected = (suggestion) => {
+        console.log("[Search] Valgt suggestion:", JSON.stringify(suggestion, null, 2));
         onLocationSelected(suggestion);
         setQuery("");
         setSuggestions([]);

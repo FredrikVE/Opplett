@@ -1,7 +1,7 @@
 //src/ui/utils/MapUtils/Camera/CameraPolicy.js
 import { ZOOM_LEVELS, MIN_ZOOM, MAX_ZOOM } from "../Zoom/ZoomConfig";
 
-const DEFAULT_ZOOM = ZOOM_LEVELS.STREET;	//DEnne bestemmer hva som det startes opp på
+const DEFAULT_ZOOM = ZOOM_LEVELS.STREET;
 
 const TYPE_ZOOM = {
 	continental_marine: ZOOM_LEVELS.CONTINENT,	//3
@@ -39,7 +39,7 @@ const ZOOM_THRESHOLDS = [
 ========================= */
 function clampZoom(zoom) {
 	return Math.min(
-		Math.max(zoom,MIN_ZOOM),
+		Math.max(zoom, MIN_ZOOM),
 		MAX_ZOOM
 	);
 }
@@ -116,7 +116,7 @@ export function resolveMapCamera({ location, geometryBounds }) {
 		return null;
 	}
 
-	// GEOMETRY
+	//GEOMETRY – mest presist, brukes når geometri er ferdig lastet
 	const geoBounds = normalizeBounds(geometryBounds);
 
 	if (geoBounds) {
@@ -130,7 +130,7 @@ export function resolveMapCamera({ location, geometryBounds }) {
 		};
 	}
 
-	// SEARCH
+	//SEARCH BOUNDS – brukes for typer som IKKE venter på geometri
 	const searchBounds = normalizeBounds(location.bounds);
 
 	if (searchBounds && !AWAIT_GEOMETRY_TYPES.has(location.type)) {
@@ -144,12 +144,30 @@ export function resolveMapCamera({ location, geometryBounds }) {
 		};
 	}
 
-	// WAIT FOR GEOMETRY
+	//AWAITING GEOMETRY – midlertidig kamera mens geometri lastes
+	//Bruker searchBounds som foreløpig utsnitt i stedet for å returnere null
 	if (AWAIT_GEOMETRY_TYPES.has(location.type) && location.id) {
-		return null;
+		if (searchBounds) {
+			const { lat, lon } = centerFromBounds(searchBounds);
+
+			return {
+				id: `${location.id}-awaiting-geo`,
+				lat,
+				lon,
+				zoom: clampZoom(zoomFromBounds(searchBounds)),
+			};
+		}
+
+		// Fallback hvis searchBounds heller ikke finnes
+		return {
+			id: `${location.id}-awaiting-geo-fallback`,
+			lat: location.lat,
+			lon: location.lon,
+			zoom: clampZoom(zoomFromType(location.type)),
+		};
 	}
 
-	// FALLBACK
+	//FALLBACK – punkt-lokasjoner uten bounds
 	return {
 		id: `${location.id ?? "gps"}-${location.type ?? "default"}`,
 		lat: location.lat,
