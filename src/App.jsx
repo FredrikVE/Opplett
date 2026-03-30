@@ -19,7 +19,7 @@ import {
     getMapWeatherUseCase,
     getLocationGeometryUseCase,
     mapTilerRepository,
-} from "./di/container.js";
+} from "./di/dependencies.js";
 
 import useForecastPageViewModel from "./ui/viewmodel/ForecastPageViewModel.js";
 import useGraphScreenViewModel from "./ui/viewmodel/GraphScreenViewModel.js";

@@ -1,4 +1,4 @@
-//src/di/container.js
+//src/di/dependencies.js
 //
 // Composition Root – Dependency Injection Container
 // Samler all instansiering av DataSources, Repositories og UseCases
