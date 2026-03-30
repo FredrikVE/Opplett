@@ -304,7 +304,7 @@ Denne arkitekturen gjenspeiles i prosjektets mappestruktur:
 ├── images
 ├── public
 ├── src
-│   ├── di                                  <- Initialisering av modell for dependency injection
+│   ├── di                                  <- Initialisering av modell og dependency injection
 │   │   └── dependencies.js
 │   ├── hooks
 │   │   └── useActiveLocation.js
