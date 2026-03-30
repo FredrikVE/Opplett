@@ -3,7 +3,7 @@
 config:
   layout: elk
   elk:
-    mergeEdges: true
+    mergeEdges: false
     nodePlacementStrategy: NETWORK_SIMPLEX
     cycleBreakingStrategy: DEPTH_FIRST
     edgeRouting: ORTHOGONAL
@@ -16,6 +16,14 @@ flowchart TB
 %% =========================
 subgraph AppLayer["App (Composition Root)"]
 	App["App.jsx"]
+	Dependencies["dependencies.js"]
+end
+
+%% =========================
+%% SHARED HOOKS
+%% =========================
+subgraph SharedHooks["Shared Hooks"]
+	ActiveLocation["useActiveLocation"]
 end
 
 %% =========================
@@ -101,12 +109,20 @@ end
 %% =========================
 %% APP CONNECTIONS
 %% =========================
-App --> NavGraph
+App --> Dependencies
 App --> GeoHook
+App --> ActiveLocation
+App --> SearchVM
+App --> NavGraph
 App --> ForecastPage
 App --> GraphPage
 App --> AlertPage
 App --> MapPage
+
+%% =========================
+%% SHARED HOOKS → USECASE
+%% =========================
+ActiveLocation --> GetLocationNameUC
 
 %% =========================
 %% SCREEN → VIEWMODEL
@@ -117,8 +133,6 @@ AlertPage --> AlertVM
 MapPage --> MapVM
 
 GraphVM --> ForecastVM
-ForecastVM --> SearchVM
-MapVM --> SearchVM
 
 %% =========================
 %% VIEWMODEL → USECASE
@@ -127,7 +141,6 @@ ForecastVM --> GetForecastUC
 ForecastVM --> GetAlertsUC
 ForecastVM --> GetCurrentUC
 ForecastVM --> GetSunTimesUC
-ForecastVM --> GetLocationNameUC
 
 AlertVM --> GetAllAlertsUC
 
@@ -175,6 +188,7 @@ MapTilerDS --> MapTiler
 %% STYLING
 %% =========================
 style AppLayer stroke:#000000,fill:#E1BEE7
+style SharedHooks stroke:#000000,fill:#E1BEE7
 style NavigationLayer stroke:#000000,fill:#BBDEFB
 style Screens stroke:#000000,fill:#FFF9C4
 style Hooks stroke:#000000,fill:#FFCDD2
