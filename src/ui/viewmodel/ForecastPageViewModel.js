@@ -1,8 +1,8 @@
-import { useEffect, useState, useRef  } from "react";
+// src/ui/viewmodel/ForecastPageViewModel.js
+import { useEffect, useState, useRef } from "react";
 import { formatToLocalTime, formatToLocalDateLabel, formatLocalDate, formatLocalDateTime, getLocalHour } from "../utils/TimeZoneUtils/timeFormatters.js";
-import useSearchViewModel from "./SearchViewModel.js";
 
-export default function useForecastPageViewModel(getForecastUseCase, getAlertsUseCase, getCurrentWeatherUseCase, searchLocationUseCase, getLocationNameUseCase, getSunTimesUseCase, activeLocation, hoursAhead, onLocationChange, onResetToDeviceLocation) {
+export default function useForecastPageViewModel(getForecastUseCase, getAlertsUseCase, getCurrentWeatherUseCase, getSunTimesUseCase, activeLocation, hoursAhead) {
     const DATA_FETCH_STABILIZATION_MS = 50;
 
     // Lokale stater for værdata
@@ -15,61 +15,10 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    // Metadata om stedet (navn, bounds osv.) som vi kanskje beriker via reverse geocoding
-    const [enrichedLocation, setEnrichedLocation] = useState(activeLocation);
-
     const lastFetchedRef = useRef("");
-
-    // Synkroniser enrichedLocation når activeLocation endres fra utsiden
-    useEffect(() => {
-        setEnrichedLocation(activeLocation);
-    }, [activeLocation]);
-
-    const searchViewModel = useSearchViewModel(
-        searchLocationUseCase,
-        onLocationChange,
-        { lat: activeLocation.lat, lon: activeLocation.lon },
-        onResetToDeviceLocation
-    );
 
     // Eksplisitt tidssone fra vår SSOT
     const tz = activeLocation.timezone;
-
-    // Reverse geocoding: Berik lokasjonen med navn hvis det mangler (f.eks. ved GPS-start)
-    useEffect(() => {
-        if (activeLocation.lat == null || activeLocation.lon == null || activeLocation.name !== "Min posisjon") {
-            return;
-        }
-
-        let cancelled = false;
-
-        async function loadLocationName() {
-            try {
-                const result = await getLocationNameUseCase.execute({
-                    lat: activeLocation.lat,
-                    lon: activeLocation.lon
-                });
-
-
-                if (!cancelled && result?.name) {
-                    setEnrichedLocation(prev => ({
-                        ...prev,
-                        name: result.name,
-                        // Vi beholder tz fra activeLocation da den allerede er beregnet i App.jsx
-                        bounds: result.bounds || null,
-                        type: result.type || null
-                    }));
-                }
-            } 
-			
-			catch (error) {
-                console.warn("Kunne ikke hente stedsnavn for GPS-posisjon", error);
-            }
-        }
-
-        loadLocationName();
-        return () => { cancelled = true; };
-    }, [activeLocation.lat, activeLocation.lon, activeLocation.name, getLocationNameUseCase]);
 
     // Hovedeffekt for datainnhenting
     useEffect(() => {
@@ -82,8 +31,8 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
         async function loadData() {
             const fetchKey = `${activeLocation.lat},${activeLocation.lon},${hoursAhead},${tz}`;
             if (lastFetchedRef.current === fetchKey) {
-				return;
-			}
+                return;
+            }
 
             lastFetchedRef.current = fetchKey;
 
@@ -99,9 +48,7 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
                     timeZone: tz
                 });
 
-                if (cancelled) {
-					return;
-				}
+                if (cancelled) return;
 
                 const grouped = {};
                 const entries = Object.entries(forecastResult.hourlyByDate);
@@ -117,7 +64,7 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
                 setForecast(grouped);
                 setDailySummaryByDate(forecastResult.dailySummaryByDate);
 
-                //Farevarsler
+                // 2. Farevarsler
                 const alertsResult = await getAlertsUseCase.execute({
                     lat: activeLocation.lat,
                     lon: activeLocation.lon
@@ -128,7 +75,7 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
                     setAlertsByDate(alertsResult.alertsByDate ?? {});
                 }
 
-                //Soloppgang/nedgang
+                // 3. Soloppgang/nedgang
                 const isoDates = Object.keys(grouped);
                 const sunTimes = await getSunTimesUseCase.execute({
                     lat: activeLocation.lat,
@@ -139,10 +86,10 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
                 });
 
                 if (!cancelled) {
-					setSunTimesByDate(sunTimes);
-				}
+                    setSunTimesByDate(sunTimes);
+                }
 
-                //Nå-vær
+                // 4. Nå-vær
                 const current = await getCurrentWeatherUseCase.execute({
                     lat: activeLocation.lat,
                     lon: activeLocation.lon,
@@ -150,13 +97,12 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
                 });
 
                 if (!cancelled) {
-					setCurrentWeather(current);
-				}
+                    setCurrentWeather(current);
+                }
 
                 setLoading(false);
             } 
-
-			catch (error) {
+            catch (error) {
                 if (!cancelled) {
                     setError(error?.message ?? "Feil ved henting av data");
                     lastFetchedRef.current = "";
@@ -170,10 +116,11 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
             cancelled = true;
             clearTimeout(timer);
         };
-    }, 
-	[activeLocation.lat, activeLocation.lon, hoursAhead, tz, getForecastUseCase, getAlertsUseCase, getSunTimesUseCase, getCurrentWeatherUseCase]);
+    }, [activeLocation.lat, activeLocation.lon, hoursAhead, tz,
+        getForecastUseCase, getAlertsUseCase, getSunTimesUseCase, getCurrentWeatherUseCase]);
 
     return {
+        // Data
         forecast,
         currentWeather,
         dailySummaryByDate,
@@ -182,16 +129,13 @@ export default function useForecastPageViewModel(getForecastUseCase, getAlertsUs
         alertsByDate,
         loading,
         error,
-        location: enrichedLocation, // Bruker den berikede lokasjonen for UI
 
+        // Lokasjon (bruker activeLocation direkte – enrichment skjer i useActiveLocation)
+        location: activeLocation,
+
+        // Tidsformateringsfunksjoner
         getLocalHour: (zuluTime) => getLocalHour(zuluTime, tz),
         formatLocalDateTime: (zuluTime) => formatLocalDateTime(zuluTime, tz),
         formatLocalDate: (zuluTime) => formatLocalDate(zuluTime, tz),
-
-        query: searchViewModel.query,
-        suggestions: searchViewModel.suggestions,
-        onSearchChange: searchViewModel.onSearchChange,
-        onSuggestionSelected: searchViewModel.onSuggestionSelected,
-        onResetToDeviceLocation: () => searchViewModel.onResetLocation()
     };
 }

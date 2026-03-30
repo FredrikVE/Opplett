@@ -1,67 +1,26 @@
 // src/App.jsx
-import { useState, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { useGeolocation } from "./geolocation/useGeolocation.js";
-import { resolveTimezone } from "./ui/utils/TimeZoneUtils/timeFormatters.js"; // Viktig import for SSOT mtp tidsoner
+import useActiveLocation from "./hooks/useActiveLocation.js";
+import useSearchViewModel from "./ui/viewmodel/SearchViewModel.js";
 
-// Stilark
-import "./ui/style/App.css";
-import "./ui/style/LoadingSpinner.css";
-import "./ui/style/SolarInfo.css";
-import "./ui/style/SearchFeild.css";
-import "./ui/style/AlertCard.css";
-import "./ui/style/ForecastTable.css";
-import "./ui/style/DayForecastCard.css";
-import "./ui/style/ForecastPage.css";
-import "./ui/style/GraphPage.css";
-import "./ui/style/AlertPage.css";
-import "./ui/style/Header.css";
-import "./ui/style/Footer.css";
-import "./ui/style/NavButton.css";
-import "./ui/style/NowCard.css";
-import "./ui/style/UVNowBar.css";
-import "./ui/style/WindArrow.css";
-import "./ui/style/FilterDropDown.css";
-import "./ui/style/MapPage.css";
-import "./ui/style/DeviceLocationDot.css"
+import "./ui/style/Global.css";
 
-import "./ui/style/MapLayerToggle.css";
-
-//import "./ui/style/WindLegend.css";
-//import "./ui/style/TemperatureLegend.css";
-//import "./ui/style/PrecipitationLegend.css";
-import "./ui/style/MapLegend.css";
-
-import "./ui/style/Timeline.css";
-
-
-//Navigation
 import { NAV_SCREENS } from "./navigation/navGraph.js";
 
-//DataSources
-import LocationForecastDataSource from "./model/datasource/LocationForecastDataSource.js";
-import MetAlertsDataSource from "./model/datasource/MetAlertsDataSource.js";
-import SunriseDataSource from "./model/datasource/SunriseDataSource.js";
-import MapTilerDataSource from "./model/datasource/MapTilerDataSource.js";
+import {
+    getForecastUseCase,
+    getAlertsUseCase,
+    getAllAlertsUseCase,
+    getCurrentWeatherUseCase,
+    searchLocationUseCase,
+    getLocationNameUseCase,
+    getSunTimesUseCase,
+    getMapWeatherUseCase,
+    getLocationGeometryUseCase,
+    mapTilerRepository,
+} from "./di/container.js";
 
-//Repositories
-import LocationForecastRepository from "./model/repositories/LocationForecastRepository.js";
-import MetAlertsRepository from "./model/repositories/MetAlertsRepository.js";
-import SunriseRepository from "./model/repositories/SunriseRepository.js";
-import MapTilerRepository from "./model/repositories/MapTilerRepository.js";
-
-//UseCases
-import GetForecastUseCase from "./model/domain/GetForecastUseCase.js";
-import GetAllAlertsUseCase from "./model/domain/GetAllAlertsUseCase.js";
-import GetCurrentWeatherUseCase from "./model/domain/GetCurrentWeatherUseCase.js";
-import SearchLocationUseCase from "./model/domain/SearchLocationUseCase.js";
-import GetLocationNameUseCase from "./model/domain/GetLocationNameUseCase.js";
-import GetSunTimesUseCase from "./model/domain/GetSunTimesUseCase.js";
-import GetAlertsUseCase from "./model/domain/GetAlertsUseCase.js";
-import GetMapWeatherUseCase from "./model/domain/GetMapWeatherUseCase.js";
-import GetLocationGeometryUseCase from "./model/domain/GetLocationGeometryUseCase.js";
-//import GetCountryCitiesUseCase from "./model/domain/GetCountryCitiesUseCase.js";
-
-//ViewModel og View
 import useForecastPageViewModel from "./ui/viewmodel/ForecastPageViewModel.js";
 import useGraphScreenViewModel from "./ui/viewmodel/GraphScreenViewModel.js";
 import useAlertPageViewModel from "./ui/viewmodel/AlertPageViewModel.js";
@@ -72,96 +31,70 @@ import GraphPage from "./ui/view/pages/GraphPage.jsx";
 import AlertPage from "./ui/view/pages/AlertPage.jsx";
 import MapPage from "./ui/view/pages/MapPage.jsx";
 
-//Header og footer
 import Header from "./ui/view/components/Common/Layout/Header.jsx";
 import Footer from "./ui/view/components/Common/Layout/Footer.jsx";
 import LoadingSpinner from "./ui/view/components/Common/LoadingSpinner/LoadingSpinner.jsx";
-
-//Composition Root
-const locationForecastRepository = new LocationForecastRepository(new LocationForecastDataSource());
-const sunriseRepo = new SunriseRepository(new SunriseDataSource());
-const alertsRepo = new MetAlertsRepository(new MetAlertsDataSource());
-const mapTilerRepo = new MapTilerRepository(new MapTilerDataSource());
-
-const getForecastUseCase = new GetForecastUseCase(locationForecastRepository);
-const getSunTimesUseCase = new GetSunTimesUseCase(sunriseRepo);
-const getAlertsUseCase = new GetAlertsUseCase(alertsRepo);
-const getAllAlertsUseCase = new GetAllAlertsUseCase(alertsRepo);
-const getCurrentWeatherUseCase = new GetCurrentWeatherUseCase(locationForecastRepository);
-const searchLocationUseCase = new SearchLocationUseCase(mapTilerRepo);
-const getLocationNameUseCase = new GetLocationNameUseCase(mapTilerRepo);
-const getMapWeatherUseCase = new GetMapWeatherUseCase(getCurrentWeatherUseCase);
-const getLocationGeometryUseCase = new GetLocationGeometryUseCase(mapTilerRepo);
 
 export default function App() {
     const hoursAhead = 120;
     const [activeScreen, setActiveScreen] = useState(NAV_SCREENS.TABLE);
 
-    //Henter ferske GPS-koordinater
     const { loading, error, coords } = useGeolocation();
 
-    //State for manuelle valg (søk/kart-klikk)
-    const [manualLocation, setManualLocation] = useState(null);
+    const {
+        activeLocation,
+        handleLocationChange,
+        handleResetToDeviceLocation
+    } = useActiveLocation(coords, getLocationNameUseCase);
 
-    //SSOT: LOKASJONSOBJEKTET (Den utledede sannheten)
-    const activeLocation = useMemo(() => {
-        const lat = manualLocation?.lat ?? coords?.lat ?? null;
-        const lon = manualLocation?.lon ?? coords?.lon ?? null;
-        const name = manualLocation?.name ?? (coords ? "Min posisjon" : "");
-        const explicitTz = manualLocation?.timezone ?? null;
-
-        //Her valideres tidssonen via vår sentrale vaktpost
-        const timezone = resolveTimezone(lat, lon, explicitTz, name);
-
-        return { lat, lon, name, timezone,
-            bounds: manualLocation?.bounds ?? null,
-            type: manualLocation?.type ?? null,
-            countryCode: manualLocation?.countryCode ?? null,
-            id: manualLocation?.id ?? null
-        };
-    }, 
-	[manualLocation, coords]);
-
-    //Handlere for lokasjonsendring
-    const handleLocationChange = (newLocation) => {
-        setManualLocation(newLocation);
-    };
-
-    const handleResetToDeviceLocation = () => {
-        setManualLocation(null);
-    };
-
-    //ViewModel-instanser (Injiserer det atomiske objektet)
-    const forecastPageViewModel = useForecastPageViewModel(
-        getForecastUseCase, 
-        getAlertsUseCase, 
-        getCurrentWeatherUseCase, 
+    const searchViewModel = useSearchViewModel(
         searchLocationUseCase,
-        getLocationNameUseCase,
-        getSunTimesUseCase, 
-        activeLocation, 		//SSOT objektet
-        hoursAhead,
+        handleLocationChange,
+        { lat: activeLocation.lat, lon: activeLocation.lon },
+        handleResetToDeviceLocation
+    );
+
+    // MapPageViewModel trenger en reset-callback som den kan utvide med kart-spesifikk logikk
+    const mapPageViewModel = useMapPageViewModel(
+        mapTilerRepository,
+        getMapWeatherUseCase,
+        getLocationGeometryUseCase,
+        activeLocation,
+        coords,
         handleLocationChange,
         handleResetToDeviceLocation
     );
 
-    const mapPageViewModel = useMapPageViewModel(
-        mapTilerRepo,
-        searchLocationUseCase,
-        getMapWeatherUseCase,
-        getLocationGeometryUseCase,
-        activeLocation, 		//SSOT objektet
-        coords,                    //User location til blue dot
-        handleLocationChange,
-        handleResetToDeviceLocation 
+    const forecastPageViewModel = useForecastPageViewModel(
+        getForecastUseCase,
+        getAlertsUseCase,
+        getCurrentWeatherUseCase,
+        getSunTimesUseCase,
+        activeLocation,
+        hoursAhead
     );
-    
+
     const graphScreenViewModel = useGraphScreenViewModel(forecastPageViewModel);
     const alertPageViewModel = useAlertPageViewModel(getAllAlertsUseCase);
 
+    // Samlet reset som kombinerer søk + kart + lokasjon
+    const handleFullReset = useCallback(() => {
+        searchViewModel.onResetLocation();      // Tømmer søkefelt + suggestions
+        mapPageViewModel.resetMapState();        // Nullstiller weatherPoints, resetCounter osv.
+        // handleResetToDeviceLocation kalles allerede inne i searchViewModel.onResetLocation
+    }, [searchViewModel, mapPageViewModel]);
+
+    const searchProps = {
+        query: searchViewModel.query,
+        suggestions: searchViewModel.suggestions,
+        onSearchChange: searchViewModel.onSearchChange,
+        onSuggestionSelected: searchViewModel.onSuggestionSelected,
+        onResetToDeviceLocation: handleFullReset
+    };
+
     if (loading) {
-		return <LoadingSpinner />;
-	}
+        return <LoadingSpinner />;
+    }
 
     if (error) {
         return (
@@ -188,6 +121,7 @@ export default function App() {
             {activeScreen === NAV_SCREENS.TABLE && (
                 <ForecastPage
                     viewModel={forecastPageViewModel}
+                    searchProps={searchProps}
                     activeScreen={activeScreen}
                     onChangeScreen={setActiveScreen}
                     SCREENS={NAV_SCREENS}
@@ -197,6 +131,7 @@ export default function App() {
             {activeScreen === NAV_SCREENS.GRAPH && (
                 <GraphPage
                     viewModel={graphScreenViewModel}
+                    searchProps={searchProps}
                     activeScreen={activeScreen}
                     onChangeScreen={setActiveScreen}
                     SCREENS={NAV_SCREENS}
@@ -206,12 +141,13 @@ export default function App() {
             {activeScreen === NAV_SCREENS.MAP && (
                 <MapPage
                     viewModel={mapPageViewModel}
+                    searchProps={searchProps}
                     activeScreen={activeScreen}
                     onChangeScreen={setActiveScreen}
                     SCREENS={NAV_SCREENS}
                 />
             )}
-            
+
             <Footer />
         </>
     );

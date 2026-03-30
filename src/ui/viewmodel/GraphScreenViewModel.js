@@ -1,50 +1,36 @@
-//src/ui/viewmodel/GraphScreenViewModel.js
-export default function useGraphScreenViewModel(homeViewModel) {
+// src/ui/viewmodel/GraphScreenViewModel.js
+export default function useGraphScreenViewModel(forecastViewModel) {
 
-	const getHourlyForecastList = (forecastByDate) => {
-		const hourlyForecastList = [];
-		
-		//Bruker Object.values() for å slippe entry[1]-styret
-		//Da får vi listen over dager direkte
-		const allDays = Object.values(forecastByDate || {});
+    const getHourlyForecastList = (forecastByDate) => {
+        const hourlyForecastList = [];
+        const allDays = Object.values(forecastByDate || {});
 
-		for (const dayData of allDays) {
-			//Sjekker at vi faktisk har data og at "hours" finnes
-			if (dayData && Array.isArray(dayData.hours)) {
-				
-				//En enkel for-of løkke er ofte lettere å lese enn forEach
-				for (const hour of dayData.hours) {
-					hourlyForecastList.push(hour);
-				}
-			}
-		}
+        for (const dayData of allDays) {
+            if (dayData && Array.isArray(dayData.hours)) {
+                for (const hour of dayData.hours) {
+                    hourlyForecastList.push(hour);
+                }
+            }
+        }
 
-		return hourlyForecastList;
-	};
+        return hourlyForecastList;
+    };
 
-	return {
-		
-		//Grafdata
-		hourlyData: getHourlyForecastList(homeViewModel.forecast),
-		sunTimesByDate: homeViewModel.sunTimesByDate,
+    return {
+        // Grafdata
+        hourlyData: getHourlyForecastList(forecastViewModel.forecast),
+        sunTimesByDate: forecastViewModel.sunTimesByDate,
 
-		//Status
-		loading: homeViewModel.loading,
-		error: homeViewModel.error,
+        // Status
+        loading: forecastViewModel.loading,
+        error: forecastViewModel.error,
 
-		//Lokasjon
-		location: homeViewModel.location,
+        // Lokasjon
+        location: forecastViewModel.location,
 
-		//Tid
-		getLocalHour: homeViewModel.getLocalHour,
-		formatLocalDate: homeViewModel.formatLocalDate,
-		formatLocalDateTime: homeViewModel.formatLocalDateTime,
-
-		//Søk
-		query: homeViewModel.query,
-		suggestions: homeViewModel.suggestions,
-		onSearchChange: homeViewModel.onSearchChange,
-		onSuggestionSelected: homeViewModel.onSuggestionSelected,
-		onResetToDeviceLocation: homeViewModel.onResetToDeviceLocation
-	};
+        // Tidsformatering
+        getLocalHour: forecastViewModel.getLocalHour,
+        formatLocalDate: forecastViewModel.formatLocalDate,
+        formatLocalDateTime: forecastViewModel.formatLocalDateTime,
+    };
 }
