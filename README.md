@@ -304,9 +304,9 @@ Denne arkitekturen gjenspeiles i prosjektets mappestruktur:
 ├── images
 ├── public
 ├── src
-│   ├── di                                  <- Dependency Injection
+│   ├── di                                  <- Initialisering av modell for dependency injection
 │   │   └── dependencies.js
-│   ├── hooks                               <- Delte hooks
+│   ├── hooks
 │   │   └── useActiveLocation.js
 │   ├── geolocation
 │   ├── navigation
@@ -318,7 +318,7 @@ Denne arkitekturen gjenspeiles i prosjektets mappestruktur:
 │       ├── style
 │       ├── utils
 │       ├── view                            <- View (V)
-│       │   ├── components
+│       │   ├── components                  <- Komponentene som hver Page består av
 │       │   │   ├── Common
 │       │   │   ├── ForecastPage
 │       │   │   ├── GraphPage
