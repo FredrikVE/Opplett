@@ -4,7 +4,7 @@ import { useGeolocation } from "./geolocation/useGeolocation.js";
 import useActiveLocation from "./hooks/useActiveLocation.js";
 import useSearchViewModel from "./ui/viewmodel/SearchViewModel.js";
 
-import "./ui/style/index.css";
+import "./ui/style/Global.css";
 
 import { NAV_SCREENS } from "./navigation/navGraph.js";
 
