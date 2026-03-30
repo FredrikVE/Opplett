@@ -1,16 +1,13 @@
-//src/App.jsx
-import { useState } from "react";
+// src/App.jsx
+import { useState, useCallback } from "react";
 import { useGeolocation } from "./geolocation/useGeolocation.js";
 import useActiveLocation from "./hooks/useActiveLocation.js";
 import useSearchViewModel from "./ui/viewmodel/SearchViewModel.js";
 
-//Importerer samling med stilark
 import "./ui/style/index.css";
 
-//Navigation
 import { NAV_SCREENS } from "./navigation/navGraph.js";
 
-//DI Container
 import {
     getForecastUseCase,
     getAlertsUseCase,
@@ -24,19 +21,16 @@ import {
     mapTilerRepository,
 } from "./di/container.js";
 
-// ViewModels
 import useForecastPageViewModel from "./ui/viewmodel/ForecastPageViewModel.js";
 import useGraphScreenViewModel from "./ui/viewmodel/GraphScreenViewModel.js";
 import useAlertPageViewModel from "./ui/viewmodel/AlertPageViewModel.js";
 import useMapPageViewModel from "./ui/viewmodel/MapPageViewModel.js";
 
-// Views
 import ForecastPage from "./ui/view/pages/ForecastPage.jsx";
 import GraphPage from "./ui/view/pages/GraphPage.jsx";
 import AlertPage from "./ui/view/pages/AlertPage.jsx";
 import MapPage from "./ui/view/pages/MapPage.jsx";
 
-// Layout
 import Header from "./ui/view/components/Common/Layout/Header.jsx";
 import Footer from "./ui/view/components/Common/Layout/Footer.jsx";
 import LoadingSpinner from "./ui/view/components/Common/LoadingSpinner/LoadingSpinner.jsx";
@@ -45,34 +39,22 @@ export default function App() {
     const hoursAhead = 120;
     const [activeScreen, setActiveScreen] = useState(NAV_SCREENS.TABLE);
 
-    // GPS-koordinater
     const { loading, error, coords } = useGeolocation();
 
-    // SSOT for lokasjon (inkludert enrichment)
     const {
         activeLocation,
         handleLocationChange,
         handleResetToDeviceLocation
     } = useActiveLocation(coords, getLocationNameUseCase);
 
-    // Felles søke-ViewModel (løftet opp fra individuelle ViewModels)
     const searchViewModel = useSearchViewModel(
         searchLocationUseCase,
         handleLocationChange,
-        { lat: activeLocation.lat, lon: activeLocation.lon },   //Løfte ut i beskrivende variabel
+        { lat: activeLocation.lat, lon: activeLocation.lon },
         handleResetToDeviceLocation
     );
 
-    // ViewModel-instanser
-    const forecastPageViewModel = useForecastPageViewModel(
-        getForecastUseCase,
-        getAlertsUseCase,
-        getCurrentWeatherUseCase,
-        getSunTimesUseCase,
-        activeLocation,
-        hoursAhead
-    );
-
+    // MapPageViewModel trenger en reset-callback som den kan utvide med kart-spesifikk logikk
     const mapPageViewModel = useMapPageViewModel(
         mapTilerRepository,
         getMapWeatherUseCase,
@@ -83,16 +65,31 @@ export default function App() {
         handleResetToDeviceLocation
     );
 
+    const forecastPageViewModel = useForecastPageViewModel(
+        getForecastUseCase,
+        getAlertsUseCase,
+        getCurrentWeatherUseCase,
+        getSunTimesUseCase,
+        activeLocation,
+        hoursAhead
+    );
+
     const graphScreenViewModel = useGraphScreenViewModel(forecastPageViewModel);
     const alertPageViewModel = useAlertPageViewModel(getAllAlertsUseCase);
 
-    // Samle søkeprops som sendes ned til alle sider som trenger det
+    // Samlet reset som kombinerer søk + kart + lokasjon
+    const handleFullReset = useCallback(() => {
+        searchViewModel.onResetLocation();      // Tømmer søkefelt + suggestions
+        mapPageViewModel.resetMapState();        // Nullstiller weatherPoints, resetCounter osv.
+        // handleResetToDeviceLocation kalles allerede inne i searchViewModel.onResetLocation
+    }, [searchViewModel, mapPageViewModel]);
+
     const searchProps = {
         query: searchViewModel.query,
         suggestions: searchViewModel.suggestions,
         onSearchChange: searchViewModel.onSearchChange,
         onSuggestionSelected: searchViewModel.onSuggestionSelected,
-        onResetToDeviceLocation: searchViewModel.onResetLocation
+        onResetToDeviceLocation: handleFullReset
     };
 
     if (loading) {

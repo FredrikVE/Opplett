@@ -55,6 +55,13 @@ export default function useMapPageViewModel(mapTilerRepository, getMapWeatherUse
         onResetToDeviceLocation();
     }, [clearWeatherPoints, onResetToDeviceLocation]);
 
+    const resetMapState = useCallback(() => {
+        clearWeatherPoints();
+        setResetCounter(prev => prev + 1);
+        previousMapTargetRef.current = null;
+    }, [clearWeatherPoints]);
+
+
     const onMapChange = useCallback(({ viewport, points }) => {
         setCurrentZoom(viewport?.zoom ?? null);
         setMapPoints(points || []);
@@ -249,5 +256,6 @@ export default function useMapPageViewModel(mapTilerRepository, getMapWeatherUse
 
         // Kart-spesifikke lokasjonshandlere
         onResetToDeviceLocation: handleResetToDeviceLocation,
+        resetMapState,
     };
 }
