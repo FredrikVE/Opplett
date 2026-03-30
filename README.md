@@ -304,6 +304,10 @@ Denne arkitekturen gjenspeiles i prosjektets mappestruktur:
 ├── images
 ├── public
 ├── src
+│   ├── di                                  <- Dependency Injection
+│   │   └── dependencies.js
+│   ├── hooks                               <- Delte hooks
+│   │   └── useActiveLocation.js
 │   ├── geolocation
 │   ├── navigation
 │   ├── model                               <- Model (M)
@@ -311,7 +315,6 @@ Denne arkitekturen gjenspeiles i prosjektets mappestruktur:
 │   │   ├── domain
 │   │   └── repositories
 │   └── ui
-│       ├── hooks
 │       ├── style
 │       ├── utils
 │       ├── view                            <- View (V)
@@ -328,9 +331,10 @@ Denne arkitekturen gjenspeiles i prosjektets mappestruktur:
 │       │       └── MapPage.jsx
 │       └── viewmodel                       <- ViewModel (VM)
 │           ├── ForecastPageViewModel.js
-│           ├── GraphPageViewModel.js
+│           ├── GraphScreenViewModel.js
 │           ├── AlertPageViewModel.js
-│           └── MapPageViewModel.js
+│           ├── MapPageViewModel.js
+│           └── SearchViewModel.js
 └── test
     ├── model
     └── ui

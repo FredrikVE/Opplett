@@ -1,4 +1,4 @@
-//src/geolocation/FormatLocationName.js
+//src/geolocation/useGeolocation.js
 import { useEffect, useState } from 'react';
 
 export function useGeolocation() {
